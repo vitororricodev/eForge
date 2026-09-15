@@ -1,0 +1,2 @@
+import { BodyFront, BodyBack, type MuscleKey } from './MuscleBody';
+export function MuscleThumbnail({muscle}:{muscle:string}){const back=['lats','back','traps','lower_back','hamstrings','glutes','rear_delts','triceps'].includes(muscle);const key=(muscle==='back'?'lats':muscle) as MuscleKey;return <div className="eforge-muscle-thumb" title="Grupo muscular principal">{back?<BodyBack levels={{[key]:3}}/>:<BodyFront levels={{[key]:3}}/>}</div>}

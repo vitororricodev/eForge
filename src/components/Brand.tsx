@@ -1,0 +1,1 @@
+export function Brand({compact=false}:{compact?:boolean}) { return <span className="eforge-brand" aria-label="eForge"><img src="/brand/eforge-mark.svg" alt="" width="36" height="36"/>{!compact&&<span className="eforge-wordmark">eForge</span>}</span>; }

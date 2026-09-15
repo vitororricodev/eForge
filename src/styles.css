@@ -1,0 +1,213 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* eForge — Premium fitness design system
+   Black canvas + purple accents + white typography.
+   All colors live as oklch tokens; never hardcode hex in components. */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-neon: var(--neon);
+  --color-neon-strong: var(--neon-strong);
+  --color-neon-soft: var(--neon-soft);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --font-display: "Forega Sport", "Arial Black", Impact, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 1rem;
+
+  /* Deep black canvas */
+  --background: oklch(0.04 0 0);
+  --foreground: oklch(0.98 0 0);
+
+  /* Cards / surfaces — slightly elevated black */
+  --surface: oklch(0.09 0 0);
+  --surface-2: oklch(0.13 0 0);
+  --card: oklch(0.09 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.11 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+
+  /* Purple — primary brand */
+  --neon: oklch(0.76 0.19 300);
+  --neon-strong: oklch(0.84 0.15 300);
+  --neon-soft: oklch(0.85 0.22 300);
+  --primary: oklch(0.76 0.19 300);
+  --primary-foreground: oklch(0.04 0 0);
+
+  --secondary: oklch(0.18 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.16 0 0);
+  --muted-foreground: oklch(0.62 0 0);
+  --accent: oklch(0.76 0.19 300);
+  --accent-foreground: oklch(0.04 0 0);
+
+  --destructive: oklch(0.65 0.24 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --border: oklch(0.20 0 0);
+  --input: oklch(0.16 0 0);
+  --ring: oklch(0.76 0.19 300);
+
+  /* Effects */
+  --glow-neon: 0 0 24px oklch(0.76 0.19 300 / 0.55), 0 0 64px oklch(0.76 0.19 300 / 0.25);
+  --glow-neon-soft: 0 0 16px oklch(0.76 0.19 300 / 0.35);
+  --gradient-neon: linear-gradient(135deg, oklch(0.84 0.15 300), oklch(0.85 0.22 300));
+  --gradient-dark: linear-gradient(180deg, oklch(0.09 0 0), oklch(0.04 0 0));
+}
+
+.dark { color-scheme: dark; }
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { background: var(--color-background); color: var(--color-foreground); }
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, oklch(0.76 0.19 300 / 0.08), transparent 60%),
+      var(--color-background);
+    min-height: 100dvh;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; font-weight: 800; }
+}
+
+@layer utilities {
+  .text-neon { color: var(--neon); }
+  .bg-neon { background: var(--neon); color: var(--primary-foreground); }
+  .border-neon { border-color: var(--neon); }
+  .glow-neon { box-shadow: var(--glow-neon); }
+  .glow-neon-soft { box-shadow: var(--glow-neon-soft); }
+  .text-glow { text-shadow: 0 0 18px oklch(0.76 0.19 300 / 0.55); }
+  .gradient-neon { background-image: var(--gradient-neon); }
+  .surface { background: var(--surface); }
+  .surface-2 { background: var(--surface-2); }
+  .ring-neon { box-shadow: 0 0 0 1px var(--neon), var(--glow-neon-soft); }
+  .hairline { border: 1px solid oklch(1 0 0 / 0.06); }
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+}
+
+@keyframes pulse-neon {
+  0%, 100% { box-shadow: 0 0 12px oklch(0.76 0.19 300 / 0.4); }
+  50% { box-shadow: 0 0 32px oklch(0.76 0.19 300 / 0.8); }
+}
+.animate-pulse-neon { animation: pulse-neon 2.4s ease-in-out infinite; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.5s ease-out both; }
+
+@font-face { font-family: "Forega Sport"; src: url("/fonts/forega-sport-demo.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0000,U+000D,U+0020,U+002C,U+002E,U+0041,U+0042,U+0043,U+0044,U+0045,U+0046,U+0047,U+0048,U+0049,U+004A,U+004B,U+004C,U+004D,U+004E,U+004F,U+0050,U+0051,U+0052,U+0053,U+0054,U+0055,U+0056,U+0057,U+0058,U+0059,U+005A,U+0061,U+0062,U+0063,U+0064,U+0065,U+0066,U+0067,U+0068,U+0069,U+006A,U+006B,U+006C,U+006D,U+006E,U+006F,U+0070,U+0071,U+0072,U+0073,U+0074,U+0075,U+0076,U+0077,U+0078,U+0079,U+007A; }
+:root { color-scheme: dark; --background: #09090d; --surface: #121219; --surface-2: #1b1b25; --muted-foreground: #aaa7b7; }
+h1,h2,h3,h4 { font-family: var(--font-display); font-style: normal; font-weight: 400 !important; font-synthesis: none; letter-spacing: 0.015em; text-transform: uppercase; line-height: 1.2; overflow-wrap: anywhere; }
+.eforge-wordmark { font-family: var(--font-display); font-weight: 400; font-style: normal; font-synthesis: none; letter-spacing: 0; }
+input, select, textarea, table, [role="timer"] { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+button, a, input, select { touch-action: manipulation; }
+input, select, textarea { font-size: 16px !important; }
+button { min-height: 44px; }
+main { padding-top: max(2rem, env(safe-area-inset-top)) !important; }
+:focus-visible { outline: 2px solid #c49aff; outline-offset: 3px; }
+@media(prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* eForge visual identity — shared across every route and dialog. */
+:root {
+ --radius: .75rem;
+ --background:#09090d; --foreground:#faf9ff;
+ --card:#15151d; --surface:#15151d; --surface-2:#20202a;
+ --popover:#181820; --input:#34323e; --border:#30303c;
+ --neon:#b885ff; --neon-soft:#9360d8; --neon-strong:#d7b7ff;
+ --primary:#b885ff; --primary-foreground:#10091a;
+ --accent:#b885ff; --accent-foreground:#10091a; --ring:#b885ff;
+ --muted-foreground:#aaa6b6;
+ --glow-neon:0 4px 22px #8e4bd322;
+ --glow-neon-soft:0 2px 14px #0003;
+}
+body { background:radial-gradient(ellipse at 90% 0%,#9a50dd0c,transparent 50%),#09090d; }
+.eforge-brand { display:inline-flex; align-items:center; gap:10px; white-space:nowrap; color:#faf9ff; }
+.eforge-brand .eforge-wordmark { font-size:25px; line-height:1.2; }
+.eforge-brand img { width:32px; height:32px; object-fit:contain; }
+.eforge-app-header { max-width:480px; margin:auto; padding:max(20px,env(safe-area-inset-top)) 20px 8px; display:flex; align-items:center; justify-content:space-between; }
+.eforge-app-header > a:last-child { border:1px solid var(--border); border-radius:12px; padding:8px; min-width:44px; min-height:44px; display:grid; place-items:center; }
+main { max-width:480px; padding-top:24px !important; }
+main > h1 { font-size:clamp(25px,7vw,34px); }
+main .rounded-3xl { border-radius:16px; }
+main .rounded-2xl { border-radius:12px; }
+.surface { background:linear-gradient(135deg,#1b1b24,#121218); }
+.hairline { border:1px solid #ffffff13; }
+.text-glow { text-shadow:none; }
+button.bg-neon, a.bg-neon, .bg-primary { background:linear-gradient(110deg,#a86aef,#bd8cfb); border:1px solid #cfa7ff40; color:#110a1a; box-shadow:0 3px 12px #8c42c51a; }
+button.rounded-full, a.rounded-full { border-radius:11px; }
+button:not(:disabled):active, a.bg-neon:active { transform:translateY(1px); }
+input:not([type="checkbox"]), textarea { background:#101015; border:1px solid #393642; border-radius:10px; min-height:46px; padding:10px 12px; }
+select { background:#181820; color:#f8f6ff; border-radius:10px; border:1px solid #393642; min-height:44px; max-width:100%; }
+[role="dialog"], [role="alertdialog"] { background:#14141c; border:1px solid #393244; border-radius:20px; max-height:90dvh; overflow-y:auto; }
+[role="tablist"] { background:#17171f; border:1px solid #302c3b; padding:4px; border-radius:12px; }
+[role="tab"][data-state="active"] { background:#b885ff; color:#10091a; }
+.eforge-nav { background:#0c0c12f5; border-top:1px solid #302a3b; backdrop-filter:blur(18px); }
+.eforge-nav-inner { display:flex; max-width:480px; margin:auto; padding:8px 12px; }
+.eforge-nav a { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-height:52px; font-size:10px; color:#a8a4b2; position:relative; }
+.eforge-nav a[aria-current="page"] { color:#c39aff; }
+.eforge-nav a[aria-current="page"]::before { content:''; position:absolute; width:24px; height:2px; top:0; background:#b885ff; border-radius:2px; }
+.eforge-medal { width:84px;height:84px;border-radius:50%;padding:7px;position:relative;background:linear-gradient(135deg,#a5a7b4,#333540 42%,#858794);box-shadow:0 5px 14px #0005,inset 0 0 0 1px #ffffff30; }
+.eforge-medal.is-earned { background:linear-gradient(135deg,#eedfff,#8a46d5 45%,#d4b0ff); }
+.medal-core { width:100%;height:100%;display:grid;place-items:center;border-radius:50%;background:linear-gradient(145deg,#38313f,#14121a);color:#a6a0b0;box-shadow:inset 0 0 0 2px #aaa1b450; }
+.is-earned .medal-core { color:#e7d4ff; background:linear-gradient(135deg,#743ca6,#20142e); }
+.medal-lock { position:absolute;right:-2px;bottom:4px;color:#aaa4b4;background:#17141f;box-sizing:content-box;padding:5px;border-radius:50%; }
+.eforge-medal-card { display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px; }
+.eforge-hero { position:relative;overflow:hidden;background:radial-gradient(ellipse at top right,#8c41c533,transparent 65%),linear-gradient(130deg,#1d1727,#111116)!important;border:1px solid #a16bdd44; }
+.eforge-hero::after { content:'';position:absolute;right:-20px;top:-40px;width:150px;height:200px;border-right:22px solid #a76bec0d;transform:skew(-24deg);pointer-events:none; }
+.eforge-map-panel { background:radial-gradient(ellipse at center,#a76bec13,transparent 70%),#111117; }
+.eforge-map-panel svg { filter:drop-shadow(0 8px 14px #0008); }
+.recharts-cartesian-grid line { stroke:#34303d; }
+.recharts-text { fill:#b4adbf; }
+@media(max-width:380px) { main { padding-left:16px!important;padding-right:16px!important; } .eforge-medal { width:70px;height:70px; } }
+
+.eforge-muscle-thumb { height:76px;width:64px;overflow:hidden;display:flex;justify-content:center; }
+.eforge-muscle-thumb svg { width:48px;height:100px;flex:none; }
+.eforge-run section { border:1px solid #39303f;box-shadow:0 5px 18px #0002; }
+.eforge-run section h2 { font-size:20px; }
+.eforge-run details { border-top:1px solid #ffffff0c; }
+.eforge-run [aria-label="Concluir série"][aria-pressed="true"] { background:#b885ff;box-shadow:0 0 0 1px #d9baff55; }
+.eforge-rest { background:linear-gradient(120deg,#2e1d3e,#17121f);border:1px solid #a76bec66;box-shadow:0 8px 20px #0006;gap:8px;flex-wrap:wrap; }
+.eforge-rest [role="timer"] { color:#dbbaff;font-size:24px;text-align:center; }
+.eforge-rest button { padding:8px 10px;border-radius:9px;background:#ffffff08;font-size:12px; }
+.eforge-finished { min-height:85dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center; }
+.eforge-finish-trophy { width:120px;height:120px;border-radius:32px;display:grid;place-items:center;background:radial-gradient(circle,#9253c84d,#151019);color:#c796ff;margin:36px auto 24px; }
+.eforge-finished > a { width:100%;min-height:48px;border:1px solid #70528b;border-radius:12px;margin:6px 0;display:grid;place-items:center; }
+.eforge-finished > a:first-of-type { background:#b885ff;color:#10091a;font-weight:700; }
+.eforge-profile-card { border-top:2px solid #aa72ed; }

@@ -1,0 +1,74 @@
+# Dependências
+node_modules/
+
+# Builds e caches
+/dist/
+/dist-ssr/
+/.output/
+/.vinxi/
+/.tanstack/
+/.nitro/
+/.vite/
+/.cache/
+*.tsbuildinfo
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+.dev.vars
+.dev.vars.*
+
+# Credenciais de assinatura Android
+*.jks
+*.keystore
+/android/key.properties
+/android/keystore.properties
+
+# Plataformas de deploy
+.wrangler/
+.vercel/
+.netlify/
+
+# Supabase: arquivos locais
+supabase/.temp/
+supabase/.branches/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Resultados de testes
+coverage/
+playwright-report/
+test-results/
+
+# Editor e sistema
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# Builds Android
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/local.properties
+*.apk
+*.aab
