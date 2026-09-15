@@ -1,4 +1,4 @@
-# eForge 1.2.0
+# eForge 1.3.0
 
 Site mobile em React/TanStack Start + Supabase. Preto, roxo e branco.
 
@@ -46,3 +46,20 @@ A identidade agora é compartilhada por todas as rotas: fundo preto, superfície
 Autenticação e boas-vindas usam a marca única. Dashboard recebeu cards de destaque; execução recebeu acabamento de descanso/séries e resumo com troféu; perfil recebeu avatar de iniciais. Conquistas têm 11 símbolos diferenciados em medalhões roxos/cinza, com estado bloqueado identificado. Mapa mantém geometria vetorial própria e ganhou contraste/contornos. Exercícios sem mídia mostram uma miniatura do grupo muscular, não uma demonstração de execução.
 
 Não é uma reprodução pixel a pixel das imagens geradas: anatomia, ícones e imagens são os componentes reais do projeto. Não foram inventados dados de treino para preencher as telas. O navegador de validação bloqueou localhost; revisão visual em celular real ainda é necessária. Alterações deste pacote são locais; a versão publicada não foi atualizada.
+
+## Abertura após login — 1.3.0
+
+Animação de 3,7 segundos: bigorna e martelo vetoriais com acabamento metálico, três impactos (0,55 / 1,1 / 1,65 s), faíscas roxas e revelação de “Forjando a sua melhor versão!” a partir de 2,15 s. Os sons metálicos e o whoosh são sintetizados por Web Audio, sem arquivos externos. A arte vetorial segue a composição aprovada; não é o render 3D fotográfico da prancha conceitual.
+
+A abertura ocorre após login por senha ou retorno do login Google iniciado pelo app. Não aparece a cada troca de página ou renovação de token. O sinal de exibição expira em 10 minutos e é consumido ao terminar/pular. A prévia não altera a autenticação. Som usa o gesto de login quando permitido; retorno OAuth pode exigir tocar “Ativar som”. Pular e Escape encerram e silenciam. Ao sair da aba, a abertura termina; não reproduz sons atrasados. Redução de movimento mostra apenas a mensagem por 1,4 s sem áudio.
+
+### Testar só a animação, sem banco
+
+1. `npm ci`
+2. `npm run intro:dev`
+3. Abrir `http://localhost:5174/intro-preview.html` (normalmente abre automaticamente).
+4. Clicar em “Reproduzir com som”. É possível repetir quantas vezes quiser.
+
+Essa prévia usa os mesmos componentes da abertura real. Não exige `.env`, Supabase nem login e não simula as outras telas. Para build isolado: `npm run intro:build`.
+
+Validação: TypeScript, build da prévia, testes do sinal de login (conta, expiração, limpeza) e suíte existente. Validação visual/audio em celular físico ainda pendente; navegador remoto não alcança localhost neste ambiente.

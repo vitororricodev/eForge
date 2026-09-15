@@ -1,3 +1,4 @@
+import { requestIntro, clearIntro } from "@/lib/intro-session";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -36,8 +37,9 @@ function SignupPage() {
   }
 
   async function withGoogle() {
+    requestIntro();
     const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (res.error) toast.error("Falha ao entrar com Google");
+    if (res.error) { clearIntro(); toast.error("Falha ao entrar com Google"); }
   }
 
   return (

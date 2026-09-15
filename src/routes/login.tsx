@@ -1,3 +1,5 @@
+import { requestIntro, clearIntro } from "@/lib/intro-session";
+import { unlockIntroAudio } from "@/lib/intro-audio";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,16 +20,20 @@ function LoginPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    void unlockIntroAudio().catch(()=>{});
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
+    if(data.user) requestIntro(data.user.id);
     nav({ to: "/dashboard" });
   }
 
   async function withGoogle() {
+    requestIntro();
+    void unlockIntroAudio().catch(()=>{});
     const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (res.error) toast.error("Falha ao entrar com Google");
+    if (res.error) { clearIntro(); toast.error("Falha ao entrar com Google"); }
   }
 
   return (

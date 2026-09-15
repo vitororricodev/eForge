@@ -14,8 +14,10 @@
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",
     "cap:ios": "npx cap open ios",
-    "test": "node tests/workout-storage.mjs && node tests/database.mjs",
-    "typecheck": "tsc --noEmit"
+    "test": "node tests/workout-storage.mjs && node tests/database.mjs && node tests/intro-session.mjs",
+    "typecheck": "tsc --noEmit",
+    "intro:dev": "vite --config vite.intro.config.ts",
+    "intro:build": "vite build --config vite.intro.config.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
@@ -97,5 +99,5 @@
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
   },
-  "version": "1.2.0"
+  "version": "1.3.0"
 }

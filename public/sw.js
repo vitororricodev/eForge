@@ -1,4 +1,4 @@
-const CACHE='eforge-shell-v3';
+const CACHE='eforge-shell-v4';
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/brand/eforge-mark.svg','/offline.html','/manifest.webmanifest','/icon-192.png','/icon-512.png','/fonts/forega-sport-demo.ttf']))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('eforge-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('message',e=>{if(e.data==='SKIP_WAITING')self.skipWaiting()});
