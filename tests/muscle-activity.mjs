@@ -8,7 +8,7 @@ const source = ts.transpileModule(
   { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } },
 ).outputText;
 
-const { buildMuscleState, draftMuscleEntries, resolveMuscleKeys } = await import(
+const { buildMuscleState, draftMuscleEntries, resolveMuscleKeys, getTrainingWeekWindow } = await import(
   'data:text/javascript;base64,' + Buffer.from(source).toString('base64')
 );
 
@@ -42,4 +42,17 @@ assert.deepEqual(draftEntries, [
   { muscle: 'Bíceps', role: 'secondary' },
   { muscle: 'Trapézio', role: 'tertiary' },
 ]);
-console.log('PASS: Portuguese muscle labels map to the anatomical heatmap with role hierarchy.');
+
+const wed = new Date(2026, 8, 16, 10, 30, 0);
+const week = getTrainingWeekWindow(wed);
+assert.equal(week.start.getDay(), 1);
+assert.equal(week.start.getDate(), 14);
+assert.equal(week.end.getDate(), 21);
+assert.equal(week.key, '2026-09-14');
+
+const sunday = getTrainingWeekWindow(new Date(2026, 8, 20, 23, 59, 0));
+assert.equal(sunday.key, '2026-09-14');
+const monday = getTrainingWeekWindow(new Date(2026, 8, 21, 0, 1, 0));
+assert.equal(monday.key, '2026-09-21');
+
+console.log('PASS: muscle map roles and weekly reset window are correct.');

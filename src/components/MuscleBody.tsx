@@ -20,220 +20,273 @@ export type MuscleKey =
 export type MuscleRole = "primary" | "secondary" | "tertiary";
 export type BodyGender = "male" | "female";
 export type MuscleLevels = Partial<Record<MuscleKey, number>>;
-export type MuscleState = Partial<
-  Record<MuscleKey, { level: number; role: MuscleRole; score: number }>
->;
-
-const ROLE_FILL: Record<MuscleRole, string> = {
-  primary: "var(--muscle-primary)",
-  secondary: "var(--muscle-secondary)",
-  tertiary: "var(--muscle-tertiary)",
-};
+export type MuscleState = Partial<Record<MuscleKey, { level: number; role: MuscleRole; score: number }>>;
 
 const levelOpacity = (level: number) => {
   if (level >= 4) return 1;
-  if (level === 3) return 0.92;
-  if (level === 2) return 0.78;
-  if (level === 1) return 0.62;
+  if (level === 3) return 0.94;
+  if (level === 2) return 0.82;
+  if (level === 1) return 0.68;
   return 1;
 };
 
-function MusclePath({
-  d,
+function MuscleShape({
+  paths,
   k,
   levels,
   state,
+  gradientId,
 }: {
-  d: string;
+  paths: string[];
   k: MuscleKey;
   levels?: MuscleLevels;
   state?: MuscleState;
+  gradientId: string;
 }) {
   const activation = state?.[k];
   const level = activation?.level ?? levels?.[k] ?? 0;
-  const fill = activation ? ROLE_FILL[activation.role] : level > 0 ? "var(--muscle-primary)" : "var(--muscle-idle)";
+  const role = activation?.role;
+  const fill = role
+    ? `url(#${gradientId}-${role})`
+    : level > 0
+      ? `url(#${gradientId}-primary)`
+      : `url(#${gradientId}-idle)`;
   const style: CSSProperties = {
-    opacity: levelOpacity(level),
+    opacity: level === 0 ? 0.78 : levelOpacity(level),
     transition: "fill 220ms ease, opacity 220ms ease, filter 220ms ease",
-    filter: level >= 3 ? "drop-shadow(0 0 7px var(--muscle-glow))" : undefined,
+    filter: level >= 3 ? "drop-shadow(0 0 11px var(--muscle-glow))" : undefined,
   };
 
   return (
-    <path d={d} fill={fill} stroke="var(--body-muscle-stroke)" strokeWidth={0.75} style={style}>
-      <title>
-        {k}: {activation ? activation.role : "sem atividade"}, nível {level} de 4
-      </title>
-    </path>
+    <g
+      fill={fill}
+      stroke={level > 0 ? "var(--body-active-stroke)" : "var(--body-muscle-stroke)"}
+      strokeWidth={3}
+      strokeLinejoin="round"
+      style={style}
+    >
+      {paths.map((d, index) => (
+        <path d={d} key={`${k}-${index}`}>
+          <title>
+            {k}: {activation ? activation.role : "sem atividade"}, nível {level} de 4
+          </title>
+        </path>
+      ))}
+    </g>
   );
 }
 
-function BodyBase({ gender, view, gradientId }: { gender: BodyGender; view: "front" | "back"; gradientId: string }) {
-  const female = gender === "female";
-  const torso = female
-    ? "M61 78 Q100 64 139 78 Q143 112 139 152 Q136 183 144 208 Q126 222 100 222 Q74 222 56 208 Q64 183 61 152 Q57 112 61 78 Z"
-    : "M52 78 Q100 57 148 78 Q151 120 143 165 Q140 190 147 211 Q124 222 100 222 Q76 222 53 211 Q60 190 57 165 Q49 120 52 78 Z";
-  const hips = female
-    ? "M58 203 Q77 218 100 218 Q123 218 142 203 L148 252 Q127 268 100 268 Q73 268 52 252 Z"
-    : "M57 205 Q78 216 100 216 Q122 216 143 205 L145 248 Q123 259 100 259 Q77 259 55 248 Z";
-  const leftArm = female
-    ? "M59 84 Q40 98 35 137 Q31 169 36 191 L47 188 Q46 161 52 136 Q58 110 69 93 Z"
-    : "M53 84 Q31 100 27 140 Q25 171 31 193 L43 190 Q43 160 49 133 Q55 106 66 92 Z";
-  const rightArm = female
-    ? "M141 84 Q160 98 165 137 Q169 169 164 191 L153 188 Q154 161 148 136 Q142 110 131 93 Z"
-    : "M147 84 Q169 100 173 140 Q175 171 169 193 L157 190 Q157 160 151 133 Q145 106 134 92 Z";
-  const leftForearm = female
-    ? "M36 188 Q31 225 37 269 L50 269 Q47 226 47 188 Z"
-    : "M31 189 Q25 229 32 274 L46 274 Q43 229 43 189 Z";
-  const rightForearm = female
-    ? "M164 188 Q169 225 163 269 L150 269 Q153 226 153 188 Z"
-    : "M169 189 Q175 229 168 274 L154 274 Q157 229 157 189 Z";
-  const leftLeg = female
-    ? "M58 247 Q61 311 66 390 Q69 416 73 425 L94 425 Q96 354 94 267 Z"
-    : "M58 244 Q61 312 66 390 Q68 416 72 425 L94 425 Q96 351 92 257 Z";
-  const rightLeg = female
-    ? "M142 247 Q139 311 134 390 Q131 416 127 425 L106 425 Q104 354 106 267 Z"
-    : "M142 244 Q139 312 134 390 Q132 416 128 425 L106 425 Q104 351 108 257 Z";
-
+function NeutralShape({ d, gradientId }: { d: string; gradientId: string }) {
   return (
-    <g>
-      <g fill={`url(#${gradientId})`} stroke="var(--body-outline)" strokeWidth="1.25">
-        <ellipse cx="100" cy="31" rx={female ? 20 : 22} ry="26" />
-        <path d={female ? "M89 52 Q100 58 111 52 L112 70 Q100 76 88 70 Z" : "M88 52 Q100 58 112 52 L114 70 Q100 77 86 70 Z"} />
-        <path d={torso} />
-        <path d={hips} />
-        <path d={leftArm} />
-        <path d={rightArm} />
-        <path d={leftForearm} />
-        <path d={rightForearm} />
-        <path d={leftLeg} />
-        <path d={rightLeg} />
-      </g>
-      <g fill="none" stroke="var(--body-guide)" strokeWidth="0.75" opacity="0.55">
-        <path d="M100 75 V258" />
-        {view === "front" ? (
-          <>
-            <path d="M69 126 Q100 145 131 126" />
-            <path d="M82 211 Q100 218 118 211" />
-          </>
-        ) : (
-          <>
-            <path d="M66 103 Q100 82 134 103" />
-            <path d="M75 207 Q100 219 125 207" />
-          </>
-        )}
-      </g>
-    </g>
+    <path
+      d={d}
+      fill={`url(#${gradientId}-neutral)`}
+      stroke="var(--body-muscle-stroke)"
+      strokeWidth={3}
+      strokeLinejoin="round"
+      opacity={0.78}
+    />
   );
 }
 
 function SvgShell({ children, label, gradientId }: { children: ReactNode; label: string; gradientId: string }) {
   return (
-    <svg viewBox="0 0 200 440" className="h-full w-full" role="img" aria-label={label}>
+    <svg viewBox="100 40 460 820" className="h-full w-full" role="img" aria-label={label} preserveAspectRatio="xMidYMid meet">
       <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="var(--body-base-light)" />
-          <stop offset="0.55" stopColor="var(--body-base)" />
+        <linearGradient id={`${gradientId}-neutral`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--body-base-highlight)" />
+          <stop offset="0.28" stopColor="var(--body-base-light)" />
+          <stop offset="0.65" stopColor="var(--body-base)" />
           <stop offset="1" stopColor="var(--body-base-dark)" />
         </linearGradient>
+        <linearGradient id={`${gradientId}-idle`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--muscle-idle-light)" />
+          <stop offset="0.48" stopColor="var(--muscle-idle)" />
+          <stop offset="1" stopColor="var(--muscle-idle-dark)" />
+        </linearGradient>
+        <linearGradient id={`${gradientId}-primary`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--muscle-primary-light)" />
+          <stop offset="0.42" stopColor="var(--muscle-primary)" />
+          <stop offset="1" stopColor="var(--muscle-primary-dark)" />
+        </linearGradient>
+        <linearGradient id={`${gradientId}-secondary`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--muscle-secondary-light)" />
+          <stop offset="0.42" stopColor="var(--muscle-secondary)" />
+          <stop offset="1" stopColor="var(--muscle-secondary-dark)" />
+        </linearGradient>
+        <linearGradient id={`${gradientId}-tertiary`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--muscle-tertiary-light)" />
+          <stop offset="0.42" stopColor="var(--muscle-tertiary)" />
+          <stop offset="1" stopColor="var(--muscle-tertiary-dark)" />
+        </linearGradient>
+        <filter id={`${gradientId}-depth`} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="7" stdDeviation="6" floodColor="#000" floodOpacity="0.45" />
+        </filter>
       </defs>
-      {children}
+      <g filter={`url(#${gradientId}-depth)`}>{children}</g>
     </svg>
   );
 }
 
-export function BodyFront({
-  levels,
-  state,
-  gender = "male",
-}: {
-  levels?: MuscleLevels;
-  state?: MuscleState;
-  gender?: BodyGender;
-}) {
+function FrontFigure({ gender, levels, state, gradientId }: { gender: BodyGender; levels?: MuscleLevels; state?: MuscleState; gradientId: string }) {
   const female = gender === "female";
-  const gradientId = `body-shell-${useId().replace(/:/g, "")}`;
+  const upperTransform = female ? "translate(330 0) scale(.94 1) translate(-330 0)" : undefined;
+  const lowerTransform = female ? "translate(330 0) scale(1.035 1) translate(-330 0)" : undefined;
+
   return (
-    <SvgShell label={`Corpo ${female ? "feminino" : "masculino"}, vista frontal`} gradientId={gradientId}>
-      <BodyBase gender={gender} view="front" gradientId={gradientId} />
+    <g>
+      <g transform={upperTransform}>
+        <NeutralShape gradientId={gradientId} d="M294 72 Q330 47 366 72 Q380 86 376 124 Q371 170 330 180 Q289 170 284 124 Q280 86 294 72Z" />
+        <NeutralShape gradientId={gradientId} d="M301 154 Q312 184 330 207 Q348 184 359 154 L367 212 L293 212Z" />
 
-      <MusclePath k="chest" levels={levels} state={state} d={female ? "M70 91 Q83 84 98 90 L98 130 Q83 137 66 127 Q64 106 70 91 Z" : "M65 88 Q82 82 98 89 L98 132 Q80 140 61 128 Q59 104 65 88 Z"} />
-      <MusclePath k="chest" levels={levels} state={state} d={female ? "M130 91 Q117 84 102 90 L102 130 Q117 137 134 127 Q136 106 130 91 Z" : "M135 88 Q118 82 102 89 L102 132 Q120 140 139 128 Q141 104 135 88 Z"} />
+        <MuscleShape gradientId={gradientId} k="traps" levels={levels} state={state} paths={["M294 188 C306 202 317 210 330 222 C343 210 354 202 366 188 L405 215 C373 215 350 225 333 246 L330 229 L327 246 C310 225 287 215 255 215Z"]} />
+        <MuscleShape gradientId={gradientId} k="chest" levels={levels} state={state} paths={[
+          "M327 245 C311 230 282 222 249 234 C240 246 241 275 254 297 C271 314 299 321 326 307 C329 288 329 265 327 245Z",
+          "M333 245 C349 230 378 222 411 234 C420 246 419 275 406 297 C389 314 361 321 334 307 C331 288 331 265 333 245Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="shoulders" levels={levels} state={state} paths={[
+          "M249 218 C223 214 199 226 190 252 C187 276 194 296 207 311 C216 283 229 260 256 243 C258 233 255 224 249 218Z",
+          "M411 218 C437 214 461 226 470 252 C473 276 466 296 453 311 C444 283 431 260 404 243 C402 233 405 224 411 218Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="biceps" levels={levels} state={state} paths={[
+          "M203 304 C184 326 179 366 188 402 C193 420 205 428 216 411 C226 381 231 346 235 318 C225 309 214 305 203 304Z",
+          "M457 304 C476 326 481 366 472 402 C467 420 455 428 444 411 C434 381 429 346 425 318 C435 309 446 305 457 304Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="forearms" levels={levels} state={state} paths={[
+          "M189 399 C178 427 166 467 154 511 C151 530 158 543 174 550 C188 510 202 466 216 419 C209 407 201 401 189 399Z",
+          "M471 399 C482 427 494 467 506 511 C509 530 502 543 486 550 C472 510 458 466 444 419 C451 407 459 401 471 399Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="abs" levels={levels} state={state} paths={[
+          "M304 323 C313 317 321 315 327 317 L326 365 C317 369 307 367 300 362Z",
+          "M333 317 C339 315 347 317 356 323 L360 362 C353 367 343 369 334 365Z",
+          "M299 370 C308 366 317 367 326 371 L325 414 C314 419 304 417 296 412Z",
+          "M334 371 C343 367 352 366 361 370 L364 412 C356 417 346 419 335 414Z",
+          "M296 420 C306 416 315 417 325 422 L324 466 C313 471 302 469 293 463Z",
+          "M335 422 C345 417 354 416 364 420 L367 463 C358 469 347 471 336 466Z",
+          "M294 471 C305 467 315 469 324 474 L323 501 C316 519 307 528 300 521 C294 508 291 488 294 471Z",
+          "M336 474 C345 469 355 467 366 471 C369 488 366 508 360 521 C353 528 344 519 337 501Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="obliques" levels={levels} state={state} paths={[
+          "M252 309 C267 320 279 326 292 320 C288 353 286 392 286 433 C281 452 274 466 264 471 C255 446 249 407 248 365 C248 339 249 320 252 309Z",
+          "M408 309 C393 320 381 326 368 320 C372 353 374 392 374 433 C379 452 386 466 396 471 C405 446 411 407 412 365 C412 339 411 320 408 309Z",
+        ]} />
+        <NeutralShape gradientId={gradientId} d="M153 510 Q124 520 112 545 Q120 555 135 544 L126 574 Q133 579 142 555 L138 585 Q146 590 153 558 L153 588 Q163 589 166 555 L174 577 Q184 574 174 537Z M507 510 Q536 520 548 545 Q540 555 525 544 L534 574 Q527 579 518 555 L522 585 Q514 590 507 558 L507 588 Q497 589 494 555 L486 577 Q476 574 486 537Z" />
+      </g>
 
-      <MusclePath k="shoulders" levels={levels} state={state} d="M59 79 Q49 88 50 108 Q58 116 69 105 Q72 91 65 82 Z" />
-      <MusclePath k="shoulders" levels={levels} state={state} d="M141 79 Q151 88 150 108 Q142 116 131 105 Q128 91 135 82 Z" />
+      <g transform={lowerTransform}>
+        <NeutralShape gradientId={gradientId} d="M284 469 L327 543 L292 583 L260 493Z M376 469 L333 543 L368 583 L400 493Z" />
+        <MuscleShape gradientId={gradientId} k="quads" levels={levels} state={state} paths={[
+          "M261 493 C276 508 288 530 295 557 L292 679 C283 707 273 707 265 681 C251 618 248 548 261 493Z",
+          "M292 516 C304 535 311 560 313 591 L306 697 C296 713 289 698 289 675 L291 553 C290 535 289 522 292 516Z",
+          "M399 493 C384 508 372 530 365 557 L368 679 C377 707 387 707 395 681 C409 618 412 548 399 493Z",
+          "M368 516 C356 535 349 560 347 591 L354 697 C364 713 371 698 371 675 L369 553 C370 535 371 522 368 516Z",
+        ]} />
+        <NeutralShape gradientId={gradientId} d="M269 690 Q288 674 307 699 L300 741 Q282 750 266 731Z M391 690 Q372 674 353 699 L360 741 Q378 750 394 731Z" />
+        <MuscleShape gradientId={gradientId} k="calves" levels={levels} state={state} paths={[
+          "M267 733 C280 743 291 745 300 738 C299 771 297 808 293 848 L269 848 C264 807 263 769 267 733Z",
+          "M393 733 C380 743 369 745 360 738 C361 771 363 808 367 848 L391 848 C396 807 397 769 393 733Z",
+        ]} />
+      </g>
 
-      <MusclePath k="biceps" levels={levels} state={state} d="M43 111 Q34 136 37 168 Q42 179 49 166 Q52 139 48 116 Z" />
-      <MusclePath k="biceps" levels={levels} state={state} d="M157 111 Q166 136 163 168 Q158 179 151 166 Q148 139 152 116 Z" />
-      <MusclePath k="forearms" levels={levels} state={state} d="M36 188 Q31 222 37 262 L48 262 Q47 225 46 190 Z" />
-      <MusclePath k="forearms" levels={levels} state={state} d="M164 188 Q169 222 163 262 L152 262 Q153 225 154 190 Z" />
+      <g fill="none" stroke="var(--body-guide)" strokeWidth={2.5} strokeLinecap="round" opacity={0.42}>
+        <path d="M330 319V528 M296 365H364 M294 414H366 M292 465H368" />
+        <path d="M286 530 Q270 617 294 699 M374 530 Q390 617 366 699" />
+      </g>
+      {female && (
+        <g fill="none" stroke="var(--body-outline)" strokeWidth={3} opacity={0.55}>
+          <path d="M270 302 Q330 330 390 302" />
+          <path d="M275 484 Q330 511 385 484" />
+        </g>
+      )}
+    </g>
+  );
+}
 
-      <MusclePath k="abs" levels={levels} state={state} d="M87 136 Q100 132 113 136 L111 158 Q100 162 89 158 Z" />
-      <MusclePath k="abs" levels={levels} state={state} d="M88 161 Q100 157 112 161 L111 182 Q100 186 89 182 Z" />
-      <MusclePath k="abs" levels={levels} state={state} d="M89 185 Q100 181 111 185 L110 207 Q100 211 90 207 Z" />
-      <MusclePath k="obliques" levels={levels} state={state} d="M66 139 Q78 147 84 166 L84 207 Q72 204 63 189 Q60 162 66 139 Z" />
-      <MusclePath k="obliques" levels={levels} state={state} d="M134 139 Q122 147 116 166 L116 207 Q128 204 137 189 Q140 162 134 139 Z" />
+function BackFigure({ gender, levels, state, gradientId }: { gender: BodyGender; levels?: MuscleLevels; state?: MuscleState; gradientId: string }) {
+  const female = gender === "female";
+  const shift = "translate(-540 0)";
+  const upperTransform = female ? `${shift} translate(870 0) scale(.94 1) translate(-870 0)` : shift;
+  const lowerTransform = female ? `${shift} translate(870 0) scale(1.035 1) translate(-870 0)` : shift;
 
-      <MusclePath k="quads" levels={levels} state={state} d="M61 261 Q66 303 69 347 Q72 365 83 374 Q93 354 91 268 Q77 258 61 261 Z" />
-      <MusclePath k="quads" levels={levels} state={state} d="M139 261 Q134 303 131 347 Q128 365 117 374 Q107 354 109 268 Q123 258 139 261 Z" />
-      <MusclePath k="calves" levels={levels} state={state} d="M70 370 Q72 399 78 416 L90 416 Q90 389 87 374 Q79 366 70 370 Z" />
-      <MusclePath k="calves" levels={levels} state={state} d="M130 370 Q128 399 122 416 L110 416 Q110 389 113 374 Q121 366 130 370 Z" />
+  return (
+    <g>
+      <g transform={upperTransform}>
+        <NeutralShape gradientId={gradientId} d="M834 72 Q870 47 906 72 Q920 86 916 124 Q911 165 870 176 Q829 165 824 124 Q820 86 834 72Z" />
+        <NeutralShape gradientId={gradientId} d="M842 151 L870 190 L898 151 L909 222 L831 222Z" />
+        <MuscleShape gradientId={gradientId} k="traps" levels={levels} state={state} paths={[
+          "M833 186 C846 201 858 213 870 227 C882 213 894 201 907 186 L952 218 C920 224 899 241 886 270 L870 315 L854 270 C841 241 820 224 788 218Z",
+          "M854 271 L870 315 L886 271 L883 389 C879 418 875 446 870 472 C865 446 861 418 857 389Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="rear_delts" levels={levels} state={state} paths={[
+          "M790 219 C758 213 733 228 726 254 C724 278 732 296 746 311 C755 282 770 258 798 242 C799 232 796 224 790 219Z",
+          "M950 219 C982 213 1007 228 1014 254 C1016 278 1008 296 994 311 C985 282 970 258 942 242 C941 232 944 224 950 219Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="lats" levels={levels} state={state} paths={[
+          "M793 244 C819 247 841 264 853 290 L861 464 C848 482 835 495 821 504 C794 465 776 408 766 337 C765 299 774 266 793 244Z",
+          "M947 244 C921 247 899 264 887 290 L879 464 C892 482 905 495 919 504 C946 465 964 408 974 337 C975 299 966 266 947 244Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="lower_back" levels={levels} state={state} paths={[
+          "M858 291 L870 319 L882 291 L881 473 C879 492 875 509 870 523 C865 509 861 492 859 473Z",
+          "M846 402 C853 424 857 449 858 477 L870 523 L855 505 C847 475 843 440 846 402Z",
+          "M894 402 C887 424 883 449 882 477 L870 523 L885 505 C893 475 897 440 894 402Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="triceps" levels={levels} state={state} paths={[
+          "M742 301 C724 327 718 367 728 405 C734 425 746 430 758 412 C767 382 771 347 771 320 C762 310 753 304 742 301Z",
+          "M998 301 C1016 327 1022 367 1012 405 C1006 425 994 430 982 412 C973 382 969 347 969 320 C978 310 987 304 998 301Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="forearms" levels={levels} state={state} paths={[
+          "M729 405 L693 514 Q691 541 714 550 L757 419 Q744 401 729 405Z",
+          "M1011 405 L1047 514 Q1049 541 1026 550 L983 419 Q996 401 1011 405Z",
+        ]} />
+        <NeutralShape gradientId={gradientId} d="M692 511 Q663 520 650 544 Q658 554 674 543 L665 574 Q673 578 682 553 L678 584 Q687 589 694 557 L694 587 Q704 588 707 554 L714 575 Q724 572 714 536Z M1048 511 Q1077 520 1090 544 Q1082 554 1066 543 L1075 574 Q1067 578 1058 553 L1062 584 Q1053 589 1046 557 L1046 587 Q1036 588 1033 554 L1026 575 Q1016 572 1026 536Z" />
+      </g>
+
+      <g transform={lowerTransform}>
+        <MuscleShape gradientId={gradientId} k="glutes" levels={levels} state={state} paths={[
+          "M822 492 C841 480 857 486 868 510 C870 539 866 571 860 596 C838 611 816 603 800 578 C793 546 799 514 822 492Z",
+          "M918 492 C899 480 883 486 872 510 C870 539 874 571 880 596 C902 611 924 603 940 578 C947 546 941 514 918 492Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="hamstrings" levels={levels} state={state} paths={[
+          "M800 578 C815 602 834 610 858 603 C858 637 855 678 851 716 C840 742 829 744 817 722 C802 680 793 626 800 578Z",
+          "M940 578 C925 602 906 610 882 603 C882 637 885 678 889 716 C900 742 911 744 923 722 C938 680 947 626 940 578Z",
+        ]} />
+        <MuscleShape gradientId={gradientId} k="calves" levels={levels} state={state} paths={[
+          "M810 717 Q833 735 853 722 L847 829 Q829 857 812 824Z",
+          "M930 717 Q907 735 887 722 L893 829 Q911 857 928 824Z",
+        ]} />
+      </g>
+
+      <g transform={shift} fill="none" stroke="var(--body-guide)" strokeWidth={2.5} strokeLinecap="round" opacity={0.42}>
+        <path d="M828 606 Q813 666 842 725 M912 606 Q927 666 898 725" />
+      </g>
+      {female && (
+        <g fill="none" stroke="var(--body-outline)" strokeWidth={3} opacity={0.55}>
+          <path d="M274 494 Q330 521 386 494" />
+        </g>
+      )}
+    </g>
+  );
+}
+
+export function BodyFront({ levels, state, gender = "male" }: { levels?: MuscleLevels; state?: MuscleState; gender?: BodyGender }) {
+  const gradientId = `body-front-${useId().replace(/:/g, "")}`;
+  return (
+    <SvgShell label={`Corpo ${gender === "female" ? "feminino" : "masculino"}, vista frontal`} gradientId={gradientId}>
+      <FrontFigure gender={gender} levels={levels} state={state} gradientId={gradientId} />
     </SvgShell>
   );
 }
 
-export function BodyBack({
-  levels,
-  state,
-  gender = "male",
-}: {
-  levels?: MuscleLevels;
-  state?: MuscleState;
-  gender?: BodyGender;
-}) {
-  const female = gender === "female";
-  const gradientId = `body-shell-${useId().replace(/:/g, "")}`;
+export function BodyBack({ levels, state, gender = "male" }: { levels?: MuscleLevels; state?: MuscleState; gender?: BodyGender }) {
+  const gradientId = `body-back-${useId().replace(/:/g, "")}`;
   return (
-    <SvgShell label={`Corpo ${female ? "feminino" : "masculino"}, vista posterior`} gradientId={gradientId}>
-      <BodyBase gender={gender} view="back" gradientId={gradientId} />
-
-      <MusclePath k="traps" levels={levels} state={state} d="M88 66 Q100 61 112 66 L123 89 Q111 96 100 103 Q89 96 77 89 Z" />
-      <MusclePath k="traps" levels={levels} state={state} d="M76 91 Q100 99 124 91 L119 111 Q100 117 81 111 Z" />
-      <MusclePath k="traps" levels={levels} state={state} d="M82 113 Q100 119 118 113 L108 157 L100 170 L92 157 Z" />
-
-      <MusclePath k="rear_delts" levels={levels} state={state} d="M58 80 Q48 89 50 109 Q57 118 69 106 Q72 91 65 82 Z" />
-      <MusclePath k="rear_delts" levels={levels} state={state} d="M142 80 Q152 89 150 109 Q143 118 131 106 Q128 91 135 82 Z" />
-
-      <MusclePath k="lats" levels={levels} state={state} d="M65 101 Q82 112 93 128 L91 181 Q73 184 60 166 Q57 132 65 101 Z" />
-      <MusclePath k="lats" levels={levels} state={state} d="M135 101 Q118 112 107 128 L109 181 Q127 184 140 166 Q143 132 135 101 Z" />
-      <MusclePath k="lower_back" levels={levels} state={state} d="M86 174 Q100 181 114 174 L116 211 Q100 218 84 211 Z" />
-
-      <MusclePath k="triceps" levels={levels} state={state} d="M42 112 Q34 138 38 171 Q43 179 49 166 Q51 137 47 116 Z" />
-      <MusclePath k="triceps" levels={levels} state={state} d="M158 112 Q166 138 162 171 Q157 179 151 166 Q149 137 153 116 Z" />
-      <MusclePath k="forearms" levels={levels} state={state} d="M36 188 Q31 222 37 262 L48 262 Q47 225 46 190 Z" />
-      <MusclePath k="forearms" levels={levels} state={state} d="M164 188 Q169 222 163 262 L152 262 Q153 225 154 190 Z" />
-
-      <MusclePath k="glutes" levels={levels} state={state} d={female ? "M57 217 Q76 211 96 223 L94 261 Q74 272 57 252 Q52 235 57 217 Z" : "M59 216 Q77 212 96 223 L94 259 Q75 267 59 250 Q55 233 59 216 Z"} />
-      <MusclePath k="glutes" levels={levels} state={state} d={female ? "M143 217 Q124 211 104 223 L106 261 Q126 272 143 252 Q148 235 143 217 Z" : "M141 216 Q123 212 104 223 L106 259 Q125 267 141 250 Q145 233 141 216 Z"} />
-
-      <MusclePath k="hamstrings" levels={levels} state={state} d="M64 266 Q69 308 72 356 Q77 367 88 360 Q92 318 90 271 Q77 262 64 266 Z" />
-      <MusclePath k="hamstrings" levels={levels} state={state} d="M136 266 Q131 308 128 356 Q123 367 112 360 Q108 318 110 271 Q123 262 136 266 Z" />
-      <MusclePath k="calves" levels={levels} state={state} d="M70 363 Q70 396 78 419 L90 419 Q91 389 87 368 Q78 359 70 363 Z" />
-      <MusclePath k="calves" levels={levels} state={state} d="M130 363 Q130 396 122 419 L110 419 Q109 389 113 368 Q122 359 130 363 Z" />
+    <SvgShell label={`Corpo ${gender === "female" ? "feminino" : "masculino"}, vista posterior`} gradientId={gradientId}>
+      <BackFigure gender={gender} levels={levels} state={state} gradientId={gradientId} />
     </SvgShell>
   );
 }
 
-export function MuscleBody({
-  view,
-  gender = "male",
-  state,
-  levels,
-}: {
-  view: "front" | "back";
-  gender?: BodyGender;
-  state?: MuscleState;
-  levels?: MuscleLevels;
-}) {
+export function MuscleBody({ view, gender = "male", state, levels }: { view: "front" | "back"; gender?: BodyGender; state?: MuscleState; levels?: MuscleLevels }) {
   return view === "front" ? (
     <BodyFront gender={gender} state={state} levels={levels} />
   ) : (

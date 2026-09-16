@@ -16,7 +16,7 @@ function Run(){
  const {user}=useAuth(); const {workoutId}=Route.useParams();
  const [historyRows,setHistoryRows]=useState<{exercise_id:string|null;carga_kg:number|null;repeticoes:number|null}[]>([]);
  const [choices,setChoices]=useState<{id:string;nome:string;musculo_principal:string;musculos_secundarios:string[];musculos_terciarios?:string[]}[]>([]);
- useEffect(()=>{if(user)supabase.from('exercises').select('id,nome,musculo_principal,musculos_secundarios,musculos_terciarios').eq('user_id',user.id).order('nome').then(({data})=>setChoices(data||[]))},[user?.id]);
+ useEffect(()=>{if(user)supabase.from('exercises').select('id,nome,musculo_principal,musculos_secundarios,musculos_terciarios').order('nome').then(({data})=>setChoices(data||[]))},[user?.id]);
  const [sound,setSound]=useState(false);
  const [bodyGender,setBodyGender]=useState<BodyGender>('male');
  useEffect(()=>{if(!user)return;supabase.from('profiles').select('sex').eq('id',user.id).maybeSingle().then(({data})=>setBodyGender(data?.sex==='feminino'?'female':'male')).catch(()=>{});},[user?.id]);

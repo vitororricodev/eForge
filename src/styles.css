@@ -157,17 +157,27 @@ main { padding-top: max(2rem, env(safe-area-inset-top)) !important; }
  --muted-foreground:#aaa6b6;
  --glow-neon:0 4px 22px #8e4bd322;
  --glow-neon-soft:0 2px 14px #0003;
- --muscle-primary:#d29cff;
- --muscle-secondary:#9b6bd9;
- --muscle-tertiary:#674d86;
- --muscle-idle:#34313d;
- --muscle-glow:#c98dff;
- --body-base-light:#4a4654;
- --body-base:#302d38;
- --body-base-dark:#1f1d25;
- --body-outline:#625c6d;
- --body-guide:#777080;
- --body-muscle-stroke:#17151d;
+ --muscle-primary:#d7a4ff;
+ --muscle-primary-light:#f0d9ff;
+ --muscle-primary-dark:#8b42cf;
+ --muscle-secondary:#a675df;
+ --muscle-secondary-light:#d8bbf4;
+ --muscle-secondary-dark:#65448c;
+ --muscle-tertiary:#746086;
+ --muscle-tertiary-light:#b8a9c5;
+ --muscle-tertiary-dark:#4b3e57;
+ --muscle-idle:#555963;
+ --muscle-idle-light:#8f949e;
+ --muscle-idle-dark:#2a2d33;
+ --muscle-glow:#d39aff;
+ --body-base-highlight:#b4bac4;
+ --body-base-light:#777d87;
+ --body-base:#474b53;
+ --body-base-dark:#24272d;
+ --body-outline:#a0a6b0;
+ --body-guide:#a5abb4;
+ --body-muscle-stroke:#24272e;
+ --body-active-stroke:#d8b4f044;
 }
 body { background:radial-gradient(ellipse at 90% 0%,#9a50dd0c,transparent 50%),#09090d; }
 .eforge-brand { display:inline-flex; align-items:center; gap:10px; white-space:nowrap; color:#faf9ff; }
@@ -228,11 +238,13 @@ select { background:#181820; color:#f8f6ff; border-radius:10px; border:1px solid
 /* Muscle map — anatomy, role hierarchy and live workout feedback. */
 .eforge-map-panel {
   background:
-    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--muscle-primary) 11%, transparent), transparent 44%),
-    linear-gradient(180deg, #15141d, #0e0e14);
+    radial-gradient(circle at 50% 22%, #ffffff0a, transparent 34%),
+    radial-gradient(circle at 50% 44%, color-mix(in srgb, var(--muscle-primary) 8%, transparent), transparent 52%),
+    linear-gradient(180deg, #15151b, #0d0d12);
 }
 .eforge-map-panel svg,
-.eforge-live-muscles svg { filter:drop-shadow(0 12px 22px #000a); }
+.eforge-live-muscles svg { filter:drop-shadow(0 14px 24px #000b); }
+.eforge-map-panel svg { opacity:.96; }
 .eforge-control-card {
   display:flex;
   flex-direction:column;
@@ -322,4 +334,27 @@ select { background:#181820; color:#f8f6ff; border-radius:10px; border:1px solid
   [role="dialog"] .grid-cols-2 { grid-template-columns:1fr; }
   [role="dialog"] .col-span-2 { grid-column:span 1 / span 1; }
   .eforge-role-legend { font-size:11px; }
+}
+
+.eforge-week-window {
+  display:flex;
+  min-height:44px;
+  flex-direction:column;
+  justify-content:center;
+  gap:2px;
+  border:1px solid #3a3544;
+  border-radius:10px;
+  background:#111117;
+  padding:8px 10px;
+}
+.eforge-week-window strong {
+  color:#f3eff8;
+  font-size:15px;
+  line-height:1.1;
+  letter-spacing:.02em;
+}
+.eforge-week-window small {
+  color:var(--muted-foreground);
+  font-size:11px;
+  line-height:1.25;
 }

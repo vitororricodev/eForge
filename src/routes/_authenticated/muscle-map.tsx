@@ -13,6 +13,8 @@ import {
 import {
   buildMuscleState,
   draftMuscleEntries,
+  formatTrainingWeekLabel,
+  getTrainingWeekWindow,
   muscleRoleLabel,
   type MuscleActivityEntry,
 } from "@/lib/muscle-activity";
@@ -76,8 +78,9 @@ function rowsToEntries(rows: SetLogRow[]): MuscleActivityEntry[] {
 
 function MuscleMap() {
   const { user } = useAuth();
-  const [days, setDays] = useState(7);
   const [view, setView] = useState<"front" | "back">("front");
+  const weekWindow = getTrainingWeekWindow();
+  const weekLabel = formatTrainingWeekLabel(weekWindow);
   const [genderOverride, setGenderOverride] = useState<BodyGender | null>(null);
 
   const { data: profile } = useQuery({
@@ -95,11 +98,11 @@ function MuscleMap() {
   });
 
   const { data: activity = [], isLoading, error } = useQuery({
-    queryKey: ["muscle-activity", user?.id, days],
+    queryKey: ["muscle-activity", user?.id, weekWindow.key],
     enabled: !!user,
+    refetchInterval: 60_000,
     queryFn: async () => {
-      const since = new Date();
-      since.setDate(since.getDate() - days);
+      const currentWeek = getTrainingWeekWindow();
 
       const withTertiary = await supabase
         .from("set_logs")
@@ -109,7 +112,8 @@ function MuscleMap() {
         .eq("user_id", user!.id)
         .eq("concluida", true)
         .eq("workout_sessions.status", "concluida")
-        .gte("workout_sessions.iniciado_em", since.toISOString());
+        .gte("workout_sessions.iniciado_em", currentWeek.start.toISOString())
+        .lt("workout_sessions.iniciado_em", currentWeek.end.toISOString());
 
       let serverRows: SetLogRow[] = [];
       if (!withTertiary.error) {
@@ -124,7 +128,8 @@ function MuscleMap() {
           .eq("user_id", user!.id)
           .eq("concluida", true)
           .eq("workout_sessions.status", "concluida")
-          .gte("workout_sessions.iniciado_em", since.toISOString());
+          .gte("workout_sessions.iniciado_em", currentWeek.start.toISOString())
+        .lt("workout_sessions.iniciado_em", currentWeek.end.toISOString());
         if (fallback.error) throw fallback.error;
         serverRows = (fallback.data ?? []) as SetLogRow[];
       } else {
@@ -133,7 +138,9 @@ function MuscleMap() {
 
       const localDraft = readDraft(user!.id);
       const includeLocal =
-        !!localDraft?.finished && localDraft.finished >= since.getTime();
+        !!localDraft?.finished &&
+        localDraft.finished >= currentWeek.start.getTime() &&
+        localDraft.finished < currentWeek.end.getTime();
 
       const localEntries = includeLocal ? draftMuscleEntries(localDraft) : [];
       const rowsWithoutLocalSession = includeLocal
@@ -172,19 +179,18 @@ function MuscleMap() {
       </header>
 
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        Cada região muda de cor conforme sua participação nos exercícios concluídos: principal,
-        secundária ou terciária.
+        O avatar permanece cinza e translúcido em repouso. As regiões recebem cor somente quando
+        são ativadas por séries concluídas no plano da semana atual.
       </p>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <label className="eforge-control-card">
-          <span><CalendarDays className="size-4" /> Período</span>
-          <select aria-label="Período do mapa muscular" value={days} onChange={(e) => setDays(Number(e.target.value))}>
-            <option value={1}>Últimas 24 horas</option>
-            <option value={7}>Últimos 7 dias</option>
-            <option value={30}>Últimos 30 dias</option>
-          </select>
-        </label>
+        <div className="eforge-control-card" aria-label={`Semana de treino: ${weekLabel}`}>
+          <span><CalendarDays className="size-4" /> Semana de treino</span>
+          <div className="eforge-week-window">
+            <strong>{weekLabel}</strong>
+            <small>Reinicia automaticamente toda segunda-feira</small>
+          </div>
+        </div>
         <div className="eforge-control-card">
           <span><UserRound className="size-4" /> Avatar</span>
           <div className="eforge-mini-segmented" role="group" aria-label="Tipo de avatar">
@@ -238,7 +244,8 @@ function MuscleMap() {
           ))}
         </div>
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          O brilho aumenta com a quantidade de séries. Aquecimento não entra no cálculo.
+          O brilho aumenta com a quantidade de séries. Aquecimento não entra no cálculo e o mapa
+          volta ao cinza no início de cada nova semana de treino.
         </p>
       </section>
 

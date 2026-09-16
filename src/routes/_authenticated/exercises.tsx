@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Plus, Search, Pencil, Trash2, Upload, Library as LibraryIcon, X, Loader2, ImageOff,
+  Plus, Search, Pencil, Trash2, Upload, Library as LibraryIcon, X, Loader2, ImageOff, Lock, Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +30,8 @@ type ControlType = Database["public"]["Enums"] extends { exercise_control_type: 
 type Category = Database["public"]["Enums"] extends { exercise_category: infer T }
   ? T : "musculacao" | "cardio" | "funcional" | "alongamento";
 
+type ExerciseVisibility = "private" | "public";
+
 type Exercise = {
   id: string;
   user_id: string;
@@ -39,6 +41,7 @@ type Exercise = {
   musculo_principal: string;
   musculos_secundarios: string[];
   musculos_terciarios: string[];
+  visibility: ExerciseVisibility;
   categoria: Category;
   observacoes: string | null;
   created_at: string;
@@ -188,6 +191,7 @@ function ExercisesPage() {
               <ExerciseCard
                 key={ex.id}
                 ex={ex}
+                currentUserId={user?.id ?? null}
                 onEdit={() => { setEditing(ex); setFormOpen(true); }}
                 onDelete={() => setToDelete(ex)}
               />
@@ -242,10 +246,11 @@ function FilterSelect({
 }
 
 function ExerciseCard({
-  ex, onEdit, onDelete,
-}: { ex: Exercise; onEdit: () => void; onDelete: () => void }) {
+  ex, currentUserId, onEdit, onDelete,
+}: { ex: Exercise; currentUserId: string | null; onEdit: () => void; onDelete: () => void }) {
   const categoryLabel = CATEGORY_OPTIONS.find((c) => c.value === ex.categoria)?.label ?? ex.categoria;
   const controlLabel = CONTROL_OPTIONS.find((c) => c.value === ex.tipo_controle)?.label ?? ex.tipo_controle;
+  const canManage = !!currentUserId && ex.user_id === currentUserId;
   return (
     <li className="hairline rounded-3xl surface p-3 flex gap-3 animate-fade-up">
       <div className="size-20 shrink-0 overflow-hidden rounded-2xl surface-2 grid place-items-center">
@@ -265,9 +270,12 @@ function ExerciseCard({
           <Badge variant="secondary" className="bg-surface-2 text-foreground border-0 text-[10px] font-semibold">
             {controlLabel}
           </Badge>
+          <Badge variant="secondary" className={`border-0 text-[10px] font-semibold ${ex.visibility === "public" ? "bg-neon/15 text-neon" : "bg-surface-2 text-muted-foreground"}`}>
+            {ex.visibility === "public" ? "Público" : "Só eu"}
+          </Badge>
         </div>
       </div>
-      <div className="flex flex-col gap-1.5">
+      {canManage && <div className="flex flex-col gap-1.5">
         <button
           onClick={onEdit}
           className="grid size-8 place-items-center rounded-full surface-2 hover:bg-neon/15 hover:text-neon transition-colors"
@@ -282,7 +290,7 @@ function ExerciseCard({
         >
           <Trash2 className="size-4" />
         </button>
-      </div>
+      </div>}
     </li>
   );
 }
@@ -326,6 +334,7 @@ function ExerciseFormDialog({
   const [musculoPrincipal, setMusculoPrincipal] = useState<string>(MUSCLE_OPTIONS[0]);
   const [musculosSecundarios, setMusculosSecundarios] = useState<string[]>([]);
   const [musculosTerciarios, setMusculosTerciarios] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState<ExerciseVisibility>("private");
   const [categoria, setCategoria] = useState<Category>("musculacao");
   const [observacoes, setObservacoes] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -340,6 +349,7 @@ function ExerciseFormDialog({
         setMusculoPrincipal(editing.musculo_principal);
         setMusculosSecundarios(editing.musculos_secundarios ?? []);
         setMusculosTerciarios(editing.musculos_terciarios ?? []);
+        setVisibility(editing.visibility ?? "private");
         setCategoria(editing.categoria);
         setObservacoes(editing.observacoes ?? "");
         setPreviewUrl(editing.gif_url);
@@ -349,6 +359,7 @@ function ExerciseFormDialog({
         setMusculoPrincipal(MUSCLE_OPTIONS[0]);
         setMusculosSecundarios([]);
         setMusculosTerciarios([]);
+        setVisibility("private");
         setCategoria("musculacao");
         setObservacoes("");
         setPreviewUrl(null);
@@ -421,6 +432,7 @@ function ExerciseFormDialog({
         musculo_principal: musculoPrincipal,
         musculos_secundarios: musculosSecundarios,
         musculos_terciarios: musculosTerciarios,
+        visibility,
         categoria,
         observacoes: observacoes.trim() || null,
       };
@@ -519,6 +531,41 @@ function ExerciseFormDialog({
               required
             />
           </div>
+
+          <fieldset>
+            <legend className="text-sm font-semibold">Visibilidade</legend>
+            <p className="mt-1 text-xs text-muted-foreground">Defina quem pode encontrar e usar este exercício.</p>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Visibilidade do exercício">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={visibility === "private"}
+                onClick={() => setVisibility("private")}
+                className={`min-h-[72px] rounded-2xl border p-3 text-left transition-colors ${
+                  visibility === "private"
+                    ? "border-neon/60 bg-neon/10 text-foreground"
+                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="flex items-center gap-2 font-bold"><Lock className="size-4" /> Só eu vejo</span>
+                <span className="mt-1 block text-xs leading-relaxed opacity-80">Privado — somente você pode visualizar e usar.</span>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={visibility === "public"}
+                onClick={() => setVisibility("public")}
+                className={`min-h-[72px] rounded-2xl border p-3 text-left transition-colors ${
+                  visibility === "public"
+                    ? "border-neon/60 bg-neon/10 text-foreground"
+                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="flex items-center gap-2 font-bold"><Users className="size-4" /> Público</span>
+                <span className="mt-1 block text-xs leading-relaxed opacity-80">Todos os usuários podem encontrar e usar em seus treinos.</span>
+              </button>
+            </div>
+          </fieldset>
 
           <div className="grid grid-cols-2 gap-3">
             <div>

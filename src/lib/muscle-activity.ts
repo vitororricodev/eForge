@@ -7,6 +7,38 @@ export type MuscleActivityEntry = {
   weight?: number;
 };
 
+export type TrainingWeekWindow = {
+  start: Date;
+  end: Date;
+  key: string;
+};
+
+export function getTrainingWeekWindow(now = new Date()): TrainingWeekWindow {
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const day = start.getDay();
+  const daysSinceMonday = (day + 6) % 7;
+  start.setDate(start.getDate() - daysSinceMonday);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+
+  const key = [
+    start.getFullYear(),
+    String(start.getMonth() + 1).padStart(2, "0"),
+    String(start.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  return { start, end, key };
+}
+
+export function formatTrainingWeekLabel(window: TrainingWeekWindow) {
+  const formatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" });
+  const inclusiveEnd = new Date(window.end);
+  inclusiveEnd.setDate(inclusiveEnd.getDate() - 1);
+  return `${formatter.format(window.start)} – ${formatter.format(inclusiveEnd)}`;
+}
+
 const ROLE_WEIGHT: Record<MuscleRole, number> = {
   primary: 1,
   secondary: 0.55,
