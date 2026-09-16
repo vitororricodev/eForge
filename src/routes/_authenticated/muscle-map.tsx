@@ -1,27 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, Info, UserRound } from "lucide-react";
+import { ArrowLeft, CalendarDays, Info, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  MuscleBody,
-  type BodyGender,
-  type MuscleKey,
-  type MuscleRole,
-} from "@/components/MuscleBody";
-import {
-  buildMuscleState,
-  draftMuscleEntries,
-  formatTrainingWeekLabel,
-  getTrainingWeekWindow,
-  muscleRoleLabel,
-  type MuscleActivityEntry,
-} from "@/lib/muscle-activity";
-import { readDraft } from "@/lib/workout-storage";
+import { BodyFront, BodyBack, type MuscleKey, type MuscleLevels } from "@/components/MuscleBody";
 
 export const Route = createFileRoute("/_authenticated/muscle-map")({
-  head: () => ({ meta: [{ title: "eForge — Mapa Muscular" }] }),
+  head: () => ({ meta: [{ title: "eForge — Músculos Treinados" }] }),
   component: MuscleMap,
 });
 
@@ -35,234 +21,210 @@ const MUSCLE_LABEL: Record<MuscleKey, string> = {
   quads: "Quadríceps",
   calves: "Panturrilhas",
   traps: "Trapézio",
-  lats: "Dorsais",
+  lats: "Dorsal",
   lower_back: "Lombar",
   glutes: "Glúteos",
-  hamstrings: "Posteriores",
+  hamstrings: "Posterior",
   triceps: "Tríceps",
-  rear_delts: "Deltoide posterior",
+  rear_delts: "Deltóide post.",
 };
 
-const ROLE_COLOR: Record<MuscleRole, string> = {
-  primary: "var(--muscle-primary)",
-  secondary: "var(--muscle-secondary)",
-  tertiary: "var(--muscle-tertiary)",
-};
+function startOfCurrentWeek() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // monday-first
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() + diff);
+  return start;
+}
 
-type SetLogRow = {
-  session_id: string;
-  musculo_principal: string | null;
-  musculos_secundarios: string[];
-  musculos_terciarios?: string[];
-  kind: string;
-};
+function formatWeekRange(start: Date) {
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return `${start.toLocaleDateString("pt-BR")} — ${end.toLocaleDateString("pt-BR")}`;
+}
 
-function rowsToEntries(rows: SetLogRow[]): MuscleActivityEntry[] {
-  return rows.flatMap((row) => {
-    if (row.kind === "warmup") return [];
-    return [
-      ...(row.musculo_principal
-        ? [{ muscle: row.musculo_principal, role: "primary" as const }]
-        : []),
-      ...(row.musculos_secundarios ?? []).map((muscle) => ({
-        muscle,
-        role: "secondary" as const,
-      })),
-      ...(row.musculos_terciarios ?? []).map((muscle) => ({
-        muscle,
-        role: "tertiary" as const,
-      })),
-    ];
-  });
+function aggregateLevels(rows: { muscle: string; intensity: number }[]): MuscleLevels {
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    if (!row.muscle) continue;
+    totals.set(row.muscle, (totals.get(row.muscle) ?? 0) + row.intensity);
+  }
+
+  const levels: MuscleLevels = {};
+  for (const [muscle, total] of totals) {
+    let level = 0;
+    if (total >= 8) level = 4;
+    else if (total >= 5) level = 3;
+    else if (total >= 3) level = 2;
+    else if (total >= 1) level = 1;
+    (levels as Record<string, number>)[muscle] = level;
+  }
+  return levels;
 }
 
 function MuscleMap() {
   const { user } = useAuth();
-  const [view, setView] = useState<"front" | "back">("front");
-  const weekWindow = getTrainingWeekWindow();
-  const weekLabel = formatTrainingWeekLabel(weekWindow);
-  const [genderOverride, setGenderOverride] = useState<BodyGender | null>(null);
+  const weekStart = useMemo(() => startOfCurrentWeek(), []);
+  const weekLabel = useMemo(() => formatWeekRange(weekStart), [weekStart]);
 
-  const { data: profile } = useQuery({
-    queryKey: ["muscle-map-profile", user?.id],
+  const { data } = useQuery({
+    queryKey: ["muscle-activity", user?.id, weekStart.toISOString()],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("sex")
-        .eq("id", user!.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: activity = [], isLoading, error } = useQuery({
-    queryKey: ["muscle-activity", user?.id, weekWindow.key],
-    enabled: !!user,
-    refetchInterval: 60_000,
-    queryFn: async () => {
-      const currentWeek = getTrainingWeekWindow();
-
-      const withTertiary = await supabase
         .from("set_logs")
-        .select(
-          "session_id,musculo_principal,musculos_secundarios,musculos_terciarios,kind,workout_sessions!inner(status,iniciado_em)",
-        )
+        .select("musculo_principal,musculos_secundarios,kind,workout_sessions!inner(status,iniciado_em)")
         .eq("user_id", user!.id)
         .eq("concluida", true)
         .eq("workout_sessions.status", "concluida")
-        .gte("workout_sessions.iniciado_em", currentWeek.start.toISOString())
-        .lt("workout_sessions.iniciado_em", currentWeek.end.toISOString());
+        .gte("workout_sessions.iniciado_em", weekStart.toISOString());
 
-      let serverRows: SetLogRow[] = [];
-      if (!withTertiary.error) {
-        serverRows = (withTertiary.data ?? []) as SetLogRow[];
-      } else if (withTertiary.error.message.toLowerCase().includes("musculos_terciarios")) {
-        // Compatibilidade durante rollout: a tela continua funcionando antes da migration nova.
-        const fallback = await supabase
-          .from("set_logs")
-          .select(
-            "session_id,musculo_principal,musculos_secundarios,kind,workout_sessions!inner(status,iniciado_em)",
-          )
-          .eq("user_id", user!.id)
-          .eq("concluida", true)
-          .eq("workout_sessions.status", "concluida")
-          .gte("workout_sessions.iniciado_em", currentWeek.start.toISOString())
-        .lt("workout_sessions.iniciado_em", currentWeek.end.toISOString());
-        if (fallback.error) throw fallback.error;
-        serverRows = (fallback.data ?? []) as SetLogRow[];
-      } else {
-        throw withTertiary.error;
-      }
+      if (error) throw error;
 
-      const localDraft = readDraft(user!.id);
-      const includeLocal =
-        !!localDraft?.finished &&
-        localDraft.finished >= currentWeek.start.getTime() &&
-        localDraft.finished < currentWeek.end.getTime();
-
-      const localEntries = includeLocal ? draftMuscleEntries(localDraft) : [];
-      const rowsWithoutLocalSession = includeLocal
-        ? serverRows.filter((row) => row.session_id !== localDraft.id)
-        : serverRows;
-
-      return [...rowsToEntries(rowsWithoutLocalSession), ...localEntries];
+      return (data ?? []).flatMap((row) => [
+        { muscle: row.musculo_principal || "", intensity: row.kind === "warmup" ? 0 : 1 },
+        ...row.musculos_secundarios.map((muscle: string) => ({
+          muscle,
+          intensity: row.kind === "warmup" ? 0 : 0.4,
+        })),
+      ]);
     },
   });
 
-  const state = useMemo(() => buildMuscleState(activity), [activity]);
-  const ranked = useMemo(
-    () =>
-      (Object.entries(state) as [MuscleKey, NonNullable<(typeof state)[MuscleKey]>][])
-        .filter(([, value]) => value.level > 0)
-        .sort((a, b) => b[1].score - a[1].score),
-    [state],
+  const levels = useMemo<MuscleLevels>(
+    () => ({
+      ...Object.fromEntries(Object.keys(MUSCLE_LABEL).map((key) => [key, 0])),
+      ...aggregateLevels(data || []),
+    }),
+    [data],
   );
-  const gender: BodyGender =
-    genderOverride ?? (profile?.sex === "feminino" ? "female" : "male");
+
+  const ranked = useMemo(() => {
+    return (Object.entries(levels) as [MuscleKey, number][]).sort((a, b) => b[1] - a[1]);
+  }, [levels]);
+
+  const top = ranked.filter(([, level]) => level > 0).slice(0, 4);
+  const activeCount = ranked.filter(([, level]) => level > 0).length;
 
   return (
-    <main className="mx-auto max-w-md px-5 pb-8 pt-8">
-      <header className="flex items-center gap-3">
-        <Link
-          to="/reports"
-          aria-label="Voltar para evolução"
-          className="grid size-11 shrink-0 place-items-center rounded-xl hairline surface"
-        >
+    <main className="mx-auto max-w-2xl px-4 pt-8 pb-6 sm:px-5 sm:pt-10">
+      <div className="flex items-start gap-3">
+        <Link to="/dashboard" className="grid size-10 shrink-0 place-items-center rounded-full hairline surface">
           <ArrowLeft className="size-5" />
         </Link>
-        <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-neon">Evolução muscular</p>
-          <h1 className="text-3xl">Mapa muscular</h1>
-        </div>
-      </header>
-
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        O avatar permanece cinza e translúcido em repouso. As regiões recebem cor somente quando
-        são ativadas por séries concluídas no plano da semana atual.
-      </p>
-
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <div className="eforge-control-card" aria-label={`Semana de treino: ${weekLabel}`}>
-          <span><CalendarDays className="size-4" /> Semana de treino</span>
-          <div className="eforge-week-window">
-            <strong>{weekLabel}</strong>
-            <small>Reinicia automaticamente toda segunda-feira</small>
-          </div>
-        </div>
-        <div className="eforge-control-card">
-          <span><UserRound className="size-4" /> Avatar</span>
-          <div className="eforge-mini-segmented" role="group" aria-label="Tipo de avatar">
-            <button type="button" aria-pressed={gender === "male"} onClick={() => setGenderOverride("male")}>Masculino</button>
-            <button type="button" aria-pressed={gender === "female"} onClick={() => setGenderOverride("female")}>Feminino</button>
-          </div>
-        </div>
-      </div>
-
-      <div className="eforge-view-toggle mt-4" role="group" aria-label="Vista do corpo">
-        <button type="button" aria-pressed={view === "front"} onClick={() => setView("front")}>Frente</button>
-        <button type="button" aria-pressed={view === "back"} onClick={() => setView("back")}>Costas</button>
-      </div>
-
-      <section className="eforge-map-panel relative mt-4 overflow-hidden rounded-3xl hairline p-4 sm:p-6">
-        <div className="pointer-events-none absolute inset-x-8 top-6 h-40 rounded-full bg-neon/5 blur-3xl" />
-        <div className="relative flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Atividade</p>
-            <p className="text-sm font-bold">{ranked.length ? `${ranked.length} regiões ativadas` : "Sem registros no período"}</p>
-          </div>
-          {isLoading && <span className="text-xs text-muted-foreground">Atualizando…</span>}
-        </div>
-
-        <div className="relative mx-auto mt-2 h-[430px] w-full max-w-[285px]">
-          <MuscleBody view={view} gender={gender} state={state} />
-        </div>
-
-        {!isLoading && ranked.length === 0 && (
-          <div className="relative -mt-2 rounded-2xl border border-dashed border-border bg-black/20 px-4 py-3 text-center text-sm text-muted-foreground">
-            Conclua séries em um treino para acender o mapa muscular.
-          </div>
-        )}
-        {error && (
-          <p role="alert" className="relative mt-3 text-center text-sm text-destructive">
-            Não foi possível sincronizar o histórico agora. O último treino salvo no aparelho ainda é considerado quando disponível.
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neon">Evolução</p>
+          <h1 className="text-3xl font-black leading-none sm:text-4xl">Músculos Treinados</h1>
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
+            O avatar reinicia automaticamente a cada semana. Fora de ativação, o corpo permanece em cinza translúcido.
           </p>
-        )}
-      </section>
-
-      <section className="mt-4 rounded-2xl hairline surface p-4" aria-label="Legenda do mapa muscular">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          <Info className="size-4" /> Participação no exercício
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {(Object.keys(ROLE_COLOR) as MuscleRole[]).map((role) => (
-            <div key={role} className="eforge-role-legend">
-              <i style={{ background: ROLE_COLOR[role] }} />
-              <span>{muscleRoleLabel(role)}</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          O brilho aumenta com a quantidade de séries. Aquecimento não entra no cálculo e o mapa
-          volta ao cinza no início de cada nova semana de treino.
-        </p>
-      </section>
+      </div>
 
-      {ranked.length > 0 && (
-        <section className="mt-4 rounded-2xl hairline surface p-4">
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Mais trabalhados</div>
-          <div className="mt-3 space-y-2">
-            {ranked.slice(0, 5).map(([muscle, value]) => (
-              <div key={muscle} className="flex items-center gap-3 rounded-xl surface-2 px-3 py-2.5">
-                <i className="size-2.5 shrink-0 rounded-full" style={{ background: ROLE_COLOR[value.role] }} />
-                <span className="min-w-0 flex-1 truncate text-sm font-bold">{MUSCLE_LABEL[muscle]}</span>
-                <span className="text-xs text-muted-foreground">{muscleRoleLabel(value.role)}</span>
-              </div>
-            ))}
+      <div className="mt-5 grid gap-3 sm:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-3xl hairline surface px-4 py-3">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <CalendarDays className="size-4 text-neon" />
+            Semana atual
           </div>
-        </section>
-      )}
+          <div className="mt-1 text-sm font-semibold">{weekLabel}</div>
+          <p className="mt-2 text-xs text-muted-foreground">Ao virar a semana, o mapa volta ao estado neutro sem apagar o histórico dos treinos.</p>
+        </div>
+
+        <div className="rounded-3xl hairline surface px-4 py-3">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <Sparkles className="size-4 text-neon" />
+            Atividade
+          </div>
+          <div className="mt-1 text-sm font-semibold">{activeCount} regiões ativadas</div>
+          <p className="mt-2 text-xs text-muted-foreground">Roxo aparece apenas nos músculos trabalhados nesta semana.</p>
+        </div>
+      </div>
+
+      {!data?.length && <p className="mt-4 text-sm text-muted-foreground">Nenhuma série sincronizada nesta semana.</p>}
+
+      <section className="eforge-map-panel relative mt-6 overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(17,16,29,0.96),rgba(8,8,15,0.98))] p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)] sm:p-6">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(165,118,255,0.12),transparent_42%),radial-gradient(circle_at_50%_78%,rgba(98,76,176,0.12),transparent_45%)]" />
+
+        <div className="relative z-10 grid gap-4 sm:grid-cols-2 sm:gap-6">
+          <FigureCard title="Vista frontal">
+            <BodyFront levels={levels} />
+          </FigureCard>
+
+          <FigureCard title="Vista posterior">
+            <BodyBack levels={levels} />
+          </FigureCard>
+        </div>
+
+        <div className="relative z-10 mt-4 grid gap-3 rounded-2xl border border-white/8 bg-black/18 px-4 py-3 sm:grid-cols-3">
+          <LegendSwatch label="Baixa" description="Ativação leve" color="rgba(153,104,222,0.48)" glow="rgba(153,104,222,0.26)" />
+          <LegendSwatch label="Média" description="Ativação consistente" color="rgba(185,128,255,0.74)" glow="rgba(185,128,255,0.30)" />
+          <LegendSwatch label="Alta" description="Maior foco" color="rgba(220,186,255,0.92)" glow="rgba(220,186,255,0.34)" />
+        </div>
+      </section>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-3xl hairline surface p-4">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            <Info className="size-4" /> legenda visual
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Cinza translúcido = sem ativação na semana. Quanto mais intenso o roxo, maior o acúmulo de trabalho naquele grupo muscular.
+          </p>
+        </div>
+
+        <div className="rounded-3xl hairline surface p-4">
+          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Mais trabalhados</div>
+          <ul className="mt-3 space-y-2">
+            {top.length ? (
+              top.map(([muscle, level]) => (
+                <li key={muscle} className="flex items-center justify-between text-sm">
+                  <span className="font-semibold">{MUSCLE_LABEL[muscle]}</span>
+                  <span className="font-bold text-neon">{["—", "leve", "média", "alta", "máxima"][level]}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-muted-foreground">Conclua treinos para começar a colorir o avatar.</li>
+            )}
+          </ul>
+        </div>
+      </div>
     </main>
+  );
+}
+
+function FigureCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,16,28,0.92),rgba(8,8,15,0.82))] p-3">
+      <div className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">{title}</div>
+      <div className="mx-auto h-[380px] max-w-[240px] sm:h-[420px] sm:max-w-[260px]">{children}</div>
+    </div>
+  );
+}
+
+function LegendSwatch({
+  label,
+  description,
+  color,
+  glow,
+}: {
+  label: string;
+  description: string;
+  color: string;
+  glow: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span
+        className="block h-5 w-5 rounded-full border border-white/20"
+        style={{ background: color, boxShadow: `0 0 16px ${glow}` }}
+      />
+      <div>
+        <div className="text-sm font-semibold">{label}</div>
+        <div className="text-xs text-muted-foreground">{description}</div>
+      </div>
+    </div>
   );
 }
