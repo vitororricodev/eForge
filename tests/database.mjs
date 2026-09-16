@@ -9,10 +9,10 @@ const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222
 await db.query('INSERT INTO auth.users(id,email) VALUES($1,$2),($3,$4)',[a,'a@test.invalid',b,'b@test.invalid']);
 await db.query(`INSERT INTO workouts(id,user_id,nome) VALUES($1,$2,'Treino A')`,[w,a]);
 await db.query(`INSERT INTO exercises(id,user_id,nome,tipo_controle,musculo_principal,categoria) VALUES($1,$2,'Supino','peso_kg','chest','musculacao')`,[e,a]);
-const payload={id:'55555555-5555-4555-8555-555555555555',workout_id:w,nome_treino:'Treino A',iniciado_em:new Date().toISOString(),finalizado_em:new Date().toISOString(),volume_total:100,sets:[{id:'66666666-6666-4666-8666-666666666666',exercise_id:e,nome_exercicio:'Supino',musculo_principal:'chest',musculos_secundarios:['triceps'],serie_numero:1,repeticoes:10,carga_kg:10,concluida:true,kind:'normal'}]};
+const payload={id:'55555555-5555-4555-8555-555555555555',workout_id:w,nome_treino:'Treino A',iniciado_em:new Date().toISOString(),finalizado_em:new Date().toISOString(),volume_total:100,sets:[{id:'66666666-6666-4666-8666-666666666666',exercise_id:e,nome_exercicio:'Supino',musculo_principal:'chest',musculos_secundarios:['triceps'],musculos_terciarios:['shoulders'],serie_numero:1,repeticoes:10,carga_kg:10,concluida:true,kind:'normal'}]};
 await db.exec(`SET ROLE authenticated; SET request.jwt.claim.sub='${a}'`);
 await db.query('SELECT save_workout_snapshot($1)',[payload]);await db.query('SELECT save_workout_snapshot($1)',[payload]);
-assert.equal((await db.query('SELECT * FROM workout_sessions')).rows.length,1);assert.equal((await db.query('SELECT * FROM set_logs')).rows.length,1);
+assert.equal((await db.query('SELECT * FROM workout_sessions')).rows.length,1);assert.equal((await db.query('SELECT * FROM set_logs')).rows.length,1);assert.deepEqual((await db.query('SELECT musculos_terciarios FROM set_logs')).rows[0].musculos_terciarios,['shoulders']);
 await db.exec(`SET request.jwt.claim.sub='${b}'`);assert.equal((await db.query('SELECT * FROM workout_sessions')).rows.length,0);await assert.rejects(db.query('SELECT save_workout_snapshot($1)',[payload]));
 await db.exec(`SET request.jwt.claim.sub='${a}'`);await assert.rejects(db.query('SELECT save_workout_snapshot($1)',[{...payload,sets:[{...payload.sets[0],exercise_id:'77777777-7777-4777-8777-777777777777'}]}]));assert.equal((await db.query('SELECT * FROM set_logs')).rows.length,1);
 console.log('PASS: two-user isolation, duplicate retries, rollback on invalid exercise.');await db.close();

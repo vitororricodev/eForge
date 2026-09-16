@@ -145,6 +145,7 @@ export type Database = {
           id: string
           musculo_principal: string
           musculos_secundarios: string[]
+          musculos_terciarios: string[]
           nome: string
           observacoes: string | null
           tipo_controle: Database["public"]["Enums"]["exercise_control_type"]
@@ -158,6 +159,7 @@ export type Database = {
           id?: string
           musculo_principal: string
           musculos_secundarios?: string[]
+          musculos_terciarios?: string[]
           nome: string
           observacoes?: string | null
           tipo_controle: Database["public"]["Enums"]["exercise_control_type"]
@@ -171,6 +173,7 @@ export type Database = {
           id?: string
           musculo_principal?: string
           musculos_secundarios?: string[]
+          musculos_terciarios?: string[]
           nome?: string
           observacoes?: string | null
           tipo_controle?: Database["public"]["Enums"]["exercise_control_type"]
@@ -296,6 +299,7 @@ export type Database = {
           id: string
           kind: string
           musculos_secundarios: string[]
+          musculos_terciarios: string[]
           musculo_principal: string | null
           nome_exercicio: string
           repeticoes: number | null
@@ -311,6 +315,7 @@ export type Database = {
           id?: string
           kind?: string
           musculos_secundarios?: string[]
+          musculos_terciarios?: string[]
           musculo_principal?: string | null
           nome_exercicio: string
           repeticoes?: number | null
@@ -326,6 +331,7 @@ export type Database = {
           id?: string
           kind?: string
           musculos_secundarios?: string[]
+          musculos_terciarios?: string[]
           musculo_principal?: string | null
           nome_exercicio?: string
           repeticoes?: number | null

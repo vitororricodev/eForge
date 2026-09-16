@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Teko:wght@600;700&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -41,8 +42,8 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
 
-  --font-display: "Forega Sport", "Arial Black", Impact, sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Teko", system-ui, sans-serif;
+  --font-sans: "Teko", system-ui, sans-serif;
 }
 
 :root {
@@ -95,6 +96,7 @@
   html, body { background: var(--color-background); color: var(--color-foreground); }
   body {
     font-family: var(--font-sans);
+    font-weight: 700;
     -webkit-font-smoothing: antialiased;
     background:
       radial-gradient(1200px 600px at 50% -10%, oklch(0.76 0.19 300 / 0.08), transparent 60%),
@@ -134,9 +136,9 @@
 
 @font-face { font-family: "Forega Sport"; src: url("/fonts/forega-sport-demo.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0000,U+000D,U+0020,U+002C,U+002E,U+0041,U+0042,U+0043,U+0044,U+0045,U+0046,U+0047,U+0048,U+0049,U+004A,U+004B,U+004C,U+004D,U+004E,U+004F,U+0050,U+0051,U+0052,U+0053,U+0054,U+0055,U+0056,U+0057,U+0058,U+0059,U+005A,U+0061,U+0062,U+0063,U+0064,U+0065,U+0066,U+0067,U+0068,U+0069,U+006A,U+006B,U+006C,U+006D,U+006E,U+006F,U+0070,U+0071,U+0072,U+0073,U+0074,U+0075,U+0076,U+0077,U+0078,U+0079,U+007A; }
 :root { color-scheme: dark; --background: #09090d; --surface: #121219; --surface-2: #1b1b25; --muted-foreground: #aaa7b7; }
-h1,h2,h3,h4 { font-family: var(--font-display); font-style: normal; font-weight: 400 !important; font-synthesis: none; letter-spacing: 0.015em; text-transform: uppercase; line-height: 1.2; overflow-wrap: anywhere; }
-.eforge-wordmark { font-family: var(--font-display); font-weight: 400; font-style: normal; font-synthesis: none; letter-spacing: 0; }
-input, select, textarea, table, [role="timer"] { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+h1,h2,h3,h4 { font-family: var(--font-display); font-style: normal; font-weight: 700 !important; font-synthesis: none; letter-spacing: 0.01em; line-height: 1.05; overflow-wrap: anywhere; }
+.eforge-wordmark { font-family: "Forega Sport", "Arial Black", Impact, sans-serif; font-weight: 400; font-style: normal; font-synthesis: none; letter-spacing: 0; text-transform: none; }
+input, select, textarea, table, [role="timer"] { font-family: var(--font-sans); font-weight: 700; font-variant-numeric: tabular-nums; }
 button, a, input, select { touch-action: manipulation; }
 input, select, textarea { font-size: 16px !important; }
 button { min-height: 44px; }
@@ -156,6 +158,17 @@ main { padding-top: max(2rem, env(safe-area-inset-top)) !important; }
  --muted-foreground:#aaa6b6;
  --glow-neon:0 4px 22px #8e4bd322;
  --glow-neon-soft:0 2px 14px #0003;
+ --muscle-primary:#d29cff;
+ --muscle-secondary:#9b6bd9;
+ --muscle-tertiary:#674d86;
+ --muscle-idle:#34313d;
+ --muscle-glow:#c98dff;
+ --body-base-light:#4a4654;
+ --body-base:#302d38;
+ --body-base-dark:#1f1d25;
+ --body-outline:#625c6d;
+ --body-guide:#777080;
+ --body-muscle-stroke:#17151d;
 }
 body { background:radial-gradient(ellipse at 90% 0%,#9a50dd0c,transparent 50%),#09090d; }
 .eforge-brand { display:inline-flex; align-items:center; gap:10px; white-space:nowrap; color:#faf9ff; }
@@ -175,7 +188,7 @@ button.rounded-full, a.rounded-full { border-radius:11px; }
 button:not(:disabled):active, a.bg-neon:active { transform:translateY(1px); }
 input:not([type="checkbox"]), textarea { background:#101015; border:1px solid #393642; border-radius:10px; min-height:46px; padding:10px 12px; }
 select { background:#181820; color:#f8f6ff; border-radius:10px; border:1px solid #393642; min-height:44px; max-width:100%; }
-[role="dialog"], [role="alertdialog"] { background:#14141c; border:1px solid #393244; border-radius:20px; max-height:90dvh; overflow-y:auto; }
+[role="dialog"], [role="alertdialog"] { background:#14141c; border:1px solid #393244; border-radius:20px; width:min(calc(100vw - 24px),32rem); max-height:90dvh; overflow-y:auto; padding:clamp(18px,5vw,24px); }
 [role="tablist"] { background:#17171f; border:1px solid #302c3b; padding:4px; border-radius:12px; }
 [role="tab"][data-state="active"] { background:#b885ff; color:#10091a; }
 .eforge-nav { background:#0c0c12f5; border-top:1px solid #302a3b; backdrop-filter:blur(18px); }
@@ -211,3 +224,103 @@ select { background:#181820; color:#f8f6ff; border-radius:10px; border:1px solid
 .eforge-finished > a { width:100%;min-height:48px;border:1px solid #70528b;border-radius:12px;margin:6px 0;display:grid;place-items:center; }
 .eforge-finished > a:first-of-type { background:#b885ff;color:#10091a;font-weight:700; }
 .eforge-profile-card { border-top:2px solid #aa72ed; }
+
+
+/* Muscle map — anatomy, role hierarchy and live workout feedback. */
+.eforge-map-panel {
+  background:
+    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--muscle-primary) 11%, transparent), transparent 44%),
+    linear-gradient(180deg, #15141d, #0e0e14);
+}
+.eforge-map-panel svg,
+.eforge-live-muscles svg { filter:drop-shadow(0 12px 22px #000a); }
+.eforge-control-card {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
+  padding:12px;
+  border:1px solid #ffffff12;
+  border-radius:14px;
+  background:linear-gradient(145deg,#191820,#111117);
+}
+.eforge-control-card > span {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:var(--muted-foreground);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.11em;
+}
+.eforge-control-card select { width:100%; }
+.eforge-mini-segmented,
+.eforge-view-toggle {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:4px;
+  padding:4px;
+  border:1px solid #3a3544;
+  border-radius:14px;
+  background:#111117;
+}
+.eforge-mini-segmented button,
+.eforge-view-toggle button {
+  min-width:0;
+  min-height:44px;
+  border-radius:10px;
+  color:#9f99aa;
+  font-size:14px;
+  letter-spacing:.06em;
+  transition:background-color .2s ease,color .2s ease,box-shadow .2s ease;
+}
+.eforge-mini-segmented button[aria-pressed="true"],
+.eforge-view-toggle button[aria-pressed="true"] {
+  color:#160d1f;
+  background:linear-gradient(110deg,#aa6df0,#c493ff);
+  box-shadow:0 4px 16px #8f4bd22d;
+}
+.eforge-role-legend {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:10px 6px;
+  border-radius:12px;
+  background:#ffffff06;
+  text-align:center;
+  color:#c9c4d0;
+  font-size:12px;
+}
+.eforge-role-legend i { width:28px;height:8px;border-radius:999px;box-shadow:0 0 10px #0004; }
+.eforge-live-muscles {
+  border:1px solid #9f66df3d !important;
+  background:radial-gradient(circle at 50% 0%,#9f66df16,transparent 50%),linear-gradient(145deg,#17141f,#101015) !important;
+}
+.eforge-live-body {
+  min-width:0;
+  border:1px solid #ffffff0d;
+  border-radius:12px;
+  background:#0d0d12;
+  padding:8px 6px;
+  text-align:center;
+}
+.eforge-live-body > span { color:#8f8998;font-size:11px;text-transform:uppercase;letter-spacing:.12em; }
+
+/* Consistent action hierarchy and touch spacing on small screens. */
+[role="dialog"] button,
+[role="alertdialog"] button { min-height:46px; }
+@media (max-width: 420px) {
+  [role="dialog"], [role="alertdialog"] { width:calc(100vw - 20px); }
+  [role="dialog"] .grid-cols-2 { gap:12px; }
+  .eforge-app-header { padding-left:16px;padding-right:16px; }
+  .eforge-nav-inner { padding-left:8px;padding-right:8px; }
+  .eforge-nav a { min-width:0;font-size:11px; }
+}
+@media (max-width: 340px) {
+  [role="dialog"] .grid-cols-2 { grid-template-columns:1fr; }
+  [role="dialog"] .col-span-2 { grid-column:span 1 / span 1; }
+  .eforge-role-legend { font-size:11px; }
+}

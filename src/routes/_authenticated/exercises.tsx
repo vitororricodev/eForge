@@ -38,6 +38,7 @@ type Exercise = {
   tipo_controle: ControlType;
   musculo_principal: string;
   musculos_secundarios: string[];
+  musculos_terciarios: string[];
   categoria: Category;
   observacoes: string | null;
   created_at: string;
@@ -324,6 +325,7 @@ function ExerciseFormDialog({
   const [tipoControle, setTipoControle] = useState<ControlType>("peso_kg");
   const [musculoPrincipal, setMusculoPrincipal] = useState<string>(MUSCLE_OPTIONS[0]);
   const [musculosSecundarios, setMusculosSecundarios] = useState<string[]>([]);
+  const [musculosTerciarios, setMusculosTerciarios] = useState<string[]>([]);
   const [categoria, setCategoria] = useState<Category>("musculacao");
   const [observacoes, setObservacoes] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -337,6 +339,7 @@ function ExerciseFormDialog({
         setTipoControle(editing.tipo_controle);
         setMusculoPrincipal(editing.musculo_principal);
         setMusculosSecundarios(editing.musculos_secundarios ?? []);
+        setMusculosTerciarios(editing.musculos_terciarios ?? []);
         setCategoria(editing.categoria);
         setObservacoes(editing.observacoes ?? "");
         setPreviewUrl(editing.gif_url);
@@ -345,6 +348,7 @@ function ExerciseFormDialog({
         setTipoControle("peso_kg");
         setMusculoPrincipal(MUSCLE_OPTIONS[0]);
         setMusculosSecundarios([]);
+        setMusculosTerciarios([]);
         setCategoria("musculacao");
         setObservacoes("");
         setPreviewUrl(null);
@@ -363,9 +367,19 @@ function ExerciseFormDialog({
   }, [file]);
 
   const toggleSecondary = (m: string) => {
+    const adding = !musculosSecundarios.includes(m);
     setMusculosSecundarios((prev) =>
       prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m],
     );
+    if (adding) setMusculosTerciarios((prev) => prev.filter((x) => x !== m));
+  };
+
+  const toggleTertiary = (m: string) => {
+    const adding = !musculosTerciarios.includes(m);
+    setMusculosTerciarios((prev) =>
+      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m],
+    );
+    if (adding) setMusculosSecundarios((prev) => prev.filter((x) => x !== m));
   };
 
   const mutation = useMutation({
@@ -406,6 +420,7 @@ function ExerciseFormDialog({
         tipo_controle: tipoControle,
         musculo_principal: musculoPrincipal,
         musculos_secundarios: musculosSecundarios,
+        musculos_terciarios: musculosTerciarios,
         categoria,
         observacoes: observacoes.trim() || null,
       };
@@ -528,7 +543,11 @@ function ExerciseFormDialog({
 
           <div>
             <Label>Músculo principal</Label>
-            <Select value={musculoPrincipal} onValueChange={setMusculoPrincipal}>
+            <Select value={musculoPrincipal} onValueChange={(value) => {
+                setMusculoPrincipal(value);
+                setMusculosSecundarios((prev) => prev.filter((m) => m !== value));
+                setMusculosTerciarios((prev) => prev.filter((m) => m !== value));
+              }}>
               <SelectTrigger className="mt-2 bg-surface-2 border-border"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {MUSCLE_OPTIONS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
@@ -549,6 +568,34 @@ function ExerciseFormDialog({
                     className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
                       active
                         ? "bg-neon text-primary-foreground glow-neon-soft"
+                        : "surface-2 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-end justify-between gap-3">
+              <Label>Músculos terciários</Label>
+              <span className="text-[11px] text-muted-foreground">apoio menor no movimento</span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {MUSCLE_OPTIONS.filter((m) => m !== musculoPrincipal).map((m) => {
+                const active = musculosTerciarios.includes(m);
+                const secondary = musculosSecundarios.includes(m);
+                return (
+                  <button
+                    type="button"
+                    key={m}
+                    disabled={secondary}
+                    onClick={() => toggleTertiary(m)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
+                      active
+                        ? "bg-[var(--muscle-tertiary)] text-white"
                         : "surface-2 text-muted-foreground hover:text-foreground"
                     }`}
                   >

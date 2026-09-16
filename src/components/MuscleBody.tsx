@@ -1,128 +1,242 @@
-import type { CSSProperties } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 
 export type MuscleKey =
-  | "chest" | "abs" | "obliques" | "shoulders" | "biceps" | "forearms" | "quads" | "calves"
-  | "traps" | "lats" | "lower_back" | "glutes" | "hamstrings" | "triceps" | "rear_delts";
+  | "chest"
+  | "abs"
+  | "obliques"
+  | "shoulders"
+  | "biceps"
+  | "forearms"
+  | "quads"
+  | "calves"
+  | "traps"
+  | "lats"
+  | "lower_back"
+  | "glutes"
+  | "hamstrings"
+  | "triceps"
+  | "rear_delts";
 
-export type MuscleLevels = Partial<Record<MuscleKey, number>>; // 0..4
+export type MuscleRole = "primary" | "secondary" | "tertiary";
+export type BodyGender = "male" | "female";
+export type MuscleLevels = Partial<Record<MuscleKey, number>>;
+export type MuscleState = Partial<
+  Record<MuscleKey, { level: number; role: MuscleRole; score: number }>
+>;
 
-const levelToFill = (lvl: number): string => {
-  if (lvl <= 0) return "#45404e";          // gray
-  if (lvl === 1) return "oklch(0.55 0.12 300 / 0.55)"; // pouco
-  if (lvl === 2) return "oklch(0.72 0.20 300 / 0.85)"; // médio
-  if (lvl === 3) return "#af74ed";        // alto
-  return "#d3afff";                       // neon forte
+const ROLE_FILL: Record<MuscleRole, string> = {
+  primary: "var(--muscle-primary)",
+  secondary: "var(--muscle-secondary)",
+  tertiary: "var(--muscle-tertiary)",
 };
 
-const levelToGlow = (lvl: number): CSSProperties => ({
-  filter: lvl >= 3 ? "drop-shadow(0 0 6px oklch(0.76 0.19 300 / 0.7))" : undefined,
-});
+const levelOpacity = (level: number) => {
+  if (level >= 4) return 1;
+  if (level === 3) return 0.92;
+  if (level === 2) return 0.78;
+  if (level === 1) return 0.62;
+  return 1;
+};
 
-function M({ d, k, levels }: { d: string; k: MuscleKey; levels: MuscleLevels }) {
-  const lvl = levels[k] ?? 0;
+function MusclePath({
+  d,
+  k,
+  levels,
+  state,
+}: {
+  d: string;
+  k: MuscleKey;
+  levels?: MuscleLevels;
+  state?: MuscleState;
+}) {
+  const activation = state?.[k];
+  const level = activation?.level ?? levels?.[k] ?? 0;
+  const fill = activation ? ROLE_FILL[activation.role] : level > 0 ? "var(--muscle-primary)" : "var(--muscle-idle)";
+  const style: CSSProperties = {
+    opacity: levelOpacity(level),
+    transition: "fill 220ms ease, opacity 220ms ease, filter 220ms ease",
+    filter: level >= 3 ? "drop-shadow(0 0 7px var(--muscle-glow))" : undefined,
+  };
+
   return (
-    <path
-      d={d}
-      fill={levelToFill(lvl)}
-      stroke="oklch(0.04 0 0)"
-      strokeWidth={0.8}
-      style={{ transition: "fill 0.4s ease", ...levelToGlow(lvl) }}
-    ><title>{k}: nível {lvl} de 4</title></path>
+    <path d={d} fill={fill} stroke="var(--body-muscle-stroke)" strokeWidth={0.75} style={style}>
+      <title>
+        {k}: {activation ? activation.role : "sem atividade"}, nível {level} de 4
+      </title>
+    </path>
   );
 }
 
-/** Stylized anatomical body — front view */
-export function BodyFront({ levels }: { levels: MuscleLevels }) {
-  return (
-    <svg viewBox="0 0 200 420" className="w-full h-full" aria-label="Corpo frente">
-      {/* Silhouette base */}
-      <g fill="#292631" stroke="#595264" strokeWidth="1">
-        {/* Head */}
-        <ellipse cx="100" cy="32" rx="22" ry="26" />
-        {/* Neck */}
-        <rect x="90" y="54" width="20" height="14" rx="4" />
-        {/* Torso */}
-        <path d="M55 78 Q100 60 145 78 L150 200 Q100 215 50 200 Z" />
-        {/* Hips */}
-        <path d="M55 195 Q100 210 145 195 L150 240 Q100 255 50 240 Z" />
-        {/* Arms */}
-        <path d="M50 82 Q30 110 32 170 L42 175 Q48 130 58 95 Z" />
-        <path d="M150 82 Q170 110 168 170 L158 175 Q152 130 142 95 Z" />
-        <path d="M32 170 Q28 220 36 260 L48 260 Q44 220 42 175 Z" />
-        <path d="M168 170 Q172 220 164 260 L152 260 Q156 220 158 175 Z" />
-        {/* Legs */}
-        <path d="M60 240 Q70 320 70 400 L92 400 Q94 320 92 240 Z" />
-        <path d="M140 240 Q130 320 130 400 L108 400 Q106 320 108 240 Z" />
-      </g>
+function BodyBase({ gender, view, gradientId }: { gender: BodyGender; view: "front" | "back"; gradientId: string }) {
+  const female = gender === "female";
+  const torso = female
+    ? "M61 78 Q100 64 139 78 Q143 112 139 152 Q136 183 144 208 Q126 222 100 222 Q74 222 56 208 Q64 183 61 152 Q57 112 61 78 Z"
+    : "M52 78 Q100 57 148 78 Q151 120 143 165 Q140 190 147 211 Q124 222 100 222 Q76 222 53 211 Q60 190 57 165 Q49 120 52 78 Z";
+  const hips = female
+    ? "M58 203 Q77 218 100 218 Q123 218 142 203 L148 252 Q127 268 100 268 Q73 268 52 252 Z"
+    : "M57 205 Q78 216 100 216 Q122 216 143 205 L145 248 Q123 259 100 259 Q77 259 55 248 Z";
+  const leftArm = female
+    ? "M59 84 Q40 98 35 137 Q31 169 36 191 L47 188 Q46 161 52 136 Q58 110 69 93 Z"
+    : "M53 84 Q31 100 27 140 Q25 171 31 193 L43 190 Q43 160 49 133 Q55 106 66 92 Z";
+  const rightArm = female
+    ? "M141 84 Q160 98 165 137 Q169 169 164 191 L153 188 Q154 161 148 136 Q142 110 131 93 Z"
+    : "M147 84 Q169 100 173 140 Q175 171 169 193 L157 190 Q157 160 151 133 Q145 106 134 92 Z";
+  const leftForearm = female
+    ? "M36 188 Q31 225 37 269 L50 269 Q47 226 47 188 Z"
+    : "M31 189 Q25 229 32 274 L46 274 Q43 229 43 189 Z";
+  const rightForearm = female
+    ? "M164 188 Q169 225 163 269 L150 269 Q153 226 153 188 Z"
+    : "M169 189 Q175 229 168 274 L154 274 Q157 229 157 189 Z";
+  const leftLeg = female
+    ? "M58 247 Q61 311 66 390 Q69 416 73 425 L94 425 Q96 354 94 267 Z"
+    : "M58 244 Q61 312 66 390 Q68 416 72 425 L94 425 Q96 351 92 257 Z";
+  const rightLeg = female
+    ? "M142 247 Q139 311 134 390 Q131 416 127 425 L106 425 Q104 354 106 267 Z"
+    : "M142 244 Q139 312 134 390 Q132 416 128 425 L106 425 Q104 351 108 257 Z";
 
-      {/* Muscle overlays */}
-      {/* Chest L/R */}
-      <M k="chest" levels={levels} d="M70 90 Q98 85 98 130 Q80 138 62 128 Q60 105 70 90 Z" />
-      <M k="chest" levels={levels} d="M130 90 Q102 85 102 130 Q120 138 138 128 Q140 105 130 90 Z" />
-      {/* Shoulders (delts) */}
-      <M k="shoulders" levels={levels} d="M55 80 Q48 92 52 110 Q66 110 70 92 Q66 82 55 80 Z" />
-      <M k="shoulders" levels={levels} d="M145 80 Q152 92 148 110 Q134 110 130 92 Q134 82 145 80 Z" />
-      {/* Abs (6 pack) */}
-      <M k="abs" levels={levels} d="M88 135 H112 V155 H88 Z" />
-      <M k="abs" levels={levels} d="M88 158 H112 V178 H88 Z" />
-      <M k="abs" levels={levels} d="M88 181 H112 V205 H88 Z" />
-      {/* Obliques */}
-      <M k="obliques" levels={levels} d="M70 145 Q82 155 84 200 L72 200 Q60 180 70 145 Z" />
-      <M k="obliques" levels={levels} d="M130 145 Q118 155 116 200 L128 200 Q140 180 130 145 Z" />
-      {/* Biceps */}
-      <M k="biceps" levels={levels} d="M36 115 Q30 145 38 168 Q48 165 48 140 Q46 120 36 115 Z" />
-      <M k="biceps" levels={levels} d="M164 115 Q170 145 162 168 Q152 165 152 140 Q154 120 164 115 Z" />
-      {/* Forearms */}
-      <M k="forearms" levels={levels} d="M32 175 Q28 210 36 250 L46 250 Q42 215 42 180 Z" />
-      <M k="forearms" levels={levels} d="M168 175 Q172 210 164 250 L154 250 Q158 215 158 180 Z" />
-      {/* Quads */}
-      <M k="quads" levels={levels} d="M64 245 Q72 310 72 380 L90 380 Q92 310 88 245 Z" />
-      <M k="quads" levels={levels} d="M136 245 Q128 310 128 380 L110 380 Q108 310 112 245 Z" />
-      {/* Calves visible front (shins) — leave subtle */}
+  return (
+    <g>
+      <g fill={`url(#${gradientId})`} stroke="var(--body-outline)" strokeWidth="1.25">
+        <ellipse cx="100" cy="31" rx={female ? 20 : 22} ry="26" />
+        <path d={female ? "M89 52 Q100 58 111 52 L112 70 Q100 76 88 70 Z" : "M88 52 Q100 58 112 52 L114 70 Q100 77 86 70 Z"} />
+        <path d={torso} />
+        <path d={hips} />
+        <path d={leftArm} />
+        <path d={rightArm} />
+        <path d={leftForearm} />
+        <path d={rightForearm} />
+        <path d={leftLeg} />
+        <path d={rightLeg} />
+      </g>
+      <g fill="none" stroke="var(--body-guide)" strokeWidth="0.75" opacity="0.55">
+        <path d="M100 75 V258" />
+        {view === "front" ? (
+          <>
+            <path d="M69 126 Q100 145 131 126" />
+            <path d="M82 211 Q100 218 118 211" />
+          </>
+        ) : (
+          <>
+            <path d="M66 103 Q100 82 134 103" />
+            <path d="M75 207 Q100 219 125 207" />
+          </>
+        )}
+      </g>
+    </g>
+  );
+}
+
+function SvgShell({ children, label, gradientId }: { children: ReactNode; label: string; gradientId: string }) {
+  return (
+    <svg viewBox="0 0 200 440" className="h-full w-full" role="img" aria-label={label}>
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--body-base-light)" />
+          <stop offset="0.55" stopColor="var(--body-base)" />
+          <stop offset="1" stopColor="var(--body-base-dark)" />
+        </linearGradient>
+      </defs>
+      {children}
     </svg>
   );
 }
 
-/** Back view */
-export function BodyBack({ levels }: { levels: MuscleLevels }) {
+export function BodyFront({
+  levels,
+  state,
+  gender = "male",
+}: {
+  levels?: MuscleLevels;
+  state?: MuscleState;
+  gender?: BodyGender;
+}) {
+  const female = gender === "female";
+  const gradientId = `body-shell-${useId().replace(/:/g, "")}`;
   return (
-    <svg viewBox="0 0 200 420" className="w-full h-full" aria-label="Corpo costas">
-      {/* Silhouette base */}
-      <g fill="#292631" stroke="#595264" strokeWidth="1">
-        <ellipse cx="100" cy="32" rx="22" ry="26" />
-        <rect x="90" y="54" width="20" height="14" rx="4" />
-        <path d="M55 78 Q100 60 145 78 L150 200 Q100 215 50 200 Z" />
-        <path d="M55 195 Q100 210 145 195 L150 240 Q100 255 50 240 Z" />
-        <path d="M50 82 Q30 110 32 170 L42 175 Q48 130 58 95 Z" />
-        <path d="M150 82 Q170 110 168 170 L158 175 Q152 130 142 95 Z" />
-        <path d="M32 170 Q28 220 36 260 L48 260 Q44 220 42 175 Z" />
-        <path d="M168 170 Q172 220 164 260 L152 260 Q156 220 158 175 Z" />
-        <path d="M60 240 Q70 320 70 400 L92 400 Q94 320 92 240 Z" />
-        <path d="M140 240 Q130 320 130 400 L108 400 Q106 320 108 240 Z" />
-      </g>
+    <SvgShell label={`Corpo ${female ? "feminino" : "masculino"}, vista frontal`} gradientId={gradientId}>
+      <BodyBase gender={gender} view="front" gradientId={gradientId} />
 
-      {/* Traps */}
-      <M k="traps" levels={levels} d="M82 70 Q100 60 118 70 Q112 92 100 95 Q88 92 82 70 Z" />
-      {/* Rear delts */}
-      <M k="rear_delts" levels={levels} d="M55 80 Q48 92 52 112 Q66 112 70 94 Q66 82 55 80 Z" />
-      <M k="rear_delts" levels={levels} d="M145 80 Q152 92 148 112 Q134 112 130 94 Q134 82 145 80 Z" />
-      {/* Lats */}
-      <M k="lats" levels={levels} d="M62 100 Q80 115 92 175 Q72 180 58 165 Q56 130 62 100 Z" />
-      <M k="lats" levels={levels} d="M138 100 Q120 115 108 175 Q128 180 142 165 Q144 130 138 100 Z" />
-      {/* Lower back */}
-      <M k="lower_back" levels={levels} d="M88 180 H112 V215 H88 Z" />
-      {/* Triceps */}
-      <M k="triceps" levels={levels} d="M36 115 Q30 145 38 168 Q48 165 48 140 Q46 120 36 115 Z" />
-      <M k="triceps" levels={levels} d="M164 115 Q170 145 162 168 Q152 165 152 140 Q154 120 164 115 Z" />
-      {/* Glutes */}
-      <M k="glutes" levels={levels} d="M62 220 Q82 248 92 268 L72 268 Q56 250 62 220 Z" />
-      <M k="glutes" levels={levels} d="M138 220 Q118 248 108 268 L128 268 Q144 250 138 220 Z" />
-      {/* Hamstrings */}
-      <M k="hamstrings" levels={levels} d="M68 270 Q74 320 76 360 L90 360 Q90 320 86 270 Z" />
-      <M k="hamstrings" levels={levels} d="M132 270 Q126 320 124 360 L110 360 Q110 320 114 270 Z" />
-      {/* Calves */}
-      <M k="calves" levels={levels} d="M72 360 Q74 390 80 405 L90 405 Q90 380 88 360 Z" />
-      <M k="calves" levels={levels} d="M128 360 Q126 390 120 405 L110 405 Q110 380 112 360 Z" />
-    </svg>
+      <MusclePath k="chest" levels={levels} state={state} d={female ? "M70 91 Q83 84 98 90 L98 130 Q83 137 66 127 Q64 106 70 91 Z" : "M65 88 Q82 82 98 89 L98 132 Q80 140 61 128 Q59 104 65 88 Z"} />
+      <MusclePath k="chest" levels={levels} state={state} d={female ? "M130 91 Q117 84 102 90 L102 130 Q117 137 134 127 Q136 106 130 91 Z" : "M135 88 Q118 82 102 89 L102 132 Q120 140 139 128 Q141 104 135 88 Z"} />
+
+      <MusclePath k="shoulders" levels={levels} state={state} d="M59 79 Q49 88 50 108 Q58 116 69 105 Q72 91 65 82 Z" />
+      <MusclePath k="shoulders" levels={levels} state={state} d="M141 79 Q151 88 150 108 Q142 116 131 105 Q128 91 135 82 Z" />
+
+      <MusclePath k="biceps" levels={levels} state={state} d="M43 111 Q34 136 37 168 Q42 179 49 166 Q52 139 48 116 Z" />
+      <MusclePath k="biceps" levels={levels} state={state} d="M157 111 Q166 136 163 168 Q158 179 151 166 Q148 139 152 116 Z" />
+      <MusclePath k="forearms" levels={levels} state={state} d="M36 188 Q31 222 37 262 L48 262 Q47 225 46 190 Z" />
+      <MusclePath k="forearms" levels={levels} state={state} d="M164 188 Q169 222 163 262 L152 262 Q153 225 154 190 Z" />
+
+      <MusclePath k="abs" levels={levels} state={state} d="M87 136 Q100 132 113 136 L111 158 Q100 162 89 158 Z" />
+      <MusclePath k="abs" levels={levels} state={state} d="M88 161 Q100 157 112 161 L111 182 Q100 186 89 182 Z" />
+      <MusclePath k="abs" levels={levels} state={state} d="M89 185 Q100 181 111 185 L110 207 Q100 211 90 207 Z" />
+      <MusclePath k="obliques" levels={levels} state={state} d="M66 139 Q78 147 84 166 L84 207 Q72 204 63 189 Q60 162 66 139 Z" />
+      <MusclePath k="obliques" levels={levels} state={state} d="M134 139 Q122 147 116 166 L116 207 Q128 204 137 189 Q140 162 134 139 Z" />
+
+      <MusclePath k="quads" levels={levels} state={state} d="M61 261 Q66 303 69 347 Q72 365 83 374 Q93 354 91 268 Q77 258 61 261 Z" />
+      <MusclePath k="quads" levels={levels} state={state} d="M139 261 Q134 303 131 347 Q128 365 117 374 Q107 354 109 268 Q123 258 139 261 Z" />
+      <MusclePath k="calves" levels={levels} state={state} d="M70 370 Q72 399 78 416 L90 416 Q90 389 87 374 Q79 366 70 370 Z" />
+      <MusclePath k="calves" levels={levels} state={state} d="M130 370 Q128 399 122 416 L110 416 Q110 389 113 374 Q121 366 130 370 Z" />
+    </SvgShell>
+  );
+}
+
+export function BodyBack({
+  levels,
+  state,
+  gender = "male",
+}: {
+  levels?: MuscleLevels;
+  state?: MuscleState;
+  gender?: BodyGender;
+}) {
+  const female = gender === "female";
+  const gradientId = `body-shell-${useId().replace(/:/g, "")}`;
+  return (
+    <SvgShell label={`Corpo ${female ? "feminino" : "masculino"}, vista posterior`} gradientId={gradientId}>
+      <BodyBase gender={gender} view="back" gradientId={gradientId} />
+
+      <MusclePath k="traps" levels={levels} state={state} d="M88 66 Q100 61 112 66 L123 89 Q111 96 100 103 Q89 96 77 89 Z" />
+      <MusclePath k="traps" levels={levels} state={state} d="M76 91 Q100 99 124 91 L119 111 Q100 117 81 111 Z" />
+      <MusclePath k="traps" levels={levels} state={state} d="M82 113 Q100 119 118 113 L108 157 L100 170 L92 157 Z" />
+
+      <MusclePath k="rear_delts" levels={levels} state={state} d="M58 80 Q48 89 50 109 Q57 118 69 106 Q72 91 65 82 Z" />
+      <MusclePath k="rear_delts" levels={levels} state={state} d="M142 80 Q152 89 150 109 Q143 118 131 106 Q128 91 135 82 Z" />
+
+      <MusclePath k="lats" levels={levels} state={state} d="M65 101 Q82 112 93 128 L91 181 Q73 184 60 166 Q57 132 65 101 Z" />
+      <MusclePath k="lats" levels={levels} state={state} d="M135 101 Q118 112 107 128 L109 181 Q127 184 140 166 Q143 132 135 101 Z" />
+      <MusclePath k="lower_back" levels={levels} state={state} d="M86 174 Q100 181 114 174 L116 211 Q100 218 84 211 Z" />
+
+      <MusclePath k="triceps" levels={levels} state={state} d="M42 112 Q34 138 38 171 Q43 179 49 166 Q51 137 47 116 Z" />
+      <MusclePath k="triceps" levels={levels} state={state} d="M158 112 Q166 138 162 171 Q157 179 151 166 Q149 137 153 116 Z" />
+      <MusclePath k="forearms" levels={levels} state={state} d="M36 188 Q31 222 37 262 L48 262 Q47 225 46 190 Z" />
+      <MusclePath k="forearms" levels={levels} state={state} d="M164 188 Q169 222 163 262 L152 262 Q153 225 154 190 Z" />
+
+      <MusclePath k="glutes" levels={levels} state={state} d={female ? "M57 217 Q76 211 96 223 L94 261 Q74 272 57 252 Q52 235 57 217 Z" : "M59 216 Q77 212 96 223 L94 259 Q75 267 59 250 Q55 233 59 216 Z"} />
+      <MusclePath k="glutes" levels={levels} state={state} d={female ? "M143 217 Q124 211 104 223 L106 261 Q126 272 143 252 Q148 235 143 217 Z" : "M141 216 Q123 212 104 223 L106 259 Q125 267 141 250 Q145 233 141 216 Z"} />
+
+      <MusclePath k="hamstrings" levels={levels} state={state} d="M64 266 Q69 308 72 356 Q77 367 88 360 Q92 318 90 271 Q77 262 64 266 Z" />
+      <MusclePath k="hamstrings" levels={levels} state={state} d="M136 266 Q131 308 128 356 Q123 367 112 360 Q108 318 110 271 Q123 262 136 266 Z" />
+      <MusclePath k="calves" levels={levels} state={state} d="M70 363 Q70 396 78 419 L90 419 Q91 389 87 368 Q78 359 70 363 Z" />
+      <MusclePath k="calves" levels={levels} state={state} d="M130 363 Q130 396 122 419 L110 419 Q109 389 113 368 Q122 359 130 363 Z" />
+    </SvgShell>
+  );
+}
+
+export function MuscleBody({
+  view,
+  gender = "male",
+  state,
+  levels,
+}: {
+  view: "front" | "back";
+  gender?: BodyGender;
+  state?: MuscleState;
+  levels?: MuscleLevels;
+}) {
+  return view === "front" ? (
+    <BodyFront gender={gender} state={state} levels={levels} />
+  ) : (
+    <BodyBack gender={gender} state={state} levels={levels} />
   );
 }

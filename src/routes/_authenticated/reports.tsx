@@ -18,9 +18,9 @@ export const Route = createFileRoute("/_authenticated/reports")({
 
 type Tab = "treino" | "cardio" | "corpo" | "muscular";
 
-const NEON = "#7CFC00";
-const NEON_SOFT = "#9aff4a";
-const NEON_DIM = "rgba(124,252,0,0.35)";
+const NEON = "#b885ff";
+const NEON_SOFT = "#d7b7ff";
+const NEON_DIM = "rgba(184,133,255,0.35)";
 
 function ReportsPage() {
   const { user } = useAuth();
@@ -37,16 +37,38 @@ function ReportsPage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      const muscleLogs = (async () => {
+        const full = await supabase
+          .from("set_logs")
+          .select("musculo_principal,musculos_secundarios,musculos_terciarios,kind,workout_sessions!inner(status,iniciado_em)")
+          .eq("user_id", user.id)
+          .eq("concluida", true)
+          .neq("kind", "warmup")
+          .eq("workout_sessions.status", "concluida");
+        if (!full.error) return full;
+        if (!full.error.message.toLowerCase().includes("musculos_terciarios")) return full;
+        return supabase
+          .from("set_logs")
+          .select("musculo_principal,musculos_secundarios,kind,workout_sessions!inner(status,iniciado_em)")
+          .eq("user_id", user.id)
+          .eq("concluida", true)
+          .neq("kind", "warmup")
+          .eq("workout_sessions.status", "concluida");
+      })();
       const [c, m, ma, ex] = await Promise.all([
         supabase.from("cardio_logs").select("*").order("data_atividade", { ascending: true }),
         supabase.from("body_measurements").select("*").order("measured_at", { ascending: true }),
-        supabase.from("set_logs").select("musculo_principal,musculos_secundarios,kind,workout_sessions!inner(status,iniciado_em)").eq("user_id",user.id).eq("concluida",true).neq("kind","warmup").eq("workout_sessions.status","concluida"),
+        muscleLogs,
         supabase.from("exercises").select("*"),
       ]);
       if (cancelled) return;
       setCardio((c.data ?? []) as any[]);
       setMeasurements((m.data ?? []) as any[]);
-      setMuscleActivity((ma.data ?? []).flatMap(r => [{muscle:r.musculo_principal,intensity:1,trained_at:r.workout_sessions.iniciado_em},...r.musculos_secundarios.map(muscle=>({muscle,intensity:0.4,trained_at:r.workout_sessions.iniciado_em}))]));
+      setMuscleActivity((ma.data ?? []).flatMap((r: any) => [
+        ...(r.musculo_principal ? [{ muscle: r.musculo_principal, intensity: 1, trained_at: r.workout_sessions.iniciado_em }] : []),
+        ...(r.musculos_secundarios ?? []).map((muscle: string) => ({ muscle, intensity: 0.55, trained_at: r.workout_sessions.iniciado_em })),
+        ...(r.musculos_terciarios ?? []).map((muscle: string) => ({ muscle, intensity: 0.25, trained_at: r.workout_sessions.iniciado_em })),
+      ]));
       setExercises((ex.data ?? []) as any[]);
       setLoading(false);
     })();
@@ -332,7 +354,7 @@ function BodyTab({ data, measurements }: { data: any[]; measurements: any[] }) {
 }
 
 function MuscleTab({ stats }: { stats: any }) {
-  const colors = [NEON, NEON_SOFT, "#5ed500", "#3aa800", "#287a00"];
+  const colors = [NEON, NEON_SOFT, "#9b6bd9", "#7c55b0", "#674d86"];
   return (
     <>
       <div className="grid grid-cols-2 gap-3">

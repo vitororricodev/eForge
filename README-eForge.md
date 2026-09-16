@@ -6,7 +6,7 @@ Site mobile em React/TanStack Start + Supabase. Preto, roxo e branco.
 
 1. `npm ci`
 2. Copie `.env.example` para `.env` e informe os valores públicos do seu projeto.
-3. Aplique `supabase/migrations/20260914191455_eforge_mobile.sql` no SQL Editor do MESMO projeto que possui as tabelas anteriores. Essa migração é necessária para a sincronização, mapa atualizado e tipos de série.
+3. Aplique as migrations pendentes em ordem, incluindo `supabase/migrations/20260914191455_eforge_mobile.sql` e `supabase/migrations/20260916093000_muscle_tertiary.sql`, no MESMO projeto Supabase. A migration de 16/09 adiciona músculos terciários a exercícios/séries e atualiza o snapshot do treino.
 4. `npm run dev` para desenvolvimento; `npm run build` para produção. A publicação usa o adaptador do TanStack/Nitro existente. Não publicar apenas uma pasta aleatória como site estático.
 5. Use HTTPS na publicação. PWA e service worker são ativados em produção. Abra o dashboard online antes de testar offline; telas/assets ainda não visitados podem exigir internet.
 
@@ -20,12 +20,23 @@ Site mobile em React/TanStack Start + Supabase. Preto, roxo e branco.
 - Descanso por horário final, +15/−15 segundos, pular, vibração e som opcionais (sujeitos às permissões do navegador).
 - Cinco entradas na navegação, menu oculto durante execução, confirmação ao sair, campos maiores, redução de animações.
 - Catálogo visual unificado de 11 medalhas; primeiro/dez treinos concedidos na finalização.
-- Mapa sem dados fictícios, baseado em séries concluídas de sessões finalizadas: principal 1, secundários 0,4; aquecimento excluído; 1/7/30 dias.
+- Mapa muscular vetorial masculino/feminino, frente/costas, com normalização dos nomes em português. Séries concluídas usam papel principal (1), secundário (0,55) e terciário (0,25); aquecimento é excluído; período 1/7/30 dias. Durante o treino, o mapa ao vivo reage imediatamente às séries marcadas como concluídas.
 - RLS adicional de validação dos pais nas relações de treinos/séries/sessões.
+
+
+## Atualização do mapa muscular — 2026-09-16
+
+- Corrigida a causa do mapa não acender: os exercícios armazenavam músculos em português, enquanto o SVG anterior esperava chaves internas em inglês. A nova camada `muscle-activity.ts` normaliza os dois formatos.
+- Novo avatar vetorial com versões masculina/feminina e vistas frente/costas; o sexo do perfil define o padrão e a tela permite troca manual.
+- Cores por função muscular: principal, secundária e terciária, com brilho acumulado conforme séries concluídas.
+- Mapa compacto em tempo real dentro da execução do treino; marcar/desmarcar uma série atualiza o corpo imediatamente.
+- Cadastro/edição de exercício passa a aceitar músculos terciários, sem permitir duplicar o mesmo músculo entre principal/secundário/terciário.
+- Diálogos e alertas ganharam gutter lateral responsivo e `gap` consistente entre ações; telas muito estreitas reduzem formulários de duas colunas para uma.
+- Teko Bold passa a ser a fonte global; Forega Sport DEMO fica restrita ao wordmark `eForge`.
 
 ## Tipografia
 
-Forega Sport DEMO incorporada em TTF, com licença original em public/fonts. Aplicada à marca e títulos; formulários e números usam fonte de leitura. Caracteres ausentes na demo usam fallback. Licença recebida permite uso pessoal; para uso comercial, obtenha a licença completa do autor.
+Forega Sport DEMO permanece exclusivamente no wordmark `eForge`. O restante da interface usa Teko Bold (Google Fonts), incluindo títulos, formulários e números, com suporte aos acentos do português. Caso a fonte remota ainda não esteja disponível, o app usa fallback de sistema.
 
 ## Limites e validação no dispositivo
 
@@ -37,11 +48,11 @@ Teste: usuário A cria sessão, fecha e reabre; usuário B não vê sessão A; r
 
 ## Verificação realizada
 
-`npm run build` e `npm run typecheck` passaram. Testes locais com PGlite validaram RLS com duas contas, retries sem duplicação e rollback; testes do armazenamento validaram separação por usuário, vírgula decimal e temporizador suspenso. Execute `npm test`. Não houve teste em aparelho real nem aplicação da migração remota.
+Nesta atualização, os testes de armazenamento, mapa muscular e sinal da intro passaram; o teste novo confirma a conversão dos rótulos em português (`Peito`, `Costas`, `Trapézio`, etc.), a hierarquia principal/secundário/terciário e a exclusão de aquecimento do mapa ao vivo. Os arquivos TypeScript/TSX alterados também foram validados por transpilation/syntax check. O ambiente usado para esta revisão não conseguiu instalar as dependências completas do projeto, então `npm run build`, `npm run typecheck` e o teste PGlite devem ser executados novamente após `npm ci`. Não houve aplicação da migration remota nem teste final em aparelho físico.
 
 ## Identidade visual 1.2.0
 
-A identidade agora é compartilhada por todas as rotas: fundo preto, superfícies grafite, destaque roxo e texto branco. Marca vetorial em public/brand/eforge-mark.svg e componente Brand reutilizado. Ícones PWA e favicon seguem o mesmo símbolo. Forega nos títulos/marca, fonte de leitura nos dados. Cards de 12–16 px de raio, botões com área de toque ampliada, navegação fixa de cinco itens e estados ativos uniformes.
+A identidade agora é compartilhada por todas as rotas: fundo preto, superfícies grafite, destaque roxo e texto branco. Marca vetorial em public/brand/eforge-mark.svg e componente Brand reutilizado. Ícones PWA e favicon seguem o mesmo símbolo. Forega fica apenas no wordmark `eForge`; Teko Bold é a fonte da interface. Cards de 12–16 px de raio, botões com área de toque ampliada, navegação fixa de cinco itens e estados ativos uniformes.
 
 Autenticação e boas-vindas usam a marca única. Dashboard recebeu cards de destaque; execução recebeu acabamento de descanso/séries e resumo com troféu; perfil recebeu avatar de iniciais. Conquistas têm 11 símbolos diferenciados em medalhões roxos/cinza, com estado bloqueado identificado. Mapa mantém geometria vetorial própria e ganhou contraste/contornos. Exercícios sem mídia mostram uma miniatura do grupo muscular, não uma demonstração de execução.
 

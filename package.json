@@ -14,7 +14,7 @@
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",
     "cap:ios": "npx cap open ios",
-    "test": "node tests/workout-storage.mjs && node tests/database.mjs && node tests/intro-session.mjs",
+    "test": "node tests/workout-storage.mjs && node tests/muscle-activity.mjs && node tests/database.mjs && node tests/intro-session.mjs",
     "typecheck": "tsc --noEmit",
     "intro:dev": "vite --config vite.intro.config.ts",
     "intro:build": "vite build --config vite.intro.config.ts"
