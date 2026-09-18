@@ -1,0 +1,553 @@
+/* Scoped to the approved muscle-map redesign. Other screens keep their typography. */
+.muscle-map-page,
+.muscle-map-shell {
+  --map-bg: #09090d;
+  --map-panel: #121219;
+  --map-border: #30303d;
+  --map-text: #f5f3fa;
+  --map-muted: #b7b3c5;
+  --map-accent: #bb8cff;
+  --map-selected: #a85cf1;
+  --map-trained: #a997bb;
+  --map-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.muscle-map-page {
+  font-family: var(--map-font);
+  color: var(--map-text);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  max-width: 520px;
+  margin: auto;
+  padding: 16px 20px 28px !important;
+}
+.muscle-map-page h1,
+.muscle-map-page h2 {
+  font-family: var(--map-font);
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+.muscle-map-heading {
+  margin-bottom: 20px;
+}
+.muscle-map-eyebrow {
+  color: var(--map-accent);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+.muscle-map-heading h1 {
+  font-size: 30px;
+  margin: 0 0 6px;
+}
+.muscle-map-heading > p:last-child {
+  color: var(--map-muted);
+}
+.muscle-map-layout,
+.muscle-map-details {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.muscle-map-page button,
+.muscle-map-page a {
+  touch-action: manipulation;
+}
+.muscle-view-switch {
+  display: flex;
+  padding: 3px;
+  gap: 4px;
+  border: 1px solid var(--map-border);
+  border-radius: 13px;
+  background: var(--map-panel);
+}
+.muscle-view-switch button {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: var(--map-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.muscle-view-switch button[aria-pressed="true"] {
+  color: var(--map-text);
+  background: linear-gradient(120deg, #48246c, #2b1d42);
+  border-color: var(--map-accent);
+}
+.muscle-view-switch .muscle-both-control {
+  display: none;
+}
+.muscle-map-canvas {
+  position: relative;
+  margin-top: 8px;
+}
+.muscle-names-toggle {
+  position: absolute;
+  top: 8px;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  min-height: 44px;
+  border-radius: 24px;
+  border: 1px solid var(--map-border);
+  background: #121219ed;
+  color: var(--map-muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+.muscle-names-toggle[aria-pressed="true"] {
+  color: var(--map-text);
+}
+.muscle-figures {
+  display: flex;
+  justify-content: center;
+}
+.anatomical-figure {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+.anatomical-stage {
+  position: relative;
+  width: min(100%, clamp(220px, 28.75svh, 280px));
+  aspect-ratio: 640/1024;
+  margin: auto;
+  isolation: isolate;
+}
+.anatomical-stage > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+.anatomical-regions {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.anatomical-region {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2;
+  cursor: pointer;
+  transition:
+    fill 0.15s,
+    stroke 0.15s;
+}
+.anatomical-region[data-trained="true"] {
+  fill: #9c7fbb30;
+  stroke: var(--map-trained);
+  stroke-dasharray: 5 5;
+}
+.anatomical-region[data-selected="true"] {
+  fill: #aa4dff91;
+  stroke: #dec0ff;
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+  mix-blend-mode: screen;
+}
+.anatomical-region:hover {
+  stroke: #ddc0ff;
+}
+.anatomical-region:focus-visible {
+  outline: none;
+  stroke: white;
+  stroke-width: 5;
+  fill: #b581ed60;
+}
+.anatomical-label {
+  position: absolute;
+  bottom: 9%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #21172ded;
+  color: #eee4ff;
+  border: 1px solid var(--map-accent);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.anatomical-figure figcaption {
+  text-align: center;
+  color: var(--map-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 10px;
+  margin-top: -8px;
+}
+.anatomical-fallback {
+  padding: 100px 24px;
+  text-align: center;
+  color: var(--map-muted);
+}
+.muscle-second-figure {
+  display: none;
+}
+.muscle-map-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 14px 0 0;
+  color: var(--map-muted);
+  font-size: 11px;
+}
+.muscle-map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.muscle-map-legend i {
+  width: 11px;
+  height: 11px;
+  display: inline-block;
+  border-radius: 50%;
+}
+.muscle-dot-selected {
+  background: var(--map-selected);
+}
+.muscle-dot-trained {
+  border: 1px dashed var(--map-trained);
+  background: #9c7fbb30;
+}
+.muscle-dot-neutral {
+  background: #686574;
+}
+.muscle-detail-card,
+.muscle-week-card,
+.muscle-related-card,
+.muscle-list-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--map-border);
+  border-radius: 16px;
+  background: linear-gradient(125deg, #15141d, #101016);
+}
+.muscle-map-kicker {
+  color: var(--map-muted);
+  font-size: 10px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.muscle-detail-card h2 {
+  font-size: 26px;
+  margin-bottom: 5px;
+}
+.muscle-detail-region {
+  color: var(--map-muted);
+  font-size: 13px;
+}
+.muscle-primary-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 10px 15px;
+  background: linear-gradient(110deg, #ad72ee, #bd8cfb);
+  color: #160c23;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+}
+.muscle-primary-action:hover {
+  filter: brightness(1.08);
+}
+.muscle-clear-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--map-accent);
+  width: 100%;
+  font-size: 12px;
+  margin-top: 4px;
+  cursor: pointer;
+}
+.muscle-week-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.muscle-week-card h2,
+.muscle-related-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.muscle-week-heading > span {
+  font-size: 11px;
+  color: var(--map-muted);
+}
+.muscle-week-card p,
+.muscle-related-card p {
+  color: var(--map-muted);
+  font-size: 12px;
+}
+.muscle-week-card button {
+  color: var(--map-accent);
+  text-decoration: underline;
+}
+.muscle-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 12px 0;
+}
+.muscle-stat-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.muscle-stat-grid > div + div {
+  border-left: 1px solid var(--map-border);
+  padding-left: 18px;
+}
+.muscle-stat-grid strong {
+  font-size: 26px;
+  font-weight: 600;
+}
+.muscle-stat-grid span {
+  font-size: 11px;
+  color: var(--map-muted);
+}
+.muscle-week-note {
+  margin-top: 10px;
+}
+.muscle-related-card ul {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 12px 0 0;
+  list-style: none;
+}
+.muscle-related-card > p {
+  margin-top: 12px;
+}
+.muscle-exercise-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  border: 1px solid var(--map-border);
+  border-radius: 10px;
+  padding: 10px;
+  color: var(--map-text);
+  text-decoration: none;
+  font-size: 12px;
+}
+.muscle-exercise-link span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.muscle-exercise-link svg {
+  flex-shrink: 0;
+  color: var(--map-muted);
+}
+.muscle-list-card {
+  padding: 0;
+}
+.muscle-list-card summary {
+  padding: 12px 16px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+}
+.muscle-list-card summary::-webkit-details-marker {
+  display: none;
+}
+.muscle-list-card summary > svg:last-child {
+  margin-left: auto;
+}
+.muscle-list-card[open] summary > svg:last-child {
+  transform: rotate(90deg);
+}
+.muscle-accessible-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+.muscle-accessible-list button {
+  min-height: 44px;
+  padding: 8px;
+  text-align: left;
+  font-size: 12px;
+  border-radius: 8px;
+  background: #ffffff06;
+  cursor: pointer;
+}
+.muscle-accessible-list button[aria-pressed="true"] {
+  background: #a875f533;
+  color: var(--map-accent);
+  box-shadow: inset 0 0 0 1px var(--map-accent);
+}
+.muscle-map-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--map-muted);
+  padding: 0 3px;
+}
+.muscle-map-footnote svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.muscle-map-shell {
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+}
+.muscle-map-shell .eforge-app-header {
+  max-width: 520px;
+  padding: 20px 20px 6px;
+}
+.muscle-map-shell .eforge-nav-inner {
+  font-family: var(--map-font);
+}
+.muscle-map-shell .eforge-nav a {
+  font-size: 10px;
+  font-weight: 500;
+}
+.muscle-desktop-brand {
+  display: none !important;
+}
+@media (min-width: 1024px) {
+  .muscle-map-shell {
+    padding: 0 24px 24px 214px;
+  }
+  .muscle-map-shell .eforge-app-header {
+    max-width: 1160px;
+    padding: 24px 0 0;
+  }
+  .muscle-map-shell .eforge-app-header > a:first-child {
+    visibility: hidden;
+  }
+  .muscle-map-page {
+    max-width: 1160px;
+    padding: 12px 0 24px !important;
+  }
+  .muscle-map-heading h1 {
+    font-size: 36px;
+  }
+  .muscle-map-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+    gap: 24px;
+  }
+  .muscle-map-viewer {
+    padding: 20px;
+    border: 1px solid var(--map-border);
+    border-radius: 16px;
+  }
+  .muscle-view-switch .muscle-both-control {
+    display: block;
+  }
+  .anatomical-stage {
+    width: min(100%, 350px);
+  }
+  .muscle-figures-both .anatomical-figure {
+    width: 50%;
+  }
+  .muscle-figures-both .muscle-second-figure {
+    width: 50%;
+    display: block;
+  }
+  .muscle-second-figure .anatomical-figure {
+    width: 100%;
+  }
+  .muscle-figures-both .anatomical-stage {
+    width: 100%;
+  }
+  .muscle-map-shell .eforge-nav {
+    top: 0;
+    right: auto;
+    width: 190px;
+    border-top: 0;
+    border-right: 1px solid var(--map-border);
+  }
+  .muscle-map-shell .eforge-nav-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 24px 12px;
+  }
+  .muscle-map-shell .eforge-nav a {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 12px;
+    gap: 13px;
+    font-size: 13px;
+    min-height: 48px;
+    border-radius: 10px;
+  }
+  .muscle-map-shell .eforge-nav a[aria-current="page"] {
+    background: #b885ff14;
+  }
+  .muscle-map-shell .eforge-nav a[aria-current="page"]::before {
+    top: 12px;
+    bottom: 12px;
+    left: 0;
+    height: auto;
+    width: 2px;
+  }
+  .muscle-map-shell .muscle-desktop-brand {
+    display: flex !important;
+    margin-bottom: 40px;
+    padding: 4px;
+  }
+  .muscle-desktop-brand .eforge-brand {
+    gap: 5px;
+  }
+  .muscle-desktop-brand .eforge-wordmark {
+    font-size: 21px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .anatomical-region {
+    transition: none;
+  }
+}
+
+/* Keep the primary action close to the avatar on a phone. */
+.muscle-detail-card { position: relative; }
+.muscle-detail-card .muscle-map-kicker { padding-right: 35px; }
+.muscle-clear-action { position: absolute; top: 7px; right: 7px; width: 44px; min-height: 44px; margin: 0; border-radius: 10px; }
+.muscle-clear-action:hover { background: #b885ff14; }
+.anatomical-figure figcaption { margin-top: 4px; }
+.anatomical-label { bottom: 0; }
+.anatomical-region:focus:not(:focus-visible) { outline: none; }
+@media(max-width:1023px) {
+ .muscle-map-shell .eforge-app-header { padding-top: max(12px,env(safe-area-inset-top)); padding-bottom: 0; }
+ .muscle-map-page { padding-top: 12px!important; }
+ .muscle-map-heading { margin-bottom: 14px; }
+ .muscle-map-heading h1 { font-size: 28px; }
+ .anatomical-stage { width: min(100%,clamp(200px,25svh,260px)); }
+ .anatomical-figure figcaption { display: none; }
+}

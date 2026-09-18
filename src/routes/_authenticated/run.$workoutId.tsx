@@ -19,7 +19,7 @@ function Run(){
  useEffect(()=>{if(user)supabase.from('exercises').select('id,nome,musculo_principal,musculos_secundarios,musculos_terciarios').order('nome').then(({data})=>setChoices(data||[]))},[user?.id]);
  const [sound,setSound]=useState(false);
  const [bodyGender,setBodyGender]=useState<BodyGender>('male');
- useEffect(()=>{if(!user)return;supabase.from('profiles').select('sex').eq('id',user.id).maybeSingle().then(({data})=>setBodyGender(data?.sex==='feminino'?'female':'male')).catch(()=>{});},[user?.id]);
+ useEffect(()=>{if(!user)return;Promise.resolve(supabase.from('profiles').select('sex').eq('id',user.id).maybeSingle()).then(({data})=>setBodyGender(data?.sex==='feminino'?'female':'male')).catch(()=>{});},[user?.id]);
  const [draft,setDraft]=useState<Draft|null>(null); const [now,setNow]=useState(Date.now()); const [status,setStatus]=useState(''); const [error,setError]=useState(''); const [saving,setSaving]=useState(false);
  useEffect(()=>{if(!user)return; let active=true;
  (async()=>{ const old=readDraft(user.id); if(old && (!old.finished || !old.synced)){if(active)setDraft(old);return;}

@@ -1,3 +1,5 @@
+import { isMuscleKey, MUSCLES } from '@/components/muscle-map/anatomy';
+import { relatedMuscles } from '@/lib/muscle-map-data';
 import { MuscleThumbnail } from "@/components/MuscleThumbnail";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -71,13 +73,20 @@ const MUSCLE_OPTIONS = [
 
 export const Route = createFileRoute("/_authenticated/exercises")({
   head: () => ({ meta: [{ title: "eForge — Exercícios" }] }),
+  validateSearch: (search: Record<string, unknown>): { muscle?: import('@/components/MuscleBody').MuscleKey; q?: string } => ({
+    muscle: isMuscleKey(search.muscle) ? search.muscle : undefined,
+    q: typeof search.q === 'string' ? search.q.slice(0, 120) : undefined,
+  }),
   component: ExercisesPage,
 });
 
 function ExercisesPage() {
   const { user } = useAuth();
+  const routeSearch = Route.useSearch();
+  const navigate = Route.useNavigate();
   const qc = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(routeSearch.q ?? "");
+  useEffect(() => { setSearch(routeSearch.q ?? ""); }, [routeSearch.q]);
   const [fMuscle, setFMuscle] = useState<string>("all");
   const [fCategory, setFCategory] = useState<string>("all");
   const [fControl, setFControl] = useState<string>("all");
@@ -102,12 +111,13 @@ function ExercisesPage() {
     const q = search.trim().toLowerCase();
     return exercises.filter((e) => {
       if (q && !e.nome.toLowerCase().includes(q)) return false;
+      if (routeSearch.muscle && !relatedMuscles(e).includes(routeSearch.muscle)) return false;
       if (fMuscle !== "all" && e.musculo_principal !== fMuscle) return false;
       if (fCategory !== "all" && e.categoria !== fCategory) return false;
       if (fControl !== "all" && e.tipo_controle !== fControl) return false;
       return true;
     });
-  }, [exercises, search, fMuscle, fCategory, fControl]);
+  }, [exercises, search, fMuscle, fCategory, fControl, routeSearch.muscle]);
 
   const deleteMutation = useMutation({
     mutationFn: async (ex: Exercise) => {
@@ -147,6 +157,10 @@ function ExercisesPage() {
         </Button>
       </div>
 
+      {routeSearch.muscle && <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-border p-3">
+        <span>Relacionados a {MUSCLES[routeSearch.muscle].label}</span>
+        <button type="button" className="text-neon px-2" aria-label="Limpar filtro do mapa muscular" onClick={() => { setSearch(''); void navigate({ search: {} }); }}>Limpar</button>
+      </div>}
       {/* Search */}
       <div className="mt-5 relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
