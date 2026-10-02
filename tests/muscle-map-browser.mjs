@@ -38,7 +38,7 @@ await context.route('**/*',async route=>{
  if(url.origin!==new URL(supabaseURL).origin)return route.abort();
  let body=[];
  if(url.pathname.includes('/auth/v1/user'))body=user;
- else if(url.pathname.endsWith('/rpc/search_exercises')){
+ else if(url.pathname.endsWith('/rpc/search_exercises_v2')){
   const input=JSON.parse(route.request().postData()||'{}');
   const keys={Peito:'chest',Costas:'lats','Tríceps':'triceps','Bíceps':'biceps',Ombros:'shoulders'};
   const items=(empty?[]:examples).filter(e=>(!input.p_query||e.nome.toLowerCase().includes(input.p_query.toLowerCase()))&&(!input.p_muscles?.length||[e.musculo_principal,...e.musculos_secundarios].some(m=>input.p_muscles.includes(keys[m]))));

@@ -19,3 +19,66 @@
 .exercise-dialog h2 {
   padding-right: 2rem;
 }
+.exercise-admin-page h3 {
+  overflow-wrap: anywhere;
+}
+.exercise-admin-page input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--neon);
+}
+.exercise-admin-page input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 3px;
+}
+
+.exercise-admin-page #gif-import,
+.exercise-admin-page #manager-title {
+  scroll-margin-top: 1.5rem;
+}
+.exercise-admin-page input[type="file"] {
+  max-width: 100%;
+  overflow: hidden;
+}
+.exercise-admin-page .owned-file-picker {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.exercise-admin-page .owned-file-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.exercise-admin-page .owned-file-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+.exercise-admin-page .owned-file-picker .owned-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.exercise-admin-page .owned-file-picker:focus-within {
+  outline: 2px solid var(--neon);
+  outline-offset: 3px;
+}
+.exercise-admin-page .owned-file-picker:has(input:disabled) {
+  opacity: 0.6;
+}

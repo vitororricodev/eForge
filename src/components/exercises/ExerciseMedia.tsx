@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MuscleThumbnail } from "@/components/MuscleThumbnail";
+import { ImageOff } from "lucide-react";
 export function ExerciseMedia({
   url,
   name,
@@ -28,7 +29,11 @@ export function ExerciseMedia({
           className="grid h-full w-full place-items-center"
           aria-label="Demonstração indisponível"
         >
-          <MuscleThumbnail muscle={muscle} />
+          {muscle ? (
+            <MuscleThumbnail muscle={muscle} />
+          ) : (
+            <ImageOff className="size-8 text-muted-foreground" aria-hidden="true" />
+          )}
         </div>
       )}
     </div>

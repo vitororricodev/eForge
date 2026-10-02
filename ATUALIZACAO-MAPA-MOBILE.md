@@ -2,6 +2,8 @@
 
 Implementação sobre o `eForge.zip` enviado em 16/09/2026. Sem publicação e sem alterações no banco remoto.
 
+Atualização da biblioteca em 02/10/2026: a consulta de exercícios passa por `search_exercises_v2`, compartilhada pela biblioteca e pelos treinos, com os GIFs próprios do eForge. Esta atualização preserva toda a arte/interação do mapa, a janela semanal e os pesos. Referências de exercícios antigos usadas no histórico são arquivadas com seus IDs preservados. Consulte [Biblioteca oficial eForge](BIBLIOTECA-EFORGE.md).
+
 ## Alterações
 
 - `/muscle-map` usa o layout mobile aprovado: frente/costas, um corpo inteiro por vez, seleção em roxo, nomes, detalhes abaixo, lista de músculos e navegação inferior.

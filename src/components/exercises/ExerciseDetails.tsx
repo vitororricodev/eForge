@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { muscleLabel } from "@/lib/exercise-labels";
+import { muscleLabel, equipmentLabel, bodyPartLabel } from "@/lib/exercise-labels";
 import type { Exercise } from "@/lib/exercise-types";
 import { ExerciseMedia } from "./ExerciseMedia";
 export function ExerciseDetails({
@@ -44,13 +44,18 @@ export function ExerciseDetails({
               className="h-56 w-full"
             />
             {exercise.name_original && exercise.name_original !== exercise.nome && (
-              <p className="text-muted-foreground">Nome original: {exercise.name_original}</p>
+              <details className="text-muted-foreground">
+                <summary className="min-h-11 cursor-pointer">Nome original</summary>
+                <p lang="en">{exercise.name_original}</p>
+              </details>
             )}
             {exercise.descricao && <p>{exercise.descricao}</p>}
             <dl className="space-y-3 text-lg">
               {[
                 [
-                  "Principais",
+                  exercise.musculo_principal_anatomico
+                    ? "Regiões primárias no avatar"
+                    : "Principais",
                   (exercise.musculos_primarios.length
                     ? exercise.musculos_primarios
                     : [exercise.musculo_principal]
@@ -65,9 +70,39 @@ export function ExerciseDetails({
                 ...(exercise.musculos_terciarios.length
                   ? [["Terciários", exercise.musculos_terciarios.map(muscleLabel).join(", ")]]
                   : []),
-                ["Equipamento", exercise.equipamentos.join(", ") || "Não informado"],
-                ["Parte do corpo", exercise.partes_corpo.join(", ") || "Não informada"],
+                [
+                  "Equipamento",
+                  (exercise.equipamentos_pt_br.length
+                    ? exercise.equipamentos_pt_br
+                    : exercise.equipamentos.map(equipmentLabel)
+                  ).join(", ") || "Não informado",
+                ],
+                [
+                  "Categoria da biblioteca",
+                  (exercise.partes_corpo_pt_br.length
+                    ? exercise.partes_corpo_pt_br
+                    : exercise.partes_corpo.map(bodyPartLabel)
+                  ).join(", ") || "Não informada",
+                ],
                 ...(exercise.dificuldade ? [["Dificuldade", exercise.dificuldade]] : []),
+                ...(exercise.musculo_principal_anatomico
+                  ? [["Músculo primário anatômico", exercise.musculo_principal_anatomico]]
+                  : []),
+                ...(exercise.classification_confidence
+                  ? [
+                      [
+                        "Confiança da classificação",
+                        exercise.classification_confidence === "media"
+                          ? "Média"
+                          : exercise.classification_confidence === "alta"
+                            ? "Alta"
+                            : "Baixa",
+                      ],
+                    ]
+                  : []),
+                ...(exercise.unmapped_muscles.length
+                  ? [["Sem região específica no avatar", exercise.unmapped_muscles.join(", ")]]
+                  : []),
               ].map(([label, value]) => (
                 <div key={label}>
                   <dt className="text-muted-foreground">{label}</dt>
@@ -75,6 +110,12 @@ export function ExerciseDetails({
                 </div>
               ))}
             </dl>
+            {exercise.gif_sha256 && !exercise.classification_reviewed && (
+              <p className="text-base text-muted-foreground">
+                Classificação fornecida no manifesto; revisão administrativa pendente. As regiões do
+                avatar não substituem a anatomia indicada.
+              </p>
+            )}
             <section>
               <h3 className="text-2xl">Como executar</h3>
               {instructions.length ? (

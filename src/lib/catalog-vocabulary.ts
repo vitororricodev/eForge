@@ -1,0 +1,42 @@
+// Source identifiers stay unchanged in the database; only their display labels are localized.
+export const BODY_PART_LABELS: Record<string, string> = {
+  chest: "Peito",
+  back: "Costas",
+  shoulders: "Ombros",
+  waist: "Abdômen",
+  "upper arms": "Braços",
+  "lower arms": "Antebraços",
+  "upper legs": "Coxas",
+  "lower legs": "Panturrilhas",
+  neck: "Pescoço",
+  cardio: "Cardio",
+};
+export const EQUIPMENT_LABELS: Record<string, string> = {
+  barbell: "Barra",
+  dumbbell: "Halteres",
+  cable: "Polia",
+  "body weight": "Peso corporal",
+  "leverage machine": "Máquina de alavanca",
+  "smith machine": "Máquina Smith",
+  kettlebell: "Kettlebell",
+  band: "Faixa elástica",
+  "resistance band": "Elástico de resistência",
+  "medicine ball": "Bola medicinal",
+  "stability ball": "Bola de estabilidade",
+  "bosu ball": "Bola Bosu",
+  "ez barbell": "Barra W",
+  "olympic barbell": "Barra olímpica",
+  "trap bar": "Barra hexagonal",
+  weighted: "Com carga",
+  assisted: "Assistido",
+  roller: "Rolo",
+  rope: "Corda",
+  "wheel roller": "Roda abdominal",
+  "elliptical machine": "Elíptico",
+  "stationary bike": "Bicicleta ergométrica",
+  "stepmill machine": "Máquina de escadas",
+  "skierg machine": "SkiErg",
+  sled: "Trenó",
+};
+export const sourceLabel = (value: string, labels: Record<string, string>) =>
+  labels[value.trim().toLowerCase()] ?? value;

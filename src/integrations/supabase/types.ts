@@ -8,8 +8,94 @@ export type Database = {
   };
   public: {
     Tables: {
+      owned_catalog_state: {
+        Row: {
+          singleton: boolean;
+          legacy_disabled: boolean;
+          activated_at: string | null;
+          activated_by: string | null;
+          removed_count: number;
+          archived_count: number;
+        };
+        Insert: {
+          singleton?: boolean;
+          legacy_disabled?: boolean;
+          activated_at?: string | null;
+          activated_by?: string | null;
+          removed_count?: number;
+          archived_count?: number;
+        };
+        Update: {
+          singleton?: boolean;
+          legacy_disabled?: boolean;
+          activated_at?: string | null;
+          activated_by?: string | null;
+          removed_count?: number;
+          archived_count?: number;
+        };
+        Relationships: [];
+      };
+      exercise_translation_runs: {
+        Row: {
+          id: string;
+          initiated_by: string;
+          status: "running" | "completed" | "cancelled";
+          target_ids: string[];
+          cursor: number;
+          total: number;
+          translated: number;
+          skipped: number;
+          estimated_characters: number;
+          last_error: string | null;
+          lease_token: string | null;
+          lease_until: string | null;
+          claimed_data: Json;
+          started_at: string;
+          updated_at: string;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          initiated_by: string;
+          status?: "running" | "completed" | "cancelled";
+          target_ids?: string[];
+          cursor?: number;
+          total?: number;
+          translated?: number;
+          skipped?: number;
+          estimated_characters?: number;
+          last_error?: string | null;
+          lease_token?: string | null;
+          lease_until?: string | null;
+          claimed_data?: Json;
+          started_at?: string;
+          updated_at?: string;
+          finished_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          initiated_by?: string;
+          status?: "running" | "completed" | "cancelled";
+          target_ids?: string[];
+          cursor?: number;
+          total?: number;
+          translated?: number;
+          skipped?: number;
+          estimated_characters?: number;
+          last_error?: string | null;
+          lease_token?: string | null;
+          lease_until?: string | null;
+          claimed_data?: Json;
+          started_at?: string;
+          updated_at?: string;
+          finished_at?: string | null;
+        };
+        Relationships: [];
+      };
+
       exercise_sync_runs: {
         Row: {
+          body_parts: string[];
           id: string;
           initiated_by: string;
           status: "running" | "completed" | "failed";
@@ -31,6 +117,7 @@ export type Database = {
           finished_at: string | null;
         };
         Insert: {
+          body_parts?: string[];
           id?: string;
           initiated_by: string;
           status?: "running" | "completed" | "failed";
@@ -52,6 +139,7 @@ export type Database = {
           finished_at?: string | null;
         };
         Update: {
+          body_parts?: string[];
           id?: string;
           initiated_by?: string;
           status?: "running" | "completed" | "failed";
@@ -223,6 +311,13 @@ export type Database = {
       };
       exercises: {
         Row: {
+          gif_path: string | null;
+          gif_sha256: string | null;
+          musculo_principal_anatomico: string | null;
+          classification_confidence: "alta" | "media" | "baixa" | null;
+          catalog_deleted_at: string | null;
+          equipamentos_pt_br: string[];
+          partes_corpo_pt_br: string[];
           source: "user" | "eforge" | "exercisedb";
           external_id: string | null;
           name_original: string | null;
@@ -260,6 +355,13 @@ export type Database = {
           user_id: string | null;
         };
         Insert: {
+          gif_path?: string | null;
+          gif_sha256?: string | null;
+          musculo_principal_anatomico?: string | null;
+          classification_confidence?: "alta" | "media" | "baixa" | null;
+          catalog_deleted_at?: string | null;
+          equipamentos_pt_br?: string[];
+          partes_corpo_pt_br?: string[];
           source?: "user" | "eforge" | "exercisedb";
           external_id?: string | null;
           name_original?: string | null;
@@ -295,6 +397,13 @@ export type Database = {
           user_id: string | null;
         };
         Update: {
+          gif_path?: string | null;
+          gif_sha256?: string | null;
+          musculo_principal_anatomico?: string | null;
+          classification_confidence?: "alta" | "media" | "baixa" | null;
+          catalog_deleted_at?: string | null;
+          equipamentos_pt_br?: string[];
+          partes_corpo_pt_br?: string[];
           source?: "user" | "eforge" | "exercisedb";
           external_id?: string | null;
           name_original?: string | null;
@@ -665,6 +774,80 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      set_owned_exercise_active: { Args: { p_id: string; p_active: boolean }; Returns: undefined };
+      inspect_owned_gif_assets: { Args: { p_entries: Json }; Returns: Json };
+      import_owned_gif: { Args: { p_entry: Json; p_gif_url: string }; Returns: Json };
+      owned_catalog_report: {
+        Args: { p_hashes?: string[]; p_include_reviews?: boolean };
+        Returns: Json;
+      };
+      activate_owned_gif_library: { Args: { p_hashes: string[] }; Returns: Json };
+      admin_owned_catalog_page: {
+        Args: {
+          p_query?: string;
+          p_body_part?: string | null;
+          p_primary?: string | null;
+          p_secondary?: string | null;
+          p_equipment?: string | null;
+          p_source?: string | null;
+          p_visibility?: string | null;
+          p_status?: string;
+          p_page?: number;
+          p_page_size?: number;
+          p_ids_only?: boolean;
+        };
+        Returns: Json;
+      };
+      search_exercises_v2: {
+        Args: {
+          p_query?: string;
+          p_muscles?: string[];
+          p_equipment?: string | null;
+          p_body_part?: string | null;
+          p_category?: string | null;
+          p_control?: string | null;
+          p_source?: string | null;
+          p_page?: number;
+          p_page_size?: number;
+          p_review?: boolean;
+          p_primary?: string | null;
+          p_secondary?: string | null;
+          p_visibility?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_catalog_page: {
+        Args: {
+          p_query?: string;
+          p_body_part?: string | null;
+          p_source?: string | null;
+          p_status?: string;
+          p_page?: number;
+          p_page_size?: number;
+        };
+        Returns: Json;
+      };
+      delete_catalog_exercises: { Args: { p_ids?: string[]; p_all?: boolean }; Returns: number };
+      restore_catalog_exercise: { Args: { p_id: string }; Returns: undefined };
+      begin_exercise_sync_filtered: {
+        Args: { p_actor: string; p_body_parts?: string[] };
+        Returns: Json;
+      };
+      begin_catalog_translation: {
+        Args: { p_actor: string; p_ids?: string[]; p_all?: boolean };
+        Returns: Json;
+      };
+      claim_catalog_translation: { Args: { p_run_id: string }; Returns: Json };
+      apply_catalog_translation: {
+        Args: { p_run_id: string; p_token: string; p_cursor: number; p_results: Json };
+        Returns: Json;
+      };
+      release_catalog_translation: {
+        Args: { p_run_id: string; p_token: string; p_error: string };
+        Returns: undefined;
+      };
+      cancel_catalog_translation: { Args: { p_run_id: string }; Returns: undefined };
+
       search_exercises: {
         Args: {
           p_query?: string;

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { muscleKeys, MUSCLES } from "@/components/muscle-map/anatomy";
 import { resolveMuscleKeys } from "@/lib/muscle-activity";
+import { LIBRARY_CATEGORIES } from "@/lib/owned-gif-manifest";
 import type { Exercise, ExerciseVisibility } from "@/lib/exercise-types";
 type ControlType = Exercise["tipo_controle"];
 type Category = Exercise["categoria"];
@@ -62,7 +63,7 @@ export function ExerciseFormDialog({
   const official = !!editing && editing.source !== "user";
   const original = useQuery({
     queryKey: ["exercises", "external-review", editing?.id],
-    enabled: open && official && isAdmin,
+    enabled: open && editing?.source === "exercisedb" && isAdmin,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("exercises")
@@ -82,6 +83,10 @@ export function ExerciseFormDialog({
     },
   });
 
+  const [libraryCategory, setLibraryCategory] = useState("");
+  const [anatomy, setAnatomy] = useState("");
+  const [confidence, setConfidence] = useState<Exercise["classification_confidence"]>(null);
+  const [unmapped, setUnmapped] = useState("");
   const [descricao, setDescricao] = useState("");
   const [equipment, setEquipment] = useState("");
   const [instructions, setInstructions] = useState("");
@@ -133,6 +138,10 @@ export function ExerciseFormDialog({
         setObservacoes("");
         setPreviewUrl(null);
       }
+      setLibraryCategory(editing?.gif_sha256 ? (editing.partes_corpo[0] ?? "") : "");
+      setAnatomy(editing?.musculo_principal_anatomico ?? "");
+      setConfidence(editing?.classification_confidence ?? null);
+      setUnmapped(editing?.unmapped_muscles.join("; ") ?? "");
       setDescricao(editing?.descricao ?? "");
       setEquipment(editing?.equipamentos.join(", ") ?? "");
       setInstructions(editing?.instrucoes.join("\n") ?? "");
@@ -175,7 +184,7 @@ export function ExerciseFormDialog({
     mutationFn: async () => {
       if (!userId) throw new Error("Usuário não autenticado");
       if (official && !isAdmin) throw new Error("Permissão administrativa necessária");
-      if (!musculoPrincipal) throw new Error("Selecione o músculo principal");
+      if (!musculoPrincipal && !official) throw new Error("Selecione o músculo principal");
       const trimmed = nome.trim();
       if (!trimmed) throw new Error("Informe o nome do exercício");
 
@@ -219,9 +228,27 @@ export function ExerciseFormDialog({
           .split("\n")
           .map((v) => v.trim())
           .filter(Boolean),
-        musculos_primarios: [musculoPrincipal, ...otherPrimaries],
+        musculos_primarios: [musculoPrincipal, ...otherPrimaries].filter(Boolean),
         ...(official
           ? {
+              ...(editing?.gif_sha256
+                ? {
+                    partes_corpo: [libraryCategory],
+                    partes_corpo_pt_br: [
+                      LIBRARY_CATEGORIES[libraryCategory as keyof typeof LIBRARY_CATEGORIES],
+                    ],
+                    musculo_principal_anatomico: anatomy.trim() || null,
+                    classification_confidence: confidence,
+                    unmapped_muscles: [
+                      ...new Set(
+                        unmapped
+                          .split(";")
+                          .map((v) => v.trim())
+                          .filter(Boolean),
+                      ),
+                    ],
+                  }
+                : {}),
               name_pt_br: namePt.trim() || null,
               instrucoes_pt_br: instructionsPt
                 .split("\n")
@@ -287,20 +314,26 @@ export function ExerciseFormDialog({
                     alt="preview"
                     className="w-full max-h-64 object-contain bg-black"
                   />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFile(null);
-                      setPreviewUrl(null);
-                      setRemoveExistingMedia(true);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                    className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-black/70 text-white hover:bg-destructive"
-                    aria-label="Remover"
-                  >
-                    <X className="size-4" />
-                  </button>
+                  {!editing?.gif_sha256 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFile(null);
+                        setPreviewUrl(null);
+                        setRemoveExistingMedia(true);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-black/70 text-white hover:bg-destructive"
+                      aria-label="Remover"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  )}
                 </div>
+              ) : editing?.gif_sha256 ? (
+                <p className="text-muted-foreground">
+                  GIF oficial ausente. Reenvie o arquivo pelo importador.
+                </p>
               ) : (
                 <button
                   type="button"
@@ -327,7 +360,7 @@ export function ExerciseFormDialog({
                   setFile(f);
                 }}
               />
-              {previewUrl && (
+              {previewUrl && !editing?.gif_sha256 && (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -383,6 +416,59 @@ export function ExerciseFormDialog({
           {official && (
             <fieldset className="space-y-3 rounded-2xl border border-neon/30 p-3">
               <legend>Revisão do catálogo oficial</legend>
+              {editing?.gif_sha256 && (
+                <div className="space-y-3">
+                  <label className="block text-lg">
+                    Categoria da biblioteca
+                    <select
+                      aria-label="Categoria oficial"
+                      className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"
+                      value={libraryCategory}
+                      onChange={(e) => setLibraryCategory(e.target.value)}
+                    >
+                      {Object.entries(LIBRARY_CATEGORIES).map(([key, label]) => (
+                        <option key={key} value={key}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <Label htmlFor="ex-anatomy">Músculo primário anatômico</Label>
+                  <Input
+                    id="ex-anatomy"
+                    value={anatomy}
+                    onChange={(e) => setAnatomy(e.target.value)}
+                    maxLength={300}
+                  />
+                  <label className="block text-lg">
+                    Confiança
+                    <select
+                      aria-label="Confiança da classificação"
+                      className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"
+                      value={confidence ?? ""}
+                      onChange={(e) =>
+                        setConfidence(
+                          (e.target.value || null) as Exercise["classification_confidence"],
+                        )
+                      }
+                    >
+                      <option value="">Não informada</option>
+                      <option value="alta">Alta</option>
+                      <option value="media">Média</option>
+                      <option value="baixa">Baixa</option>
+                    </select>
+                  </label>
+                  <Label htmlFor="ex-unmapped">
+                    Sem região no avatar (separe por ponto e vírgula)
+                  </Label>
+                  <Input
+                    id="ex-unmapped"
+                    value={unmapped}
+                    onChange={(e) => setUnmapped(e.target.value)}
+                    maxLength={1000}
+                  />
+                </div>
+              )}
               {original.data && (
                 <details>
                   <summary className="min-h-11 cursor-pointer text-neon">
@@ -542,8 +628,9 @@ export function ExerciseFormDialog({
           <div>
             <Label>Músculo principal</Label>
             <Select
-              value={musculoPrincipal}
-              onValueChange={(value) => {
+              value={musculoPrincipal || "__none__"}
+              onValueChange={(selected) => {
+                const value = selected === "__none__" ? "" : selected;
                 setMusculoPrincipal(value);
                 setOtherPrimaries((prev) => prev.filter((m) => m !== value));
                 setMusculosSecundarios((prev) => prev.filter((m) => m !== value));
@@ -554,6 +641,7 @@ export function ExerciseFormDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                {official && <SelectItem value="__none__">Sem região no avatar</SelectItem>}
                 {MUSCLE_OPTIONS.map((m) => (
                   <SelectItem key={m} value={m}>
                     {MUSCLES[m].label}

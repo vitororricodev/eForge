@@ -1,0 +1,25 @@
+{
+  "removed_files": [
+    "scripts/sync-exercisedb.mjs",
+    "src/components/exercises/ExerciseSyncPanel.tsx",
+    "src/components/exercises/ExerciseTranslationPanel.tsx",
+    "src/components/exercises/MuscleMappingPanel.tsx",
+    "supabase/functions/_shared/exercisedb.ts",
+    "supabase/functions/_shared/sync-handler.ts",
+    "supabase/functions/_shared/catalog-labels.ts",
+    "supabase/functions/_shared/catalog-translation.ts",
+    "supabase/functions/sync-exercisedb/index.ts",
+    "supabase/functions/translate-exercises/index.ts",
+    "tests/exercisedb.mjs",
+    "tests/exercisedb-database.mjs",
+    "tests/exercisedb-browser.mjs",
+    "tests/helpers/exercisedb.mjs",
+    "tests/catalog-management.mjs",
+    "tests/catalog-management-database.mjs",
+    "tests/catalog-management-manual.mjs",
+    "INTEGRACAO-EXERCISEDB.md",
+    "ATUALIZACAO-CATALOGO-PT-BR.md",
+    "maintenance/20261002180000_catalog_management_manual.sql"
+  ],
+  "note": "Arquivos de versões anteriores que devem ser removidos ao aplicar este pacote por cópia. O script PowerShell move apenas estes caminhos para um backup fora do projeto. Migrations históricas não são removidas."
+}

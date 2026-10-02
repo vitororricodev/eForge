@@ -1,4 +1,4 @@
-import { muscleLabel } from "@/lib/exercise-labels";
+import { muscleLabel, equipmentLabel } from "@/lib/exercise-labels";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -68,6 +68,15 @@ function ExercisesPage() {
   };
   const deleteMutation = useMutation({
     mutationFn: async (ex: Exercise) => {
+      if (ex.source !== "user") {
+        if (!admin.data) throw new Error("Permissão administrativa necessária");
+        const { error } = await supabase.rpc("delete_catalog_exercises", {
+          p_ids: [ex.id],
+          p_all: false,
+        });
+        if (error) throw error;
+        return;
+      }
       if (ex.source !== "user" || ex.user_id !== user?.id)
         throw new Error("Você só pode excluir seus próprios exercícios");
       const { error } = await supabase
@@ -192,7 +201,10 @@ function ExercisesPage() {
                           {muscleLabel(ex.musculo_principal)}
                         </p>
                         <p className="text-base text-muted-foreground">
-                          {ex.equipamentos.join(", ") || "Equipamento não informado"}
+                          {(ex.equipamentos_pt_br.length
+                            ? ex.equipamentos_pt_br
+                            : ex.equipamentos.map(equipmentLabel)
+                          ).join(", ") || "Equipamento não informado"}
                         </p>
                       </div>
                     </div>
@@ -202,13 +214,8 @@ function ExercisesPage() {
                           ? ex.visibility === "public"
                             ? "Comunidade"
                             : "Só eu"
-                          : "Oficial · " + (ex.source === "exercisedb" ? "ExerciseDB" : "eForge")}
+                          : "Oficial · " + (ex.source === "exercisedb" ? "Legado" : "eForge")}
                       </Badge>
-                      {!ex.classification_reviewed && (
-                        <Badge variant="outline" className="text-sm">
-                          Categoria a revisar
-                        </Badge>
-                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -242,11 +249,12 @@ function ExercisesPage() {
                           <Pencil size={16} />
                           Editar
                         </Button>
-                        {ex.source === "user" && (
+                        {(ex.source === "user" || admin.data) && (
                           <Button
                             variant="ghost"
                             className="h-11 text-destructive"
                             aria-label={`Excluir ${ex.nome}`}
+                            disabled={deleteMutation.isPending}
                             onClick={() => setToDelete(ex)}
                           >
                             <Trash2 size={16} />
@@ -270,18 +278,12 @@ function ExercisesPage() {
           </>
         )}
       </div>
-      <p className="mt-7 text-base text-muted-foreground">
-        Catálogo ExerciseDB e mídias por{" "}
-        <a
-          href="https://ascendapi.com"
-          target="_blank"
-          rel="noreferrer"
-          className="text-neon underline"
-        >
-          AscendAPI
-        </a>
-        . Instruções originais podem estar em inglês.
-      </p>
+      {catalog.data?.items.some((ex) => ex.source === "exercisedb") && (
+        <p className="mt-7 text-base text-muted-foreground">
+          Catálogo legado: dados e mídia ExerciseDB / AscendAPI. Termine a substituição na
+          administração para usar a biblioteca própria.
+        </p>
+      )}
       <ExerciseDetails
         exercise={detail}
         onClose={() => setDetail(null)}
@@ -303,7 +305,10 @@ function ExercisesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir exercício?</AlertDialogTitle>
             <AlertDialogDescription>
-              {toDelete?.nome} será removido. Os registros de séries concluídas são preservados.
+              {toDelete?.nome} será removido da biblioteca. Os registros de séries concluídas são
+              preservados.
+              {toDelete?.source !== "user" &&
+                " Treinos existentes também são preservados. Você pode restaurar o item na administração."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

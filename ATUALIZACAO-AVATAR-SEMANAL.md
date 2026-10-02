@@ -2,6 +2,8 @@
 
 Atualização aplicada em 16/09/2026.
 
+Biblioteca própria em 02/10/2026: os novos exercícios `source=eforge` usam as chaves fornecidas pelo manifesto, com primário e secundários; terciários começam vazios. Arte, pesos 1/0,55/0,25 e a janela semanal abaixo permanecem intactos. Consulte [Biblioteca oficial eForge](BIBLIOTECA-EFORGE.md).
+
 ## O que mudou
 
 - Avatar muscular passa a usar base cinza/translúcida quando não há ativação.

@@ -1,13 +1,15 @@
 import { z } from "zod";
 import type { MuscleKey } from "@/components/MuscleBody";
-export type {
-  ExerciseDBExercise,
-  MuscleMapping,
-  SyncResult,
-} from "../../supabase/functions/_shared/exercisedb";
 export type ExerciseSource = "exercisedb" | "eforge" | "user";
 export type ExerciseVisibility = "public" | "private";
 export const exerciseSchema = z.object({
+  gif_path: z.string().nullable().default(null),
+  gif_sha256: z.string().nullable().default(null),
+  musculo_principal_anatomico: z.string().nullable().default(null),
+  classification_confidence: z.enum(["alta", "media", "baixa"]).nullable().default(null),
+  catalog_deleted_at: z.string().nullable().optional(),
+  equipamentos_pt_br: z.array(z.string()).default([]),
+  partes_corpo_pt_br: z.array(z.string()).default([]),
   id: z.string().uuid(),
   user_id: z.string().uuid().nullable(),
   nome: z.string(),
@@ -48,6 +50,9 @@ export interface CatalogFilters {
   query?: string;
   muscles?: MuscleKey[];
   equipment?: string;
+  primaryMuscle?: string;
+  secondaryMuscle?: string;
+  visibility?: ExerciseVisibility;
   bodyPart?: string;
   category?: string;
   control?: string;

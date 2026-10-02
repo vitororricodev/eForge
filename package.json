@@ -14,11 +14,12 @@
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",
     "cap:ios": "npx cap open ios",
-    "test": "node tests/workout-storage.mjs && node tests/muscle-activity.mjs && node tests/database.mjs && node tests/intro-session.mjs && node tests/muscle-map-data.mjs && node tests/exercisedb.mjs && node tests/exercisedb-database.mjs",
+    "test": "node tests/workout-storage.mjs && node tests/muscle-activity.mjs && node tests/database.mjs && node tests/intro-session.mjs && node tests/muscle-map-data.mjs && node tests/owned-gif-library.mjs && node tests/owned-gif-database.mjs && node tests/owned-gif-manual.mjs",
     "typecheck": "tsc --noEmit",
     "intro:dev": "vite --config vite.intro.config.ts",
     "intro:build": "vite build --config vite.intro.config.ts",
-    "exercisedb:sync": "node scripts/sync-exercisedb.mjs"
+    "catalog:import": "node scripts/import-owned-gifs.mjs",
+    "catalog:prepare": "node scripts/prepare-owned-gifs.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
@@ -64,6 +65,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "fflate": "0.8.3",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
     "nitro": "3.0.260603-beta",

@@ -20,7 +20,10 @@ export function useExerciseCatalog(filters: CatalogFilters = {}, enabled = true)
     enabled: !!user && enabled,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("search_exercises", {
+      const { data, error } = await supabase.rpc("search_exercises_v2", {
+        p_primary: filters.primaryMuscle || null,
+        p_secondary: filters.secondaryMuscle || null,
+        p_visibility: filters.visibility || null,
         p_query: filters.query ?? "",
         p_muscles: filters.muscles ?? [],
         p_equipment: filters.equipment || null,
@@ -47,7 +50,12 @@ export function useCatalogFacets(enabled = true) {
       const { data, error } = await supabase.rpc("exercise_catalog_facets");
       if (error) throw error;
       return z
-        .object({ equipments: z.array(z.string()), bodyParts: z.array(z.string()) })
+        .object({
+          equipments: z.array(z.string()),
+          bodyParts: z.array(z.string()),
+          equipmentLabels: z.record(z.string()).default({}),
+          bodyPartLabels: z.record(z.string()).default({}),
+        })
         .parse(data);
     },
   });

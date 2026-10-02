@@ -1,19 +1,23 @@
 import "./catalog.css";
+import { equipmentLabel, bodyPartLabel } from "@/lib/exercise-labels";
 import { useId } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MUSCLES, muscleKeys } from "@/components/muscle-map/anatomy";
 import { useCatalogFacets } from "@/hooks/use-exercise-catalog";
 import { MUSCLE_GROUPS, type CatalogFilters } from "@/lib/exercise-types";
+import { LIBRARY_CATEGORIES } from "@/lib/owned-gif-manifest";
 
 export function CatalogControls({
   filters,
   onChange,
   enabled = true,
+  officialOnly = false,
 }: {
   filters: CatalogFilters;
   onChange: (filters: CatalogFilters) => void;
   enabled?: boolean;
+  officialOnly?: boolean;
 }) {
   const id = useId();
   const facets = useCatalogFacets(enabled);
@@ -30,6 +34,20 @@ export function CatalogControls({
       item.muscles.every((m) => filters.muscles?.includes(m)),
   );
   const controls = [
+    {
+      key: "primary",
+      label: "Músculo primário",
+      value: filters.primaryMuscle ?? "",
+      change: (value: string) => change({ primaryMuscle: value }),
+      items: muscleKeys.map((key) => ({ value: key, label: MUSCLES[key].label })),
+    },
+    {
+      key: "secondary",
+      label: "Músculo secundário",
+      value: filters.secondaryMuscle ?? "",
+      change: (value: string) => change({ secondaryMuscle: value }),
+      items: muscleKeys.map((key) => ({ value: key, label: MUSCLES[key].label })),
+    },
     {
       key: "muscle",
       label: "Músculo",
@@ -51,14 +69,22 @@ export function CatalogControls({
       label: "Equipamento",
       value: filters.equipment ?? "",
       change: (value: string) => change({ equipment: value }),
-      items: (facets.data?.equipments ?? []).map((value) => ({ value, label: value })),
+      items: (facets.data?.equipments ?? []).map((value) => ({
+        value,
+        label: facets.data?.equipmentLabels[value] ?? equipmentLabel(value),
+      })),
     },
     {
       key: "body",
-      label: "Parte do corpo",
+      label: "Categoria da biblioteca",
       value: filters.bodyPart ?? "",
       change: (value: string) => change({ bodyPart: value }),
-      items: (facets.data?.bodyParts ?? []).map((value) => ({ value, label: value })),
+      items: [
+        ...new Set([...Object.keys(LIBRARY_CATEGORIES), ...(facets.data?.bodyParts ?? [])]),
+      ].map((value) => ({
+        value,
+        label: facets.data?.bodyPartLabels[value] ?? bodyPartLabel(value),
+      })),
     },
     {
       key: "source",
@@ -67,14 +93,15 @@ export function CatalogControls({
       change: (value: string) =>
         change({ source: value ? (value as CatalogFilters["source"]) : undefined }),
       items: [
-        { value: "exercisedb", label: "ExerciseDB" },
         { value: "eforge", label: "eForge" },
-        { value: "user", label: "Personalizados" },
+        ...(officialOnly
+          ? [{ value: "exercisedb", label: "Legado" }]
+          : [{ value: "user", label: "Personalizados" }]),
       ],
     },
     {
       key: "category",
-      label: "Categoria",
+      label: "Modalidade",
       value: filters.category ?? "",
       change: (value: string) => change({ category: value }),
       items: [
@@ -82,6 +109,17 @@ export function CatalogControls({
         { value: "cardio", label: "Cardio" },
         { value: "funcional", label: "Funcional" },
         { value: "alongamento", label: "Alongamento" },
+      ],
+    },
+    {
+      key: "visibility",
+      label: "Visibilidade",
+      value: filters.visibility ?? "",
+      change: (value: string) =>
+        change({ visibility: value ? (value as CatalogFilters["visibility"]) : undefined }),
+      items: [
+        { value: "public", label: "Públicos" },
+        { value: "private", label: "Privados" },
       ],
     },
     {
@@ -104,25 +142,33 @@ export function CatalogControls({
         Filtrar exercícios
       </summary>
       <div className="grid grid-cols-2 gap-3 py-2">
-        {controls.map((control) => (
-          <div key={control.key} className="min-w-0">
-            <label
-              htmlFor={`${id}-${control.key}`}
-              className="block text-base text-muted-foreground"
-            >
-              {control.label}
-            </label>
-            <select
-              id={`${id}-${control.key}`}
-              value={control.value}
-              onChange={(e) => control.change(e.target.value)}
-              className="h-11 w-full min-w-0 rounded-xl border border-border bg-background px-2 text-base focus-visible:outline-2 focus-visible:outline-neon"
-            >
-              <option value="">Todos</option>
-              {options(control.items)}
-            </select>
-          </div>
-        ))}
+        {controls
+          .filter(
+            (control) =>
+              !officialOnly ||
+              ["primary", "secondary", "equipment", "body", "source", "visibility"].includes(
+                control.key,
+              ),
+          )
+          .map((control) => (
+            <div key={control.key} className="min-w-0">
+              <label
+                htmlFor={`${id}-${control.key}`}
+                className="block text-base text-muted-foreground"
+              >
+                {control.label}
+              </label>
+              <select
+                id={`${id}-${control.key}`}
+                value={control.value}
+                onChange={(e) => control.change(e.target.value)}
+                className="h-11 w-full min-w-0 rounded-xl border border-border bg-background px-2 text-base focus-visible:outline-2 focus-visible:outline-neon"
+              >
+                <option value="">Todos</option>
+                {options(control.items)}
+              </select>
+            </div>
+          ))}
       </div>
       {facets.isError && (
         <p role="status" className="text-muted-foreground">
