@@ -84,3 +84,7 @@ Administração em `/admin/exercises` reutiliza `user_roles.admin`: importar, pa
 Aplique as migrations `20261002120000_exercisedb_catalog.sql` e `20261002121000_catalog_training_snapshot.sql`, instale a Edge Function `sync-exercisedb` e configure os termos de uso antes da importação. A API gratuita exige uso não comercial e atribuição à AscendAPI; `EXERCISEDB_USAGE_MODE` vem desabilitado no exemplo. Não exponha service role no navegador.
 
 Instruções completas de schema, RPCs, env, Supabase, sincronização, segurança, mapeamento, testes e limitações: [INTEGRACAO-EXERCISEDB.md](INTEGRACAO-EXERCISEDB.md). Código local; nenhuma migration, importação ou publicação remota foi executada na entrega.
+
+## Hotfix de segurança TanStack Start — 02/10/2026
+
+Dependências e lockfile atualizados para React Start 1.168.60 e Start Server Core 1.169.39, corrigindo o bloqueio de segurança do Vercel. Router/plugin usam versões compatíveis exatas. Aplicação, validação e redeploy: [HOTFIX-TANSTACK-XSS.md](HOTFIX-TANSTACK-XSS.md).
