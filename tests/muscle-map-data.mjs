@@ -78,3 +78,5 @@ assert.deepEqual(
 console.log(
   "PASS: muscle selection data, deduplication, warmups, tertiary roles, local account/week isolation.",
 );
+
+assert.deepEqual(new Set(relatedMuscles({musculo_principal:'chest',musculos_primarios:['chest','triceps'],musculos_secundarios:['shoulders']})),new Set(['chest','triceps','shoulders']));

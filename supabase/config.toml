@@ -1,1 +1,5 @@
 project_id = "jibdamoiehlrbyeurjvi"
+
+[functions.sync-exercisedb]
+# getUser(token) validates the session inside the function, including newer JWT formats.
+verify_jwt = false

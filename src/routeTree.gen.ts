@@ -26,6 +26,7 @@ import { Route as AuthenticatedMuscleMapRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedWorkoutsRouteImport } from './routes/_authenticated/workouts'
+import { Route as AuthenticatedAdminExercisesRouteImport } from './routes/_authenticated/admin.exercises'
 import { Route as AuthenticatedRunWorkoutIdRouteImport } from './routes/_authenticated/run.$workoutId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -114,6 +115,12 @@ const AuthenticatedWorkoutsRoute = AuthenticatedWorkoutsRouteImport.update({
   path: '/workouts',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminExercisesRoute =
+  AuthenticatedAdminExercisesRouteImport.update({
+    id: '/admin/exercises',
+    path: '/admin/exercises',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRunWorkoutIdRoute =
   AuthenticatedRunWorkoutIdRouteImport.update({
     id: '/run/$workoutId',
@@ -138,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/workouts': typeof AuthenticatedWorkoutsRoute
+  '/admin/exercises': typeof AuthenticatedAdminExercisesRoute
   '/run/$workoutId': typeof AuthenticatedRunWorkoutIdRoute
 }
 export interface FileRoutesByTo {
@@ -157,6 +165,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/workouts': typeof AuthenticatedWorkoutsRoute
+  '/admin/exercises': typeof AuthenticatedAdminExercisesRoute
   '/run/$workoutId': typeof AuthenticatedRunWorkoutIdRoute
 }
 export interface FileRoutesById {
@@ -178,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/workouts': typeof AuthenticatedWorkoutsRoute
+  '/_authenticated/admin/exercises': typeof AuthenticatedAdminExercisesRoute
   '/_authenticated/run/$workoutId': typeof AuthenticatedRunWorkoutIdRoute
 }
 export interface FileRouteTypes {
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reports'
     | '/workouts'
+    | '/admin/exercises'
     | '/run/$workoutId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reports'
     | '/workouts'
+    | '/admin/exercises'
     | '/run/$workoutId'
   id:
     | '__root__'
@@ -238,6 +250,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/reports'
     | '/_authenticated/workouts'
+    | '/_authenticated/admin/exercises'
     | '/_authenticated/run/$workoutId'
   fileRoutesById: FileRoutesById
 }
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkoutsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/exercises': {
+      id: '/_authenticated/admin/exercises'
+      path: '/admin/exercises'
+      fullPath: '/admin/exercises'
+      preLoaderRoute: typeof AuthenticatedAdminExercisesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/run/$workoutId': {
       id: '/_authenticated/run/$workoutId'
       path: '/run/$workoutId'
@@ -393,6 +413,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedWorkoutsRoute: typeof AuthenticatedWorkoutsRoute
+  AuthenticatedAdminExercisesRoute: typeof AuthenticatedAdminExercisesRoute
   AuthenticatedRunWorkoutIdRoute: typeof AuthenticatedRunWorkoutIdRoute
 }
 
@@ -407,6 +428,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedWorkoutsRoute: AuthenticatedWorkoutsRoute,
+  AuthenticatedAdminExercisesRoute: AuthenticatedAdminExercisesRoute,
   AuthenticatedRunWorkoutIdRoute: AuthenticatedRunWorkoutIdRoute,
 }
 

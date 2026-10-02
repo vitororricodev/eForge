@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { MuscleMapScreen } from "@/components/muscle-map/MuscleMapScreen";
 import { getTrainingWeekWindow, formatTrainingWeekLabel } from "@/lib/muscle-activity";
-import { mergeLocalMuscleSets, relatedMuscles, summarizeMuscleSets } from "@/lib/muscle-map-data";
+import { mergeLocalMuscleSets, summarizeMuscleSets } from "@/lib/muscle-map-data";
+import { useExerciseCatalog } from '@/hooks/use-exercise-catalog';
+import type { MuscleKey } from '@/components/MuscleBody';
 import { readDraft } from "@/lib/workout-storage";
 
 export const Route = createFileRoute("/_authenticated/muscle-map")({
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/muscle-map")({
 
 function MuscleMap() {
   const { user } = useAuth();
+  const [selected, setSelected] = useState<MuscleKey | null>(null);
   const [clock, setClock] = useState(() => Date.now());
   useEffect(() => {
     const tick = () => setClock(Date.now());
@@ -36,7 +39,7 @@ function MuscleMap() {
       const { data, error } = await supabase
         .from("set_logs")
         .select(
-          "id,session_id,musculo_principal,musculos_secundarios,musculos_terciarios,kind,workout_sessions!inner(status,iniciado_em)",
+          "id,session_id,musculo_principal,musculos_primarios,musculos_secundarios,musculos_terciarios,kind,workout_sessions!inner(status,iniciado_em)",
         )
         .eq("user_id", user!.id)
         .eq("concluida", true)
@@ -48,23 +51,12 @@ function MuscleMap() {
       return data ?? [];
     },
   });
-  const exercises = useQuery({
-    queryKey: ["muscle-map-exercises", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      // Existing RLS controls access to personal/public exercises.
-      const { data, error } = await supabase
-        .from("exercises")
-        .select("id,nome,musculo_principal,musculos_secundarios,musculos_terciarios")
-        .order("nome");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+  const exercises = useExerciseCatalog({ muscles: selected ? [selected] : [], pageSize: 3 }, !!selected);
   const draft = user && typeof window !== "undefined" ? readDraft(user.id) : null;
   const rows = mergeLocalMuscleSets(activity.data ?? [], draft, user?.id ?? "", week);
   return (
     <MuscleMapScreen
+      onSelectionChange={setSelected}
       weekLabel={formatTrainingWeekLabel(week)}
       summary={summarizeMuscleSets(rows)}
       activityLoading={activity.isLoading}
@@ -73,7 +65,7 @@ function MuscleMap() {
         void activity.refetch();
       }}
       exercises={(muscle) =>
-        (exercises.data ?? []).filter((exercise) => relatedMuscles(exercise).includes(muscle))
+        muscle === selected ? exercises.data?.items ?? [] : []
       }
       exercisesLoading={exercises.isLoading}
       exercisesError={exercises.isError}

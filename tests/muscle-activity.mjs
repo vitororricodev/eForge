@@ -56,3 +56,7 @@ const monday = getTrainingWeekWindow(new Date(2026, 8, 21, 0, 1, 0));
 assert.equal(monday.key, '2026-09-21');
 
 console.log('PASS: muscle map roles and weekly reset window are correct.');
+
+const multiplePrimary = draftMuscleEntries({ id:'multiple', userId:'u1', workoutId:'w1', name:'Targets', started:Date.now(), restUntil:0, exercises:[{ exercise_id:'e2', nome:'Targets', musculo_principal:'chest', musculos_primarios:['chest','triceps','chest'], musculos_secundarios:['shoulders'], musculos_terciarios:[], descanso_seg:60, sets:[{id:'set-multi',reps:'10',carga:'0',done:true,kind:'normal'}] }] });
+assert.deepEqual(multiplePrimary,[{muscle:'chest',role:'primary'},{muscle:'triceps',role:'primary'},{muscle:'shoulders',role:'secondary'}]);
+assert.equal(buildMuscleState(multiplePrimary).triceps.score,1);

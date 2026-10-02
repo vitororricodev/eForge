@@ -1,239 +1,318 @@
-import { isMuscleKey, MUSCLES } from '@/components/muscle-map/anatomy';
-import { relatedMuscles } from '@/lib/muscle-map-data';
-import { MuscleThumbnail } from "@/components/MuscleThumbnail";
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { muscleLabel } from "@/lib/exercise-labels";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  Plus, Search, Pencil, Trash2, Upload, Library as LibraryIcon, X, Loader2, ImageOff, Lock, Users,
-} from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Library, ShieldCheck } from "lucide-react";
+import { isMuscleKey, MUSCLES } from "@/components/muscle-map/anatomy";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  useCatalogAdmin,
+  useDebouncedSearch,
+  useExerciseCatalog,
+} from "@/hooks/use-exercise-catalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import type { Database } from "@/integrations/supabase/types";
-
-type ControlType = Database["public"]["Enums"] extends { exercise_control_type: infer T }
-  ? T : "peso_corporal" | "peso_kg" | "repeticoes" | "segundos" | "distancia";
-type Category = Database["public"]["Enums"] extends { exercise_category: infer T }
-  ? T : "musculacao" | "cardio" | "funcional" | "alongamento";
-
-type ExerciseVisibility = "private" | "public";
-
-type Exercise = {
-  id: string;
-  user_id: string;
-  nome: string;
-  gif_url: string | null;
-  tipo_controle: ControlType;
-  musculo_principal: string;
-  musculos_secundarios: string[];
-  musculos_terciarios: string[];
-  visibility: ExerciseVisibility;
-  categoria: Category;
-  observacoes: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-const CONTROL_OPTIONS: { value: ControlType; label: string }[] = [
-  { value: "peso_corporal", label: "Peso corporal" },
-  { value: "peso_kg", label: "Peso (kg)" },
-  { value: "repeticoes", label: "Repetições" },
-  { value: "segundos", label: "Segundos" },
-  { value: "distancia", label: "Distância" },
-];
-
-const CATEGORY_OPTIONS: { value: Category; label: string }[] = [
-  { value: "musculacao", label: "Musculação" },
-  { value: "cardio", label: "Cardio" },
-  { value: "funcional", label: "Funcional" },
-  { value: "alongamento", label: "Alongamento" },
-];
-
-const MUSCLE_OPTIONS = [
-  "Peito", "Costas", "Ombros", "Bíceps", "Tríceps", "Antebraço",
-  "Abdômen", "Lombar", "Glúteo", "Quadríceps", "Posterior", "Panturrilha",
-  "Trapézio", "Core",
-];
+import { ExerciseFormDialog } from "@/components/exercises/ExerciseFormDialog";
+import { CatalogControls, CatalogPagination } from "@/components/exercises/CatalogControls";
+import { ExerciseDetails, AddToWorkoutDialog } from "@/components/exercises/ExerciseDetails";
+import { ExerciseMedia } from "@/components/exercises/ExerciseMedia";
+import type { Exercise, CatalogFilters } from "@/lib/exercise-types";
+import type { MuscleKey } from "@/components/MuscleBody";
 
 export const Route = createFileRoute("/_authenticated/exercises")({
-  head: () => ({ meta: [{ title: "eForge — Exercícios" }] }),
-  validateSearch: (search: Record<string, unknown>): { muscle?: import('@/components/MuscleBody').MuscleKey; q?: string } => ({
+  head: () => ({ meta: [{ title: "eForge — Biblioteca de exercícios" }] }),
+  validateSearch: (search: Record<string, unknown>): { muscle?: MuscleKey; q?: string } => ({
     muscle: isMuscleKey(search.muscle) ? search.muscle : undefined,
-    q: typeof search.q === 'string' ? search.q.slice(0, 120) : undefined,
+    q: typeof search.q === "string" ? search.q.slice(0, 120) : undefined,
   }),
   component: ExercisesPage,
 });
-
 function ExercisesPage() {
   const { user } = useAuth();
   const routeSearch = Route.useSearch();
   const navigate = Route.useNavigate();
   const qc = useQueryClient();
+  const admin = useCatalogAdmin();
   const [search, setSearch] = useState(routeSearch.q ?? "");
-  useEffect(() => { setSearch(routeSearch.q ?? ""); }, [routeSearch.q]);
-  const [fMuscle, setFMuscle] = useState<string>("all");
-  const [fCategory, setFCategory] = useState<string>("all");
-  const [fControl, setFControl] = useState<string>("all");
+  const [filters, setFilters] = useState<CatalogFilters>({
+    page: 0,
+    muscles: routeSearch.muscle ? [routeSearch.muscle] : [],
+  });
+  useEffect(() => {
+    setSearch(routeSearch.q ?? "");
+    setFilters((f) => ({ ...f, page: 0, muscles: routeSearch.muscle ? [routeSearch.muscle] : [] }));
+  }, [routeSearch.q, routeSearch.muscle]);
+  const query = useDebouncedSearch(search);
+  const catalog = useExerciseCatalog({ ...filters, query });
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Exercise | null>(null);
   const [toDelete, setToDelete] = useState<Exercise | null>(null);
-
-  const { data: exercises = [], isLoading } = useQuery({
-    queryKey: ["exercises", user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("exercises")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Exercise[];
-    },
-  });
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return exercises.filter((e) => {
-      if (q && !e.nome.toLowerCase().includes(q)) return false;
-      if (routeSearch.muscle && !relatedMuscles(e).includes(routeSearch.muscle)) return false;
-      if (fMuscle !== "all" && e.musculo_principal !== fMuscle) return false;
-      if (fCategory !== "all" && e.categoria !== fCategory) return false;
-      if (fControl !== "all" && e.tipo_controle !== fControl) return false;
-      return true;
-    });
-  }, [exercises, search, fMuscle, fCategory, fControl, routeSearch.muscle]);
-
+  const [detail, setDetail] = useState<Exercise | null>(null);
+  const [add, setAdd] = useState<Exercise | null>(null);
+  const create = () => {
+    setEditing(null);
+    setFormOpen(true);
+  };
   const deleteMutation = useMutation({
     mutationFn: async (ex: Exercise) => {
-      if (ex.gif_url) {
-        // Try extract storage path: .../object/public/exercise-media/<path>
-        const marker = "/exercise-media/";
-        const idx = ex.gif_url.indexOf(marker);
-        if (idx >= 0) {
-          const path = ex.gif_url.slice(idx + marker.length);
-          await supabase.storage.from("exercise-media").remove([path]);
-        }
-      }
-      const { error } = await supabase.from("exercises").delete().eq("id", ex.id);
+      if (ex.source !== "user" || ex.user_id !== user?.id)
+        throw new Error("Você só pode excluir seus próprios exercícios");
+      const { error } = await supabase
+        .from("exercises")
+        .delete()
+        .eq("id", ex.id)
+        .eq("user_id", user.id)
+        .eq("source", "user");
       if (error) throw error;
+      const marker = "/exercise-media/";
+      const index = ex.gif_url?.indexOf(marker) ?? -1;
+      if (ex.gif_url && index >= 0)
+        await supabase.storage
+          .from("exercise-media")
+          .remove([ex.gif_url.slice(index + marker.length)]);
     },
     onSuccess: () => {
       toast.success("Exercício excluído");
-      qc.invalidateQueries({ queryKey: ["exercises"] });
+      void qc.invalidateQueries({ queryKey: ["exercises"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (error: Error) => toast.error(error.message),
   });
-
   return (
-    <main className="mx-auto max-w-md px-5 pt-10 pb-4">
-      <div className="flex items-start justify-between">
+    <main className="exercise-catalog-page mx-auto max-w-5xl px-4 pb-6 pt-6 sm:px-6">
+      <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Biblioteca
-          </p>
-          <h1 className="mt-1 text-3xl font-black">Exercícios</h1>
+          <p className="text-base uppercase tracking-widest text-neon">Biblioteca</p>
+          <h1 className="text-4xl">Exercícios</h1>
+          <p className="mt-1 text-lg text-muted-foreground">Encontre seu próximo movimento.</p>
         </div>
-        <Button
-          onClick={() => { setEditing(null); setFormOpen(true); }}
-          className="rounded-full bg-neon text-primary-foreground glow-neon-soft hover:bg-neon/90 h-10 px-4 font-bold"
-        >
-          <Plus className="size-4" /> Novo
+        <Button className="h-11 rounded-full px-4" onClick={create}>
+          <Plus size={18} />
+          Novo
         </Button>
-      </div>
-
-      {routeSearch.muscle && <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-border p-3">
-        <span>Relacionados a {MUSCLES[routeSearch.muscle].label}</span>
-        <button type="button" className="text-neon px-2" aria-label="Limpar filtro do mapa muscular" onClick={() => { setSearch(''); void navigate({ search: {} }); }}>Limpar</button>
-      </div>}
-      {/* Search */}
-      <div className="mt-5 relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nome…"
-          className="pl-9 h-11 rounded-2xl bg-surface border-border"
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-none">
-        <FilterSelect
-          value={fMuscle} onChange={setFMuscle} placeholder="Músculo"
-          options={[{ value: "all", label: "Todos músculos" },
-            ...MUSCLE_OPTIONS.map((m) => ({ value: m, label: m }))]}
-        />
-        <FilterSelect
-          value={fCategory} onChange={setFCategory} placeholder="Categoria"
-          options={[{ value: "all", label: "Todas categorias" },
-            ...CATEGORY_OPTIONS.map((c) => ({ value: c.value, label: c.label }))]}
-        />
-        <FilterSelect
-          value={fControl} onChange={setFControl} placeholder="Controle"
-          options={[{ value: "all", label: "Todos controles" },
-            ...CONTROL_OPTIONS.map((c) => ({ value: c.value, label: c.label }))]}
-        />
-      </div>
-
-      {/* List */}
-      <div className="mt-5">
-        {isLoading ? (
-          <div className="grid place-items-center py-16 text-muted-foreground">
-            <Loader2 className="size-6 animate-spin text-neon" />
+      </header>
+      {admin.data && (
+        <Link
+          to="/admin/exercises"
+          className="mt-3 flex min-h-11 items-center gap-2 text-lg text-neon"
+        >
+          <ShieldCheck size={18} />
+          Gerenciar biblioteca oficial
+        </Link>
+      )}
+      {routeSearch.muscle &&
+        filters.muscles?.length === 1 &&
+        filters.muscles[0] === routeSearch.muscle && (
+          <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-border p-3">
+            <span className="text-lg">Relacionados a {MUSCLES[routeSearch.muscle].label}</span>
+            <Button
+              variant="ghost"
+              className="h-11 text-neon"
+              aria-label="Limpar filtro do mapa muscular"
+              onClick={() => {
+                setSearch("");
+                setFilters({ page: 0 });
+                void navigate({ search: {} });
+              }}
+            >
+              Limpar
+            </Button>
           </div>
-        ) : filtered.length === 0 ? (
-          <EmptyState onCreate={() => { setEditing(null); setFormOpen(true); }} hasAny={exercises.length > 0} />
+        )}
+      <div className="relative mt-5">
+        <Search className="pointer-events-none absolute left-3 top-3 size-5 text-muted-foreground" />
+        <Input
+          aria-label="Buscar por nome"
+          value={search}
+          maxLength={120}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setFilters((f) => ({ ...f, page: 0 }));
+          }}
+          placeholder="Buscar por nome…"
+          className="exercise-search-input h-12 rounded-2xl bg-surface pl-10 text-lg"
+        />
+      </div>
+      <CatalogControls filters={filters} onChange={setFilters} />
+      <div className="mt-5" aria-busy={catalog.isFetching}>
+        {catalog.isPending ? (
+          <p role="status" className="py-8 text-center text-lg text-muted-foreground">
+            Carregando biblioteca…
+          </p>
+        ) : catalog.isError ? (
+          <div role="alert" className="rounded-2xl border border-border bg-surface p-5">
+            <p>Não foi possível carregar a biblioteca.</p>
+            <Button className="mt-3 h-11" onClick={() => void catalog.refetch()}>
+              Tentar novamente
+            </Button>
+          </div>
         ) : (
-          <ul className="space-y-3">
-            {filtered.map((ex) => (
-              <ExerciseCard
-                key={ex.id}
-                ex={ex}
-                currentUserId={user?.id ?? null}
-                onEdit={() => { setEditing(ex); setFormOpen(true); }}
-                onDelete={() => setToDelete(ex)}
-              />
-            ))}
-          </ul>
+          <>
+            <p className="mb-3 text-lg text-muted-foreground" role="status">
+              {catalog.data.total} exercício{catalog.data.total === 1 ? "" : "s"} encontrado
+              {catalog.data.total === 1 ? "" : "s"}
+            </p>
+            {!catalog.data.total ? (
+              <div className="rounded-3xl border border-border bg-surface p-8 text-center">
+                <Library className="mx-auto size-8 text-neon" />
+                <h2 className="mt-3 text-2xl">Nenhum exercício encontrado</h2>
+                <p className="text-lg text-muted-foreground">
+                  Ajuste os filtros ou cadastre seu exercício.
+                </p>
+                <Button variant="outline" className="mt-4 h-11" onClick={create}>
+                  Cadastrar exercício
+                </Button>
+              </div>
+            ) : (
+              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {catalog.data.items.map((ex) => (
+                  <li key={ex.id} className="rounded-2xl border border-border bg-surface p-3">
+                    <div className="flex gap-3">
+                      <ExerciseMedia
+                        url={ex.gif_url}
+                        name={ex.nome}
+                        muscle={ex.musculo_principal}
+                        className="size-20 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-xl leading-tight">{ex.nome}</h2>
+                        <p className="mt-1 text-base text-muted-foreground">
+                          {muscleLabel(ex.musculo_principal)}
+                        </p>
+                        <p className="text-base text-muted-foreground">
+                          {ex.equipamentos.join(", ") || "Equipamento não informado"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="my-3 flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="border-0 bg-neon/15 text-sm text-neon">
+                        {ex.source === "user"
+                          ? ex.visibility === "public"
+                            ? "Comunidade"
+                            : "Só eu"
+                          : "Oficial · " + (ex.source === "exercisedb" ? "ExerciseDB" : "eForge")}
+                      </Badge>
+                      {!ex.classification_reviewed && (
+                        <Badge variant="outline" className="text-sm">
+                          Categoria a revisar
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="h-11 flex-1"
+                        onClick={() => setDetail(ex)}
+                      >
+                        Detalhes
+                      </Button>
+                      <Button
+                        className="h-11 flex-1"
+                        aria-label={`Adicionar ${ex.nome} ao treino`}
+                        onClick={() => setAdd(ex)}
+                      >
+                        Ao treino
+                        <Plus size={16} />
+                      </Button>
+                    </div>
+                    {((ex.source === "user" && ex.user_id === user?.id) ||
+                      (admin.data && ex.source !== "user")) && (
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          variant="ghost"
+                          className="h-11 text-muted-foreground"
+                          aria-label={`Editar ${ex.nome}`}
+                          onClick={() => {
+                            setEditing(ex);
+                            setFormOpen(true);
+                          }}
+                        >
+                          <Pencil size={16} />
+                          Editar
+                        </Button>
+                        {ex.source === "user" && (
+                          <Button
+                            variant="ghost"
+                            className="h-11 text-destructive"
+                            aria-label={`Excluir ${ex.nome}`}
+                            onClick={() => setToDelete(ex)}
+                          >
+                            <Trash2 size={16} />
+                            Excluir
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <CatalogPagination
+              page={filters.page ?? 0}
+              total={catalog.data.total}
+              onChange={(page) => {
+                setFilters((f) => ({ ...f, page }));
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
+          </>
         )}
       </div>
-
+      <p className="mt-7 text-base text-muted-foreground">
+        Catálogo ExerciseDB e mídias por{" "}
+        <a
+          href="https://ascendapi.com"
+          target="_blank"
+          rel="noreferrer"
+          className="text-neon underline"
+        >
+          AscendAPI
+        </a>
+        . Instruções originais podem estar em inglês.
+      </p>
+      <ExerciseDetails
+        exercise={detail}
+        onClose={() => setDetail(null)}
+        onAdd={(ex) => {
+          setDetail(null);
+          setAdd(ex);
+        }}
+      />
+      <AddToWorkoutDialog exercise={add} onClose={() => setAdd(null)} />
       <ExerciseFormDialog
         open={formOpen}
-        onOpenChange={(o) => { setFormOpen(o); if (!o) setEditing(null); }}
+        onOpenChange={setFormOpen}
         editing={editing}
         userId={user?.id ?? null}
+        isAdmin={!!admin.data}
       />
-
-      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
-        <AlertDialogContent className="bg-surface border-border">
+      <AlertDialog open={!!toDelete} onOpenChange={(open) => !open && setToDelete(null)}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir exercício?</AlertDialogTitle>
             <AlertDialogDescription>
-              {toDelete?.nome} será removido permanentemente. Essa ação não pode ser desfeita.
+              {toDelete?.nome} será removido. Os registros de séries concluídas são preservados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => { if (toDelete) { deleteMutation.mutate(toDelete); setToDelete(null); } }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (toDelete) deleteMutation.mutate(toDelete);
+                setToDelete(null);
+              }}
             >
               Excluir
             </AlertDialogAction>
@@ -241,459 +320,5 @@ function ExercisesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </main>
-  );
-}
-
-function FilterSelect({
-  value, onChange, options, placeholder,
-}: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder: string }) {
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-9 rounded-full bg-surface border-border min-w-[140px] text-xs font-semibold">
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-      </SelectContent>
-    </Select>
-  );
-}
-
-function ExerciseCard({
-  ex, currentUserId, onEdit, onDelete,
-}: { ex: Exercise; currentUserId: string | null; onEdit: () => void; onDelete: () => void }) {
-  const categoryLabel = CATEGORY_OPTIONS.find((c) => c.value === ex.categoria)?.label ?? ex.categoria;
-  const controlLabel = CONTROL_OPTIONS.find((c) => c.value === ex.tipo_controle)?.label ?? ex.tipo_controle;
-  const canManage = !!currentUserId && ex.user_id === currentUserId;
-  return (
-    <li className="hairline rounded-3xl surface p-3 flex gap-3 animate-fade-up">
-      <div className="size-20 shrink-0 overflow-hidden rounded-2xl surface-2 grid place-items-center">
-        {ex.gif_url ? (
-          <img src={ex.gif_url} alt={ex.nome} className="size-full object-cover" loading="lazy" />
-        ) : (
-          <MuscleThumbnail muscle={ex.musculo_principal} />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="font-bold leading-tight truncate">{ex.nome}</div>
-        <div className="mt-0.5 text-xs text-muted-foreground truncate">{ex.musculo_principal}</div>
-        <div className="mt-2 flex flex-wrap gap-1">
-          <Badge variant="secondary" className="bg-neon/15 text-neon border-0 text-[10px] font-semibold">
-            {categoryLabel}
-          </Badge>
-          <Badge variant="secondary" className="bg-surface-2 text-foreground border-0 text-[10px] font-semibold">
-            {controlLabel}
-          </Badge>
-          <Badge variant="secondary" className={`border-0 text-[10px] font-semibold ${ex.visibility === "public" ? "bg-neon/15 text-neon" : "bg-surface-2 text-muted-foreground"}`}>
-            {ex.visibility === "public" ? "Público" : "Só eu"}
-          </Badge>
-        </div>
-      </div>
-      {canManage && <div className="flex flex-col gap-1.5">
-        <button
-          onClick={onEdit}
-          className="grid size-8 place-items-center rounded-full surface-2 hover:bg-neon/15 hover:text-neon transition-colors"
-          aria-label="Editar"
-        >
-          <Pencil className="size-4" />
-        </button>
-        <button
-          onClick={onDelete}
-          className="grid size-8 place-items-center rounded-full surface-2 hover:bg-destructive/20 hover:text-destructive transition-colors"
-          aria-label="Excluir"
-        >
-          <Trash2 className="size-4" />
-        </button>
-      </div>}
-    </li>
-  );
-}
-
-function EmptyState({ onCreate, hasAny }: { onCreate: () => void; hasAny: boolean }) {
-  return (
-    <div className="mt-6 hairline rounded-3xl surface px-6 py-12 text-center">
-      <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-neon/15 text-neon ring-1 ring-neon/30 glow-neon-soft">
-        <LibraryIcon className="size-7" />
-      </div>
-      <h2 className="mt-4 text-lg font-bold">
-        {hasAny ? "Nenhum resultado" : "Sua biblioteca está vazia"}
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {hasAny ? "Ajuste a busca ou os filtros." : "Cadastre seu primeiro exercício para começar."}
-      </p>
-      {!hasAny && (
-        <Button
-          onClick={onCreate}
-          className="mt-5 rounded-full bg-neon text-primary-foreground hover:bg-neon/90 glow-neon-soft font-bold"
-        >
-          <Plus className="size-4" /> Cadastrar exercício
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function ExerciseFormDialog({
-  open, onOpenChange, editing, userId,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-  editing: Exercise | null;
-  userId: string | null;
-}) {
-  const qc = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [nome, setNome] = useState("");
-  const [tipoControle, setTipoControle] = useState<ControlType>("peso_kg");
-  const [musculoPrincipal, setMusculoPrincipal] = useState<string>(MUSCLE_OPTIONS[0]);
-  const [musculosSecundarios, setMusculosSecundarios] = useState<string[]>([]);
-  const [musculosTerciarios, setMusculosTerciarios] = useState<string[]>([]);
-  const [visibility, setVisibility] = useState<ExerciseVisibility>("private");
-  const [categoria, setCategoria] = useState<Category>("musculacao");
-  const [observacoes, setObservacoes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [removeExistingMedia, setRemoveExistingMedia] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      if (editing) {
-        setNome(editing.nome);
-        setTipoControle(editing.tipo_controle);
-        setMusculoPrincipal(editing.musculo_principal);
-        setMusculosSecundarios(editing.musculos_secundarios ?? []);
-        setMusculosTerciarios(editing.musculos_terciarios ?? []);
-        setVisibility(editing.visibility ?? "private");
-        setCategoria(editing.categoria);
-        setObservacoes(editing.observacoes ?? "");
-        setPreviewUrl(editing.gif_url);
-      } else {
-        setNome("");
-        setTipoControle("peso_kg");
-        setMusculoPrincipal(MUSCLE_OPTIONS[0]);
-        setMusculosSecundarios([]);
-        setMusculosTerciarios([]);
-        setVisibility("private");
-        setCategoria("musculacao");
-        setObservacoes("");
-        setPreviewUrl(null);
-      }
-      setFile(null);
-      setRemoveExistingMedia(false);
-    }
-  }, [open, editing]);
-
-  useEffect(() => {
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    setRemoveExistingMedia(false);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
-
-  const toggleSecondary = (m: string) => {
-    const adding = !musculosSecundarios.includes(m);
-    setMusculosSecundarios((prev) =>
-      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m],
-    );
-    if (adding) setMusculosTerciarios((prev) => prev.filter((x) => x !== m));
-  };
-
-  const toggleTertiary = (m: string) => {
-    const adding = !musculosTerciarios.includes(m);
-    setMusculosTerciarios((prev) =>
-      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m],
-    );
-    if (adding) setMusculosSecundarios((prev) => prev.filter((x) => x !== m));
-  };
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!userId) throw new Error("Usuário não autenticado");
-      const trimmed = nome.trim();
-      if (!trimmed) throw new Error("Informe o nome do exercício");
-
-      let gif_url: string | null = editing?.gif_url ?? null;
-
-      if (removeExistingMedia && !file) gif_url = null;
-
-      if (file) {
-        const ext = file.name.split(".").pop() || "bin";
-        const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("exercise-media")
-          .upload(path, file, { contentType: file.type, upsert: false });
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from("exercise-media").getPublicUrl(path);
-        gif_url = data.publicUrl;
-
-        // Cleanup old file
-        if (editing?.gif_url) {
-          const marker = "/exercise-media/";
-          const idx = editing.gif_url.indexOf(marker);
-          if (idx >= 0) {
-            const oldPath = editing.gif_url.slice(idx + marker.length);
-            await supabase.storage.from("exercise-media").remove([oldPath]);
-          }
-        }
-      }
-
-      const payload = {
-        user_id: userId,
-        nome: trimmed,
-        gif_url,
-        tipo_controle: tipoControle,
-        musculo_principal: musculoPrincipal,
-        musculos_secundarios: musculosSecundarios,
-        musculos_terciarios: musculosTerciarios,
-        visibility,
-        categoria,
-        observacoes: observacoes.trim() || null,
-      };
-
-      if (editing) {
-        const { error } = await supabase.from("exercises").update(payload).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("exercises").insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success(editing ? "Exercício atualizado" : "Exercício cadastrado");
-      qc.invalidateQueries({ queryKey: ["exercises"] });
-      onOpenChange(false);
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface border-border max-w-md max-h-[92dvh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Editar exercício" : "Novo exercício"}</DialogTitle>
-          <DialogDescription>Preencha as informações abaixo.</DialogDescription>
-        </DialogHeader>
-
-        <form
-          onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }}
-          className="space-y-4"
-        >
-          {/* Media uploader */}
-          <div>
-            <Label>GIF ou imagem</Label>
-            <div className="mt-2">
-              {previewUrl ? (
-                <div className="relative overflow-hidden rounded-2xl surface-2 hairline">
-                  <img src={previewUrl} alt="preview" className="w-full max-h-64 object-contain bg-black" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFile(null);
-                      setPreviewUrl(null);
-                      setRemoveExistingMedia(true);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                    className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-black/70 text-white hover:bg-destructive"
-                    aria-label="Remover"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full rounded-2xl border border-dashed border-neon/40 bg-surface-2 px-4 py-8 text-center transition-colors hover:bg-neon/5"
-                >
-                  <Upload className="mx-auto size-6 text-neon" />
-                  <div className="mt-2 text-sm font-semibold">Enviar GIF ou imagem</div>
-                  <div className="text-xs text-muted-foreground">PNG, JPG, GIF ou WebP</div>
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/gif,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (!f) return;
-                  if (f.size > 8 * 1024 * 1024) { toast.error("Arquivo acima de 8MB"); return; }
-                  setFile(f);
-                }}
-              />
-              {previewUrl && (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-2 text-xs font-semibold text-neon hover:underline"
-                >
-                  Trocar arquivo
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="nome">Nome do exercício</Label>
-            <Input
-              id="nome" value={nome} onChange={(e) => setNome(e.target.value)}
-              placeholder="Ex: Supino reto"
-              maxLength={120}
-              className="mt-2 bg-surface-2 border-border"
-              required
-            />
-          </div>
-
-          <fieldset>
-            <legend className="text-sm font-semibold">Visibilidade</legend>
-            <p className="mt-1 text-xs text-muted-foreground">Defina quem pode encontrar e usar este exercício.</p>
-            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Visibilidade do exercício">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={visibility === "private"}
-                onClick={() => setVisibility("private")}
-                className={`min-h-[72px] rounded-2xl border p-3 text-left transition-colors ${
-                  visibility === "private"
-                    ? "border-neon/60 bg-neon/10 text-foreground"
-                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span className="flex items-center gap-2 font-bold"><Lock className="size-4" /> Só eu vejo</span>
-                <span className="mt-1 block text-xs leading-relaxed opacity-80">Privado — somente você pode visualizar e usar.</span>
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={visibility === "public"}
-                onClick={() => setVisibility("public")}
-                className={`min-h-[72px] rounded-2xl border p-3 text-left transition-colors ${
-                  visibility === "public"
-                    ? "border-neon/60 bg-neon/10 text-foreground"
-                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span className="flex items-center gap-2 font-bold"><Users className="size-4" /> Público</span>
-                <span className="mt-1 block text-xs leading-relaxed opacity-80">Todos os usuários podem encontrar e usar em seus treinos.</span>
-              </button>
-            </div>
-          </fieldset>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Categoria</Label>
-              <Select value={categoria} onValueChange={(v) => setCategoria(v as Category)}>
-                <SelectTrigger className="mt-2 bg-surface-2 border-border"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CATEGORY_OPTIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Tipo de controle</Label>
-              <Select value={tipoControle} onValueChange={(v) => setTipoControle(v as ControlType)}>
-                <SelectTrigger className="mt-2 bg-surface-2 border-border"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CONTROL_OPTIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label>Músculo principal</Label>
-            <Select value={musculoPrincipal} onValueChange={(value) => {
-                setMusculoPrincipal(value);
-                setMusculosSecundarios((prev) => prev.filter((m) => m !== value));
-                setMusculosTerciarios((prev) => prev.filter((m) => m !== value));
-              }}>
-              <SelectTrigger className="mt-2 bg-surface-2 border-border"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {MUSCLE_OPTIONS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Músculos secundários</Label>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {MUSCLE_OPTIONS.filter((m) => m !== musculoPrincipal).map((m) => {
-                const active = musculosSecundarios.includes(m);
-                return (
-                  <button
-                    type="button"
-                    key={m}
-                    onClick={() => toggleSecondary(m)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                      active
-                        ? "bg-neon text-primary-foreground glow-neon-soft"
-                        : "surface-2 text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {m}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-end justify-between gap-3">
-              <Label>Músculos terciários</Label>
-              <span className="text-[11px] text-muted-foreground">apoio menor no movimento</span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {MUSCLE_OPTIONS.filter((m) => m !== musculoPrincipal).map((m) => {
-                const active = musculosTerciarios.includes(m);
-                const secondary = musculosSecundarios.includes(m);
-                return (
-                  <button
-                    type="button"
-                    key={m}
-                    disabled={secondary}
-                    onClick={() => toggleTertiary(m)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
-                      active
-                        ? "bg-[var(--muscle-tertiary)] text-white"
-                        : "surface-2 text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {m}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="obs">Observações</Label>
-            <Textarea
-              id="obs"
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              maxLength={500}
-              placeholder="Detalhes de execução, cadência, dicas…"
-              className="mt-2 bg-surface-2 border-border min-h-[80px]"
-            />
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={mutation.isPending}
-              className="rounded-full bg-neon text-primary-foreground hover:bg-neon/90 glow-neon-soft font-bold"
-            >
-              {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
-              {editing ? "Salvar" : "Cadastrar"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }

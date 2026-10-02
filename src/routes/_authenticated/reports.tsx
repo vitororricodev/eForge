@@ -30,7 +30,7 @@ function ReportsPage() {
   const [cardio, setCardio] = useState<any[]>([]);
   const [measurements, setMeasurements] = useState<any[]>([]);
   const [muscleActivity, setMuscleActivity] = useState<any[]>([]);
-  const [exercises, setExercises] = useState<any[]>([]);
+  const [exerciseCount, setExerciseCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -40,7 +40,7 @@ function ReportsPage() {
       const muscleLogs = (async () => {
         const full = await supabase
           .from("set_logs")
-          .select("musculo_principal,musculos_secundarios,musculos_terciarios,kind,workout_sessions!inner(status,iniciado_em)")
+          .select("musculo_principal,musculos_primarios,musculos_secundarios,musculos_terciarios,kind,workout_sessions!inner(status,iniciado_em)")
           .eq("user_id", user.id)
           .eq("concluida", true)
           .neq("kind", "warmup")
@@ -59,17 +59,17 @@ function ReportsPage() {
         supabase.from("cardio_logs").select("*").order("data_atividade", { ascending: true }),
         supabase.from("body_measurements").select("*").order("measured_at", { ascending: true }),
         muscleLogs,
-        supabase.from("exercises").select("*"),
+        supabase.from("exercises").select("id", { count: "exact", head: true }).eq("active",true).eq("review_status","approved"),
       ]);
       if (cancelled) return;
       setCardio((c.data ?? []) as any[]);
       setMeasurements((m.data ?? []) as any[]);
       setMuscleActivity((ma.data ?? []).flatMap((r: any) => [
-        ...(r.musculo_principal ? [{ muscle: r.musculo_principal, intensity: 1, trained_at: r.workout_sessions.iniciado_em }] : []),
+        ...((r.musculos_primarios?.length ? r.musculos_primarios : r.musculo_principal ? [r.musculo_principal] : []) as string[]).map((muscle: string) => ({ muscle, intensity: 1, trained_at: r.workout_sessions.iniciado_em })),
         ...(r.musculos_secundarios ?? []).map((muscle: string) => ({ muscle, intensity: 0.55, trained_at: r.workout_sessions.iniciado_em })),
         ...(r.musculos_terciarios ?? []).map((muscle: string) => ({ muscle, intensity: 0.25, trained_at: r.workout_sessions.iniciado_em })),
       ]));
-      setExercises((ex.data ?? []) as any[]);
+      setExerciseCount(ex.count ?? 0);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -175,10 +175,10 @@ function ReportsPage() {
       totalDays: days.size,
       weekDays: weekDays.size,
       monthDays: monthDays.size,
-      exerciseCount: exercises.length,
+      exerciseCount,
       series,
     };
-  }, [muscleActivity, exercises]);
+  }, [muscleActivity, exerciseCount]);
 
   return (
     <main className="mx-auto max-w-md px-5 pt-10 pb-4"><div className="flex flex-wrap gap-3 py-4 text-neon"><Link to="/cardio">Cardio</Link><Link to="/body-profile">Medidas</Link><Link to="/goals">Metas</Link><Link to="/achievements">Medalhas</Link><Link to="/muscle-map">Mapa muscular</Link></div>

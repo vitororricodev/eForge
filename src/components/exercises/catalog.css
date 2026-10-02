@@ -1,0 +1,21 @@
+/* Scoped overrides for the existing unlayered mobile theme rules. */
+.exercise-catalog-page {
+  max-width: 64rem;
+}
+.exercise-admin-page {
+  max-width: 56rem;
+}
+.exercise-search-input {
+  padding-left: 2.75rem !important;
+}
+.exercise-dialog > button:last-child {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  top: 8px;
+  right: 8px;
+}
+.exercise-dialog h2 {
+  padding-right: 2rem;
+}

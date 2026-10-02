@@ -18,6 +18,7 @@ import "./muscle-map.css";
 
 type ExerciseLink = { id: string; nome: string };
 export type MuscleMapScreenProps = {
+  onSelectionChange?: (muscle: MuscleKey | null) => void;
   weekLabel: string;
   summary: MuscleSummary;
   activityLoading: boolean;
@@ -48,6 +49,7 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
   const [showNames, setShowNames] = useState(true);
   const chooseMuscle = (key: MuscleKey) => {
     setSelected(key);
+    props.onSelectionChange?.(key);
     if (!REGIONS[view][key]) setView(MUSCLES[key].view);
   };
   const info = selected ? MUSCLES[selected] : null;
@@ -128,7 +130,7 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
                     selected={selected}
                     trained={trained}
                     showNames={showNames}
-                    onSelect={setSelected}
+                    onSelect={key => {setSelected(key);props.onSelectionChange?.(key);}}
                   />
                 </div>
               )}
@@ -172,7 +174,7 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
                   className="muscle-clear-action"
                   aria-label="Limpar seleção"
                   title="Limpar seleção"
-                  onClick={() => setSelected(null)}
+                  onClick={() => {setSelected(null);props.onSelectionChange?.(null);}}
                 >
                   <RotateCcw size={17} aria-hidden="true" /><span className="sr-only">Limpar seleção</span>
                 </button>

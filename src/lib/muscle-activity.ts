@@ -162,7 +162,7 @@ export function draftMuscleEntries(draft: Draft): MuscleActivityEntry[] {
     exercise.sets.flatMap((set) => {
       if (!set.done || set.kind === "warmup") return [];
       return [
-        { muscle: exercise.musculo_principal, role: "primary" as const },
+        ...([...new Set(exercise.musculos_primarios?.length ? exercise.musculos_primarios : [exercise.musculo_principal])]).map(muscle => ({ muscle, role: "primary" as const })),
         ...(exercise.musculos_secundarios ?? []).map((muscle) => ({
           muscle,
           role: "secondary" as const,

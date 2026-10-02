@@ -74,3 +74,13 @@ A abertura ocorre após login por senha ou retorno do login Google iniciado pelo
 Essa prévia usa os mesmos componentes da abertura real. Não exige `.env`, Supabase nem login e não simula as outras telas. Para build isolado: `npm run intro:build`.
 
 Validação: TypeScript, build da prévia, testes do sinal de login (conta, expiração, limpeza) e suíte existente. Validação visual/audio em celular físico ainda pendente; navegador remoto não alcança localhost neste ambiente.
+
+## Biblioteca ExerciseDB — 02/10/2026
+
+A biblioteca existente agora aceita catálogo oficial importado para o Supabase, busca/filtros/paginação no banco, detalhes/instruções e adição ao treino. Montagem, substituição e sugestões do mapa consultam páginas; o frontend não chama a ExerciseDB. Exercícios próprios privados/públicos e o mapa semanal são preservados.
+
+Administração em `/admin/exercises` reutiliza `user_roles.admin`: importar, pausar/retomar, ver resultados, conferir mapeamentos e revisar registros. Músculos-alvo ficam como principais, secundários seguem a fonte e terciários dos importados ficam vazios. Vários principais acompanham o snapshot do treino.
+
+Aplique as migrations `20261002120000_exercisedb_catalog.sql` e `20261002121000_catalog_training_snapshot.sql`, instale a Edge Function `sync-exercisedb` e configure os termos de uso antes da importação. A API gratuita exige uso não comercial e atribuição à AscendAPI; `EXERCISEDB_USAGE_MODE` vem desabilitado no exemplo. Não exponha service role no navegador.
+
+Instruções completas de schema, RPCs, env, Supabase, sincronização, segurança, mapeamento, testes e limitações: [INTEGRACAO-EXERCISEDB.md](INTEGRACAO-EXERCISEDB.md). Código local; nenhuma migration, importação ou publicação remota foi executada na entrega.

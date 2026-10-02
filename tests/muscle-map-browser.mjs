@@ -21,10 +21,10 @@ assert(supabaseURL, 'Configure the same public Supabase URL used by your local a
 const storageKey = `sb-${new URL(supabaseURL).hostname.split('.')[0]}-auth-token`;
 const session = {access_token:'local-visual-test-only',refresh_token:'local-visual-test-only',token_type:'bearer',expires_in:86400,expires_at:Math.floor(Date.now()/1000)+86400,user};
 const examples = [
- {id:'exercise-1',nome:'Supino reto',musculo_principal:'Peito',musculos_secundarios:['Tríceps'],musculos_terciarios:[]},
- {id:'exercise-2',nome:'Supino inclinado',musculo_principal:'Peito',musculos_secundarios:['Ombros'],musculos_terciarios:[]},
- {id:'exercise-3',nome:'Remada',musculo_principal:'Costas',musculos_secundarios:['Bíceps'],musculos_terciarios:[]},
-].map(e=>({...e,user_id:userId,gif_url:null,tipo_controle:'peso_kg',categoria:'musculacao',visibility:'private',created_at:new Date().toISOString(),observacoes:null}));
+ {id:'00000000-0000-4000-8000-000000000101',nome:'Supino reto',musculo_principal:'Peito',musculos_secundarios:['Tríceps'],musculos_terciarios:[]},
+ {id:'00000000-0000-4000-8000-000000000102',nome:'Supino inclinado',musculo_principal:'Peito',musculos_secundarios:['Ombros'],musculos_terciarios:[]},
+ {id:'00000000-0000-4000-8000-000000000103',nome:'Remada',musculo_principal:'Costas',musculos_secundarios:['Bíceps'],musculos_terciarios:[]},
+].map(e=>({...e,user_id:userId,gif_url:null,tipo_controle:'peso_kg',categoria:'musculacao',visibility:'private',created_at:new Date().toISOString(),observacoes:null,updated_at:new Date().toISOString(),source:'user',external_id:null,name_original:null,name_pt_br:null,slug:null,descricao:null,equipamentos:[],partes_corpo:[],instrucoes:[],instrucoes_pt_br:[],dificuldade:null,active:true,review_status:'approved',classification_reviewed:true,unmapped_muscles:[],last_synced_at:null,musculos_primarios:[e.musculo_principal]}));
 let failure=false, empty=false;
 let launchOptions={headless:true,args:['--no-sandbox']};
 if(process.env.TEST_CHROMIUM_MODULE){const {default:chromium}=await import(process.env.TEST_CHROMIUM_MODULE);launchOptions={...launchOptions,executablePath:await chromium.executablePath(),args:chromium.args};}
@@ -38,6 +38,13 @@ await context.route('**/*',async route=>{
  if(url.origin!==new URL(supabaseURL).origin)return route.abort();
  let body=[];
  if(url.pathname.includes('/auth/v1/user'))body=user;
+ else if(url.pathname.endsWith('/rpc/search_exercises')){
+  const input=JSON.parse(route.request().postData()||'{}');
+  const keys={Peito:'chest',Costas:'lats','Tríceps':'triceps','Bíceps':'biceps',Ombros:'shoulders'};
+  const items=(empty?[]:examples).filter(e=>(!input.p_query||e.nome.toLowerCase().includes(input.p_query.toLowerCase()))&&(!input.p_muscles?.length||[e.musculo_principal,...e.musculos_secundarios].some(m=>input.p_muscles.includes(keys[m]))));
+  body={items:items.slice(0,input.p_page_size??20),total:items.length};
+ }else if(url.pathname.endsWith('/rpc/exercise_catalog_facets'))body={equipments:[],bodyParts:[]};
+ else if(url.pathname.endsWith('/user_roles'))body=null;
  else if(url.pathname.includes('/rest/v1/exercises'))body=empty?[]:examples;
  else if(url.pathname.includes('/rest/v1/set_logs')){
   if(failure)return route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({message:'Test failure'})});

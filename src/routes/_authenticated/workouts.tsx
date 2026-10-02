@@ -1,3 +1,4 @@
+import { ExercisePicker } from '@/components/exercises/ExercisePicker';
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -73,16 +74,14 @@ function WorkoutsPage() {
   async function load() {
     if (!user) { setLoading(false); return; }
     setLoading(true);
-    const [w, e, s, we] = await Promise.all([
+    const [w, s, we] = await Promise.all([
       supabase.from("workouts").select("id,nome,descricao,created_at").order("created_at", { ascending: false }),
-      supabase.from("exercises").select("id,nome,musculo_principal").order("nome"),
       supabase.from("workout_sessions").select("id,nome_treino,iniciado_em,duracao_min,volume_total,status")
         .order("iniciado_em", { ascending: false }).limit(30),
       supabase.from("workout_exercises").select("id,workout_id"),
     ]);
     if (w.error) toast.error(w.error.message);
     setWorkouts(w.data ?? []);
-    setExercises(e.data ?? []);
     setSessions(s.data ?? []);
     const c: Record<string, number> = {};
     (we.data ?? []).forEach((r: { workout_id: string }) => {
@@ -108,9 +107,10 @@ function WorkoutsPage() {
     setDescricao(w.descricao ?? "");
     const { data } = await supabase
       .from("workout_exercises")
-      .select("id,exercise_id,series,repeticoes,carga_kg,descanso_seg")
+      .select("id,exercise_id,series,repeticoes,carga_kg,descanso_seg,exercises(id,nome,musculo_principal)")
       .eq("workout_id", w.id)
       .order("ordem");
+    setExercises((data ?? []).flatMap(row => row.exercises ? [row.exercises] : []));
     setItems(
       (data ?? []).map((r) => ({
         id: r.id,
@@ -331,20 +331,7 @@ function WorkoutsPage() {
 
             <div>
               <Label>Adicionar exercício</Label>
-              {exercises.length === 0 ? (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Cadastre exercícios na <Link to="/exercises" className="text-neon">biblioteca</Link> primeiro.
-                </p>
-              ) : (
-                <Select value="" onValueChange={addItem}>
-                  <SelectTrigger><SelectValue placeholder="Selecionar da biblioteca" /></SelectTrigger>
-                  <SelectContent>
-                    {exercises.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>{e.nome} · {e.musculo_principal}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <ExercisePicker excludeIds={items.map(item => item.exercise_id)} onSelect={ex => {setExercises(prev => [...prev.filter(item => item.id !== ex.id),ex]);addItem(ex.id);}}/>
             </div>
 
             <div className="space-y-3">

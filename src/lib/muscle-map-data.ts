@@ -4,6 +4,7 @@ import type { Draft } from "./workout-storage";
 
 export type MuscleFields = {
   musculo_principal: string | null;
+  musculos_primarios?: string[] | null;
   musculos_secundarios: string[] | null;
   musculos_terciarios?: string[] | null;
 };
@@ -14,6 +15,7 @@ export function relatedMuscles(row: MuscleFields): MuscleKey[] {
     ...new Set(
       [
         row.musculo_principal,
+        ...(row.musculos_primarios ?? []),
         ...(row.musculos_secundarios ?? []),
         ...(row.musculos_terciarios ?? []),
       ].flatMap(resolveMuscleKeys),
@@ -65,6 +67,7 @@ export function mergeLocalMuscleSets(
           session_id: draft.id,
           kind: set.kind,
           musculo_principal: exercise.musculo_principal,
+          musculos_primarios: exercise.musculos_primarios ?? [exercise.musculo_principal],
           musculos_secundarios: exercise.musculos_secundarios,
           musculos_terciarios: exercise.musculos_terciarios ?? [],
         })),
