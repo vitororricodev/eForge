@@ -1,5 +1,10 @@
-import type { MuscleKey } from "@/components/MuscleBody";
-import { resolveMuscleKeys, type TrainingWeekWindow } from "./muscle-activity";
+import type { MuscleKey, MuscleRole, MuscleState } from "@/components/MuscleBody";
+import {
+  buildMuscleState,
+  resolveMuscleKeys,
+  type MuscleActivityEntry,
+  type TrainingWeekWindow,
+} from "./muscle-activity";
 import type { Draft } from "./workout-storage";
 
 export type MuscleFields = {
@@ -10,6 +15,32 @@ export type MuscleFields = {
 };
 export type CompletedMuscleSet = MuscleFields & { id: string; session_id: string; kind: string };
 export type MuscleSummary = Partial<Record<MuscleKey, { sets: number; sessions: number }>>;
+// Preserve each snapshot's role. A muscle is counted once per set, with the strongest role winning.
+export function muscleStateFromSets(rows: CompletedMuscleSet[]): MuscleState {
+  const seenSets = new Set<string>();
+  const entries: MuscleActivityEntry[] = [];
+  for (const row of rows) {
+    if (row.kind === "warmup" || seenSets.has(row.id)) continue;
+    seenSets.add(row.id);
+    const seenMuscles = new Set<MuscleKey>();
+    const groups: [MuscleRole, (string | null)[]][] = [
+      [
+        "primary",
+        row.musculos_primarios?.length ? row.musculos_primarios : [row.musculo_principal],
+      ],
+      ["secondary", row.musculos_secundarios ?? []],
+      ["tertiary", row.musculos_terciarios ?? []],
+    ];
+    for (const [role, muscles] of groups) {
+      for (const key of muscles.flatMap(resolveMuscleKeys)) {
+        if (seenMuscles.has(key)) continue;
+        seenMuscles.add(key);
+        entries.push({ muscle: key, role });
+      }
+    }
+  }
+  return buildMuscleState(entries);
+}
 export function relatedMuscles(row: MuscleFields): MuscleKey[] {
   return [
     ...new Set(

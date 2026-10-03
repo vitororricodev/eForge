@@ -5,9 +5,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { MuscleMapScreen } from "@/components/muscle-map/MuscleMapScreen";
 import { getTrainingWeekWindow, formatTrainingWeekLabel } from "@/lib/muscle-activity";
-import { mergeLocalMuscleSets, summarizeMuscleSets } from "@/lib/muscle-map-data";
-import { useExerciseCatalog } from '@/hooks/use-exercise-catalog';
-import type { MuscleKey } from '@/components/MuscleBody';
+import {
+  mergeLocalMuscleSets,
+  muscleStateFromSets,
+  summarizeMuscleSets,
+} from "@/lib/muscle-map-data";
+import { useExerciseCatalog } from "@/hooks/use-exercise-catalog";
+import type { MuscleKey } from "@/components/MuscleBody";
 import { readDraft } from "@/lib/workout-storage";
 
 export const Route = createFileRoute("/_authenticated/muscle-map")({
@@ -51,7 +55,10 @@ function MuscleMap() {
       return data ?? [];
     },
   });
-  const exercises = useExerciseCatalog({ muscles: selected ? [selected] : [], pageSize: 3 }, !!selected);
+  const exercises = useExerciseCatalog(
+    { muscles: selected ? [selected] : [], pageSize: 3 },
+    !!selected,
+  );
   const draft = user && typeof window !== "undefined" ? readDraft(user.id) : null;
   const rows = mergeLocalMuscleSets(activity.data ?? [], draft, user?.id ?? "", week);
   return (
@@ -59,14 +66,13 @@ function MuscleMap() {
       onSelectionChange={setSelected}
       weekLabel={formatTrainingWeekLabel(week)}
       summary={summarizeMuscleSets(rows)}
+      training={muscleStateFromSets(rows)}
       activityLoading={activity.isLoading}
       activityError={activity.isError}
       onRetry={() => {
         void activity.refetch();
       }}
-      exercises={(muscle) =>
-        muscle === selected ? exercises.data?.items ?? [] : []
-      }
+      exercises={(muscle) => (muscle === selected ? (exercises.data?.items ?? []) : [])}
       exercisesLoading={exercises.isLoading}
       exercisesError={exercises.isError}
       renderExerciseLink={(muscle, children, className, exercise) => (

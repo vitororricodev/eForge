@@ -1,0 +1,401 @@
+/* Keep Teko and scope execution styles away from the library and muscle map. */
+.eforge-run.workout-run {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: max(12px, env(safe-area-inset-top)) 16px calc(112px + env(safe-area-inset-bottom));
+  color: #f5f3fa;
+}
+.workout-run button,
+.workout-run a,
+.workout-run select {
+  touch-action: manipulation;
+}
+.workout-run :is(button, a, input, select, summary):focus-visible {
+  outline: 2px solid #cf9bff;
+  outline-offset: 3px;
+}
+.workout-run-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.workout-run-topbar > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #d2b1fb;
+  font-size: 18px;
+}
+.workout-run-eyebrow {
+  color: #ba8df2;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-size: 14px;
+}
+.workout-run-header h1 {
+  font-size: 34px;
+  line-height: 1.1;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+.workout-run-guidance {
+  color: #bab6c5;
+  font-size: 18px;
+  line-height: 1.3;
+  margin-top: 8px;
+}
+.workout-run-preferences {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  padding: 8px 0 12px;
+}
+.workout-run-preferences label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  font-size: 17px;
+  cursor: pointer;
+}
+.workout-run-preferences input {
+  width: 18px;
+  height: 18px;
+  accent-color: #b57cff;
+}
+.workout-run-preferences p {
+  font-size: 15px;
+  color: #bab6c5;
+}
+.eforge-run.workout-run .workout-run-progress {
+  padding: 14px 16px 12px;
+  border: 1px solid #34303e;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #21182e, #17151e);
+}
+.workout-run-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.workout-run-stats > div + div {
+  border-left: 1px solid #ffffff15;
+  padding-left: 12px;
+}
+.workout-run-stats dt {
+  color: #c3bacf;
+  font-size: 15px;
+  line-height: 1.2;
+}
+.workout-run-stats dd {
+  font-size: 28px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.workout-run-stats dd span {
+  font-size: 17px;
+  color: #d0c8dd;
+}
+.workout-run-progress progress {
+  display: block;
+  width: 100%;
+  height: 5px;
+  margin-top: 9px;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff12;
+  overflow: hidden;
+}
+.workout-run-progress progress::-webkit-progress-bar {
+  background: #ffffff12;
+}
+.workout-run-progress progress::-webkit-progress-value {
+  background: #b57cff;
+}
+.workout-run-progress progress::-moz-progress-bar {
+  background: #b57cff;
+}
+.eforge-run .eforge-rest.workout-run-rest {
+  display: block;
+  position: sticky;
+  top: max(8px, env(safe-area-inset-top));
+  z-index: 20;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid #9360c5;
+  border-radius: 16px;
+  background: #271b38f5;
+  box-shadow: 0 6px 24px #00000040;
+  backdrop-filter: blur(12px);
+}
+.workout-run-rest-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 0 3px 5px;
+}
+.workout-run-rest-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #e1c5ff;
+  font-size: 20px;
+}
+.eforge-run .workout-run-rest [role="timer"] {
+  color: #e4c8ff;
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.workout-run-rest-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: 8px;
+}
+.eforge-run .workout-run-rest-actions button {
+  min-height: 44px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #ffffff0a;
+  border: 1px solid #ffffff0c;
+  font-size: 18px;
+  color: #f0e6ff;
+}
+.workout-run-exercises {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+.eforge-run.workout-run .workout-run-exercise {
+  padding: 16px;
+  border: 1px solid #34303e;
+  border-radius: 16px;
+  background: #15141c;
+  min-width: 0;
+}
+.workout-run-exercise-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.workout-run-exercise-heading > div {
+  min-width: 0;
+}
+.workout-run-exercise-heading p {
+  color: #a9a2b7;
+  font-size: 14px;
+  line-height: 1.1;
+}
+.eforge-run.workout-run .workout-run-exercise h2 {
+  font-size: 28px;
+  line-height: 1.15;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.workout-run-exercise-count {
+  flex-shrink: 0;
+  font-size: 17px;
+  color: #d9bdff;
+  border: 1px solid #b57cff33;
+  background: #b57cff12;
+  padding: 5px 8px;
+  border-radius: 8px;
+}
+.workout-run-replace > button {
+  color: #e1d6ef;
+  min-height: 44px;
+  font-size: 18px;
+  background: #ffffff03;
+  border-color: #40354e;
+}
+.workout-run-previous {
+  margin: 10px 0 14px;
+  font-size: 16px;
+  color: #aca5ba;
+  line-height: 1.3;
+}
+.workout-run-previous span {
+  color: #d0cadb;
+}
+.workout-run-set-labels,
+.workout-run-set-fields {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1fr) 48px;
+  gap: 8px;
+  align-items: center;
+}
+.workout-run-set-labels {
+  color: #b9b0c8;
+  padding: 0 8px;
+  font-size: 15px;
+  line-height: 1.2;
+}
+.workout-run-set-labels > :last-child {
+  text-align: center;
+}
+.workout-run-set {
+  border: 1px solid #35303e;
+  border-radius: 12px;
+  background: #101016;
+  padding: 9px 8px 5px;
+  margin-top: 8px;
+}
+.workout-run-set[data-done="true"] {
+  border-color: #a970dd;
+  background: #251930;
+}
+.workout-run-set-number {
+  color: #cec5dd;
+  font-size: 20px;
+  text-align: center;
+}
+.eforge-run.workout-run .workout-run-set-fields input {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  font-size: 20px !important;
+  padding: 8px;
+  text-align: center;
+  border-color: #4b4259;
+}
+.eforge-run.workout-run .workout-run-complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #282331;
+  border: 1px solid #544660;
+  border-radius: 10px;
+  color: #b8a9cc;
+}
+.eforge-run.workout-run .workout-run-complete[aria-pressed="true"] {
+  background: #b57cff;
+  color: #170f21;
+  border-color: #ceadff;
+  box-shadow: none;
+}
+.workout-run-set-options {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 0 30px;
+}
+.eforge-run.workout-run .workout-run-set-options select {
+  min-height: 44px;
+  max-width: 132px;
+  min-width: 0;
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 16px !important;
+  color: #d0c8dd;
+  background: transparent;
+  border-color: transparent;
+}
+.workout-run-set-status {
+  font-size: 14px;
+  color: #dab9ff;
+}
+.workout-run-set-options button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: auto;
+  color: #b9b0c8;
+  border-radius: 9px;
+}
+.workout-run-set-options button:hover {
+  color: #f4bcc9;
+  background: #ec849b12;
+}
+.workout-run-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  font-size: 18px;
+  color: #ceadff;
+  background: #b57cff08;
+  border: 1px dashed #73538f;
+  border-radius: 10px;
+}
+.eforge-run.workout-run .workout-run-history {
+  margin-top: 12px;
+  border-top: 1px solid #38303f;
+  color: #cec5dd;
+  font-size: 17px;
+}
+.workout-run-history summary {
+  min-height: 44px;
+  padding: 10px 0;
+  cursor: pointer;
+  color: #c29aef;
+}
+.workout-run-history p {
+  padding: 3px 0;
+}
+.workout-run-footer {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 30;
+  padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  background: #0d0c12f5;
+  border-top: 1px solid #34303e;
+  backdrop-filter: blur(12px);
+}
+.workout-run-footer > button {
+  display: flex;
+  max-width: 608px;
+  width: 100%;
+  min-height: 52px;
+  margin: auto;
+  font-size: 22px;
+}
+@media (max-width: 360px) {
+  .eforge-run.workout-run {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .eforge-run.workout-run .workout-run-exercise {
+    padding: 12px;
+  }
+  .workout-run-exercise-count > span {
+    display: none;
+  }
+  .workout-run-set-labels,
+  .workout-run-set-fields {
+    gap: 6px;
+    grid-template-columns: 18px minmax(0, 1fr) minmax(0, 1fr) 48px;
+  }
+  .workout-run-set-options {
+    margin-left: 24px;
+    gap: 4px;
+  }
+  .workout-run-set-status {
+    font-size: 12px;
+  }
+  .workout-run-stats dd {
+    font-size: 25px;
+  }
+  .workout-run-stats > div + div {
+    padding-left: 8px;
+  }
+}
+@media (min-width: 768px) {
+  .eforge-run.workout-run {
+    padding-top: 24px;
+  }
+}

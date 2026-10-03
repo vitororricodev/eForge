@@ -6,6 +6,8 @@ Atualização da biblioteca em 02/10/2026: a consulta de exercícios passa por `
 
 ## Alterações
 
+**Revisão de 03/10/2026:** a nova solicitação muda a seleção para ciano e os registros para roxo por papel: primário forte, secundário suave. O avatar geométrico foi retirado da execução. Estas regras substituem as descrições de cor e mapa compacto de setembro abaixo. Guia atual: [Treino e mapa](ATUALIZACAO-TREINO-MAPA.md).
+
 - `/muscle-map` usa o layout mobile aprovado: frente/costas, um corpo inteiro por vez, seleção em roxo, nomes, detalhes abaixo, lista de músculos e navegação inferior.
 - Em telas a partir de 1024 px, há navegação lateral, painel de detalhes à direita e opção Ambos. Ao voltar ao mobile, retorna a uma vista.
 - Arte anatômica cinza com aparência 3D em dois WebP locais (aproximadamente 100 KB juntos). As regiões interativas são paths SVG separados; a imagem não é apresentada como vetor editável nem como modelo 3D rotacionável.

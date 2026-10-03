@@ -4,6 +4,8 @@ Aplicativo voltado ao celular em React/TanStack Start, Supabase e Capacitor, com
 
 ## Instalação e atualização
 
+**Ajustes de treino e mapa de 03/10/2026:** se sua biblioteca já está instalada, aplique o código e execute as verificações. Não há SQL, migration, reimportação de GIFs ou Edge Function nova para estes ajustes. Consulte [Treino e mapa atualizados](ATUALIZACAO-TREINO-MAPA.md). Os passos de banco abaixo são da instalação da biblioteca anterior.
+
 1. Execute npm ci.
 2. Copie .env.example para .env e configure a URL/chave **públicas** do mesmo projeto Supabase. Preserve seu arquivo local; nenhuma credencial acompanha a entrega.
 3. Para uma instalação nova, aplique as migrations existentes em ordem. Para atualizar o projeto que já tem o catálogo/snapshot anteriores, use o arquivo completo maintenance/20261002200000_owned_gif_library_manual.sql no SQL Editor. Ele aplica somente etapas pendentes; não reaplica o antigo ADD COLUMN source.
@@ -32,7 +34,9 @@ Os nomes seguem o CSV, inclusive os poucos nomes em inglês. A revisão administ
 
 O rascunho local e a fila de sincronização continuam separados por usuário, com UUID estável e snapshot transacional. Permanecem salvamento de séries, decimal com vírgula, descanso por horário final, marcação, substituição e navegação com cinco entradas. Vibração/som dependem das permissões e do dispositivo.
 
-A rota /muscle-map mantém a arte anatômica cinza com aparência 3D, imagens WebP com máscaras SVG interativas, seleção roxa, frente/costas no celular, ambas no desktop, nomes, detalhes e lista acessível. O mapa ao vivo reage às séries concluídas. Pesos: primário 1, secundário 0,55, terciário 0,25; aquecimentos excluídos. Semana local: segunda-feira 00:00 até a próxima segunda, exclusiva. A virada muda a análise visual, sem excluir histórico.
+A execução /run/$workoutId prioriza resumo, descanso e séries, com edição de carga/repetições, marcação, tipo, remoção e adição de série. O avatar geométrico antigo foi retirado dessa tela. O descanso usa minutos/segundos e botões separados; o histórico fica recolhido após as séries. O rodapé reserva espaço no conteúdo.
+
+A rota /muscle-map mantém a arte anatômica cinza com aparência 3D, imagens WebP e máscaras SVG interativas. Primários treinados aparecem em roxo forte, secundários em roxo suave; a seleção usa contorno ciano e preserva a cor de treino. Frente/costas no celular, ambas no desktop, nomes, detalhes e lista acessível são mantidos. Papéis vêm dos snapshots das séries concluídas. Pesos: primário 1, secundário 0,55, terciário 0,25; aquecimentos excluídos. Semana local: segunda-feira 00:00 até a próxima segunda, exclusiva. A virada muda a análise visual, sem excluir histórico.
 
 Documentos específicos: [Mapa mobile](ATUALIZACAO-MAPA-MOBILE.md), [avatar semanal](ATUALIZACAO-AVATAR-SEMANAL.md) e [Vault técnico](vault/README.md). Forega Sport DEMO permanece na marca; Teko Bold na interface existente, com exceção de fonte de sistema já aprovada para a tela do mapa.
 

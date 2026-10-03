@@ -8,4 +8,6 @@ React 19, TanStack Start/Router/Query, Vite, Tailwind, componentes Radix existen
 
 A dependência operacional do catálogo externo foi removida. Códigos/labels para registros históricos e migrations antigas continuam apenas como compatibilidade de dados. A transição no banco ocorre pela ação explícita validada após a importação, não no carregamento da página.
 
-Relacionados: [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]].
+Em 03/10/2026, a execução `/run/$workoutId` recebeu CSS restrito a `workout-run` e reutiliza Button, Input e ExercisePicker. O avatar antigo não é mais renderizado nem consulta o sexo do perfil nessa rota. Armazenamento/sincronização e schema continuam existentes. O mapa deriva os papéis dos mesmos snapshots por `muscleStateFromSets`, reutilizando normalização/hierarquia/pesos de `muscle-activity.ts`. Nenhuma tabela ou consulta paralela foi criada.
+
+Relacionados: [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]].

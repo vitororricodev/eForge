@@ -8,14 +8,15 @@ const transpile = (file) =>
 const uri = (source) => "data:text/javascript;base64," + Buffer.from(source).toString("base64");
 const activityURI = uri(transpile("src/lib/muscle-activity.ts"));
 const { getTrainingWeekWindow } = await import(activityURI);
-const { summarizeMuscleSets, mergeLocalMuscleSets, relatedMuscles } = await import(
-  uri(
-    transpile("src/lib/muscle-map-data.ts").replace(
-      /(['"])\.\/muscle-activity\1/,
-      JSON.stringify(activityURI),
-    ),
-  )
-);
+const { summarizeMuscleSets, mergeLocalMuscleSets, relatedMuscles, muscleStateFromSets } =
+  await import(
+    uri(
+      transpile("src/lib/muscle-map-data.ts").replace(
+        /(['"])\.\/muscle-activity\1/,
+        JSON.stringify(activityURI),
+      ),
+    )
+  );
 const row = {
   id: "s1",
   session_id: "w1",
@@ -79,4 +80,66 @@ console.log(
   "PASS: muscle selection data, deduplication, warmups, tertiary roles, local account/week isolation.",
 );
 
-assert.deepEqual(new Set(relatedMuscles({musculo_principal:'chest',musculos_primarios:['chest','triceps'],musculos_secundarios:['shoulders']})),new Set(['chest','triceps','shoulders']));
+assert.deepEqual(
+  new Set(
+    relatedMuscles({
+      musculo_principal: "chest",
+      musculos_primarios: ["chest", "triceps"],
+      musculos_secundarios: ["shoulders"],
+    }),
+  ),
+  new Set(["chest", "triceps", "shoulders"]),
+);
+const roleState = muscleStateFromSets([
+  row,
+  row,
+  { ...row, id: "s2" },
+  { ...row, id: "warm", kind: "warmup" },
+]);
+assert.equal(roleState.chest.role, "primary");
+assert.equal(
+  roleState.chest.score,
+  2,
+  "Aliases in secondary muscles must not count a primary twice",
+);
+assert.equal(roleState.biceps.role, "secondary");
+assert.equal(roleState.biceps.score, 1.1);
+assert.equal(roleState.abs.role, "tertiary");
+assert.equal(roleState.abs.score, 0.5);
+const mixedRoles = muscleStateFromSets([
+  ...Array.from({ length: 4 }, (_, i) => ({ ...row, id: "secondary-" + i })),
+  {
+    ...row,
+    id: "primary-biceps",
+    musculo_principal: "Bíceps",
+    musculos_primarios: ["biceps", "forearms"],
+    musculos_secundarios: [],
+    musculos_terciarios: [],
+  },
+]);
+assert.equal(
+  mixedRoles.biceps.role,
+  "primary",
+  "An explicit primary role wins even with more secondary sets",
+);
+assert.equal(mixedRoles.forearms.role, "primary", "All supplied primary muscles are preserved");
+assert.deepEqual(muscleStateFromSets([{ ...row, kind: "warmup" }]), {});
+assert.deepEqual(
+  muscleStateFromSets([
+    {
+      ...row,
+      musculo_principal: "unmapped",
+      musculos_secundarios: null,
+      musculos_terciarios: null,
+    },
+  ]),
+  {},
+);
+assert.equal(
+  muscleStateFromSets(mergeLocalMuscleSets([], draft, "u1", week)).chest.role,
+  "primary",
+);
+assert.deepEqual(muscleStateFromSets(mergeLocalMuscleSets([], draft, "u2", week)), {});
+console.log(
+  "PASS: weekly trained roles, primary precedence, multiple primaries, existing role weights, duplicate/alias deduplication and local snapshot isolation.",
+);

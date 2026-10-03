@@ -6,6 +6,7 @@ Documentação técnica da biblioteca própria e do aplicativo existente, compat
 - [[Biblioteca]] — manifesto, classificação, identidade e Storage.
 - [[Banco-e-acesso]] — migrations, RLS e preservação do histórico.
 - [[Muscle-Map]] — músculos, séries e janela semanal.
+- [[Treinos]] — execução mobile, descanso e salvamento.
 - [[Manutencao]] — importação, revisão, exclusão e diagnóstico.
 
 Os documentos em `docs/LEGADO/` descrevem integrações anteriores e não são passos da instalação atual.

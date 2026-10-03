@@ -1,17 +1,18 @@
-import { useState } from "react";
-import type { MuscleKey } from "@/components/MuscleBody";
+import { Fragment, useState } from "react";
+import type { MuscleKey, MuscleState } from "@/components/MuscleBody";
+import { muscleRoleLabel } from "@/lib/muscle-activity";
 import { MUSCLES, REGIONS, type BodyView } from "./anatomy";
 
 export function AnatomicalBody({
   view,
   selected,
-  trained = [],
+  training,
   showNames,
   onSelect,
 }: {
   view: BodyView;
   selected: MuscleKey | null;
-  trained?: MuscleKey[];
+  training: MuscleState;
   showNames: boolean;
   onSelect: (key: MuscleKey) => void;
 }) {
@@ -43,31 +44,53 @@ export function AnatomicalBody({
             aria-label="Regiões musculares selecionáveis"
           >
             {(Object.entries(REGIONS[view]) as [MuscleKey, string][]).map(([key, d]) => (
-              <path
-                key={key}
-                d={d}
-                role="button"
-                tabIndex={0}
-                aria-label={MUSCLES[key].label}
-                aria-pressed={selected === key}
-                data-muscle={key}
-                data-selected={selected === key}
-                data-trained={trained.includes(key)}
-                className="anatomical-region"
-                onClick={() => onSelect(key)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onSelect(key);
+              <Fragment key={key}>
+                <path
+                  d={d}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={MUSCLES[key].label}
+                  aria-pressed={selected === key}
+                  data-muscle={key}
+                  data-selected={selected === key}
+                  data-trained={!!training[key]}
+                  data-role={training[key]?.role ?? "none"}
+                  className="anatomical-region"
+                  vectorEffect="non-scaling-stroke"
+                  aria-description={
+                    training[key]
+                      ? `${muscleRoleLabel(training[key].role)} nos treinos desta semana`
+                      : "Sem registro de treino nesta semana"
                   }
-                }}
-              >
-                <title>
-                  {MUSCLES[key].label}
-                  {trained.includes(key) ? " — registrado na semana" : ""}
-                </title>
-              </path>
+                  onClick={() => onSelect(key)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onSelect(key);
+                    }
+                  }}
+                >
+                  <title>
+                    {MUSCLES[key].label}
+                    {training[key] ? ` — ${muscleRoleLabel(training[key].role)} na semana` : ""}
+                  </title>
+                </path>
+                <path
+                  d={d}
+                  className="anatomical-focus"
+                  vectorEffect="non-scaling-stroke"
+                  aria-hidden="true"
+                />
+              </Fragment>
             ))}
+            {selected && REGIONS[view][selected] && (
+              <path
+                d={REGIONS[view][selected]}
+                className="anatomical-selection"
+                vectorEffect="non-scaling-stroke"
+                aria-hidden="true"
+              />
+            )}
           </svg>
         )}
         {showNames && selected && REGIONS[view][selected] && (

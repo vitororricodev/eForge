@@ -10,8 +10,9 @@ import {
   Dumbbell,
   CircleHelp,
 } from "lucide-react";
-import type { MuscleKey } from "@/components/MuscleBody";
+import type { MuscleKey, MuscleState } from "@/components/MuscleBody";
 import type { MuscleSummary } from "@/lib/muscle-map-data";
+import { muscleRoleLabel } from "@/lib/muscle-activity";
 import { AnatomicalBody } from "./AnatomicalBody";
 import { MUSCLES, muscleKeys, REGIONS, type BodyView } from "./anatomy";
 import "./muscle-map.css";
@@ -21,6 +22,7 @@ export type MuscleMapScreenProps = {
   onSelectionChange?: (muscle: MuscleKey | null) => void;
   weekLabel: string;
   summary: MuscleSummary;
+  training: MuscleState;
   activityLoading: boolean;
   activityError: boolean;
   onRetry: () => void;
@@ -56,6 +58,8 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
   const stats = selected ? props.summary[selected] : undefined;
   const related = selected ? props.exercises(selected) : [];
   const trained = Object.keys(props.summary) as MuscleKey[];
+  const selectedRole = selected ? props.training[selected]?.role : undefined;
+  const hasTertiary = Object.values(props.training).some((muscle) => muscle.role === "tertiary");
   return (
     <main className="muscle-map-page">
       <header className="muscle-map-heading">
@@ -119,7 +123,7 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
                 key={view}
                 view={view}
                 selected={selected}
-                trained={trained}
+                training={props.training}
                 showNames={showNames}
                 onSelect={chooseMuscle}
               />
@@ -128,9 +132,12 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
                   <AnatomicalBody
                     view={view === "front" ? "back" : "front"}
                     selected={selected}
-                    trained={trained}
+                    training={props.training}
                     showNames={showNames}
-                    onSelect={key => {setSelected(key);props.onSelectionChange?.(key);}}
+                    onSelect={(key) => {
+                      setSelected(key);
+                      props.onSelectionChange?.(key);
+                    }}
                   />
                 </div>
               )}
@@ -138,15 +145,26 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
           </div>
           <div className="muscle-map-legend" aria-label="Legenda do mapa">
             <span>
-              <i className="muscle-dot-selected" /> Selecionado
+              <i className="muscle-dot-primary" aria-hidden="true" /> Principal
             </span>
             <span>
-              <i className="muscle-dot-trained" /> Treinado
+              <i className="muscle-dot-secondary" aria-hidden="true" /> Secundário
             </span>
             <span>
-              <i className="muscle-dot-neutral" /> Outros
+              <i className="muscle-dot-selected" aria-hidden="true" /> Selecionado
+            </span>
+            {hasTertiary && (
+              <span>
+                <i className="muscle-dot-tertiary" aria-hidden="true" /> Terciário
+              </span>
+            )}
+            <span>
+              <i className="muscle-dot-neutral" aria-hidden="true" /> Sem registro
             </span>
           </div>
+          <p className="muscle-map-role-note">
+            Roxo indica os treinos da semana. O contorno ciano indica sua seleção.
+          </p>
         </section>
         <div className="muscle-map-details">
           <section className="muscle-detail-card" aria-labelledby="muscle-detail-title">
@@ -159,6 +177,11 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
                 {info?.region ??
                   "Toque em uma região do avatar ou escolha um músculo na lista abaixo."}
               </p>
+              {selectedRole && (
+                <p className="muscle-role-badge" data-role={selectedRole}>
+                  <i aria-hidden="true" /> {muscleRoleLabel(selectedRole)} na semana
+                </p>
+              )}
             </div>
             {selected && (
               <>
@@ -174,9 +197,13 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
                   className="muscle-clear-action"
                   aria-label="Limpar seleção"
                   title="Limpar seleção"
-                  onClick={() => {setSelected(null);props.onSelectionChange?.(null);}}
+                  onClick={() => {
+                    setSelected(null);
+                    props.onSelectionChange?.(null);
+                  }}
                 >
-                  <RotateCcw size={17} aria-hidden="true" /><span className="sr-only">Limpar seleção</span>
+                  <RotateCcw size={17} aria-hidden="true" />
+                  <span className="sr-only">Limpar seleção</span>
                 </button>
               </>
             )}
@@ -215,7 +242,7 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
                 </div>
                 <p className="muscle-week-note">
                   {stats
-                    ? "Inclui participação principal, secundária e terciária. Aquecimentos não entram na contagem."
+                    ? "Conta as séries em que este músculo participou. Aquecimentos não entram na contagem. O destaque usa o papel principal quando ele aparece em algum exercício da semana."
                     : "Nenhuma série registrada para este músculo na semana."}
                 </p>
               </>
@@ -275,10 +302,18 @@ export function MuscleMapScreen(props: MuscleMapScreenProps) {
                 <button
                   type="button"
                   key={key}
+                  aria-label={MUSCLES[key].label}
+                  aria-description={
+                    props.training[key]
+                      ? `${muscleRoleLabel(props.training[key].role)} nos treinos desta semana`
+                      : "Sem registro nesta semana"
+                  }
                   aria-pressed={selected === key}
+                  data-role={props.training[key]?.role ?? "none"}
                   onClick={() => chooseMuscle(key)}
                 >
-                  {MUSCLES[key].label}
+                  <i className="muscle-list-dot" aria-hidden="true" />
+                  <span>{MUSCLES[key].label}</span>
                 </button>
               ))}
             </div>

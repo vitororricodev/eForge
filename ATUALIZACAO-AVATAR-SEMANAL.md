@@ -2,6 +2,8 @@
 
 Atualização aplicada em 16/09/2026.
 
+**Revisão de 03/10/2026:** o avatar geométrico ao vivo foi retirado da execução. O mapa anatômico usa primários em roxo forte, secundários em roxo suave e seleção em ciano. Janela semanal, pesos e histórico permanecem; as descrições de geometria/atualização ao vivo abaixo registram a versão de setembro. Guia atual: [Treino e mapa](ATUALIZACAO-TREINO-MAPA.md).
+
 Biblioteca própria em 02/10/2026: os novos exercícios `source=eforge` usam as chaves fornecidas pelo manifesto, com primário e secundários; terciários começam vazios. Arte, pesos 1/0,55/0,25 e a janela semanal abaixo permanecem intactos. Consulte [Biblioteca oficial eForge](BIBLIOTECA-EFORGE.md).
 
 ## O que mudou

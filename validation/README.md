@@ -1,5 +1,7 @@
 # Capturas e verificação local
 
+As capturas dos ajustes de treino e cores de 03/10/2026 estão em [treino-mapa/README.md](treino-mapa/README.md). As imagens abaixo documentam a entrega anterior da biblioteca.
+
 Estas imagens foram capturadas nas rotas reais do aplicativo em Chromium, com sessão e HTTP interceptados exclusivamente no processo de teste. Nomes, totais e dados de treino mostrados são fixtures; não representam o banco da sua conta. Nenhuma requisição de teste chegou ao seu Supabase.
 
 - [Biblioteca no celular](biblioteca-mobile.png)

@@ -115,7 +115,7 @@ Não foi encontrado cron de sincronização no repositório. Agendamentos remoto
 
 ## Muscle Map e validação
 
-A arte anatômica, máscaras SVG, navegação mobile e lista acessível foram preservadas. O mapa usa as chaves importadas e os snapshots das séries: principal 1, secundário 0,55, terciário 0,25; aquecimento excluído. A janela semanal começa segunda-feira 00:00 no fuso local. O reset é visual/analítico, não exclusão de histórico. Ao marcar/desmarcar uma série, o mapa ao vivo continua reagindo.
+A arte anatômica, máscaras SVG, navegação mobile e lista acessível foram preservadas. O mapa usa as chaves importadas e os snapshots das séries: principal 1, secundário 0,55, terciário 0,25; aquecimento excluído. A janela semanal começa segunda-feira 00:00 no fuso local. O reset é visual/analítico, não exclusão de histórico. Em 03/10/2026, o avatar antigo foi retirado da execução; o mapa semanal recebeu primários em roxo forte, secundários em roxo suave e seleção ciano, independente do treino. Consulte [Treino e mapa](ATUALIZACAO-TREINO-MAPA.md).
 
 Execute `npm test`, `npm run typecheck`, `npm run build` e `npm run build:mobile`. Os testes novos cobrem CSV/JSON/ZIP, os 611 registros, idempotência, hash/slug, erros, Storage/RLS, filtros, exclusão e troca com exercício antigo utilizado. O banco dos testes é PostgreSQL local em PGlite, com tabelas/políticas de Storage simuladas. Os testes de navegador usam rotas reais com HTTP interceptado; não consultam sua conta real.
 
