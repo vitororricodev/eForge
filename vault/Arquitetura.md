@@ -10,4 +10,6 @@ A dependência operacional do catálogo externo foi removida. Códigos/labels pa
 
 Em 03/10/2026, a execução `/run/$workoutId` recebeu CSS restrito a `workout-run` e reutiliza Button, Input e ExercisePicker. O avatar antigo não é mais renderizado nem consulta o sexo do perfil nessa rota. Armazenamento/sincronização e schema continuam existentes. O mapa deriva os papéis dos mesmos snapshots por `muscleStateFromSets`, reutilizando normalização/hierarquia/pesos de `muscle-activity.ts`. Nenhuma tabela ou consulta paralela foi criada.
 
-Relacionados: [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]].
+O fechamento de 03/10/2026 acrescenta `/share/$token`, componentes de compartilhar/ordenar e RPCs no Supabase. Nenhuma dependência de drag, serviço externo ou framework novo foi adicionado. `ExercisePicker` e catálogo paginado existentes são reutilizados na cópia; `ExerciseMedia` renderiza mídia da biblioteca. CSS novo está restrito às classes das telas/diálogos de planejamento e compartilhamento. Perfil reutiliza schema/formulário, com correção do banco e IMC durante edição. Emojis escritos na interface foram substituídos por Lucide; dados de usuários não são reescritos.
+
+Relacionados: [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]], [[Compartilhamento]], [[Perfil]].

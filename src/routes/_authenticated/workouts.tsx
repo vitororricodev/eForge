@@ -1,9 +1,22 @@
-import { ExercisePicker } from '@/components/exercises/ExercisePicker';
+import { ExercisePicker } from "@/components/exercises/ExercisePicker";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  Plus, Dumbbell, Play, Pencil, Trash2, X, ArrowUp, ArrowDown, History, Loader2, Clock,
+  Plus,
+  Dumbbell,
+  Play,
+  Pencil,
+  Trash2,
+  X,
+  ArrowUp,
+  ArrowDown,
+  History,
+  Loader2,
+  Clock,
+  Share2,
+  ListOrdered,
+  Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,32 +25,57 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { SortableList } from "@/components/workouts/SortableList";
+import { WorkoutShareDialog } from "@/components/workouts/WorkoutShareDialog";
+import { moveTo, errorMessage } from "@/lib/workout-sharing";
+import { decimalNumber } from "@/lib/body-profile";
+import "@/components/workouts/workout-plan.css";
 
 export const Route = createFileRoute("/_authenticated/workouts")({
   head: () => ({
     meta: [
       { title: "eForge — Treinos" },
-      { name: "description", content: "Monte seus treinos, execute série por série e acompanhe o volume levantado." },
+      {
+        name: "description",
+        content: "Monte seus treinos, execute série por série e acompanhe o volume levantado.",
+      },
       { property: "og:title", content: "eForge — Treinos" },
-      { property: "og:description", content: "Monte seus treinos e execute série por série com cronômetro de descanso." },
+      {
+        property: "og:description",
+        content: "Monte seus treinos e execute série por série com cronômetro de descanso.",
+      },
     ],
   }),
   component: WorkoutsPage,
 });
 
 type ExerciseLite = { id: string; nome: string; musculo_principal: string };
-type WorkoutRow = { id: string; nome: string; descricao: string | null; created_at: string };
+type WorkoutRow = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  created_at: string;
+  ordem: number;
+};
 type WEItem = {
-  id?: string;
+  id: string;
   exercise_id: string;
   series: number;
   repeticoes: number;
@@ -69,32 +107,78 @@ function WorkoutsPage() {
   const [descricao, setDescricao] = useState("");
   const [items, setItems] = useState<WEItem[]>([]);
   const [saving, setSaving] = useState(false);
+  const [planId, setPlanId] = useState("");
+  const [shareWorkout, setShareWorkout] = useState<WorkoutRow | null>(null);
+  const [orderDraft, setOrderDraft] = useState<WorkoutRow[] | null>(null);
+  const [ordering, setOrdering] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [toDelete, setToDelete] = useState<WorkoutRow | null>(null);
 
-  async function load() {
-    if (!user) { setLoading(false); return; }
+  const load = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-    const [w, s, we] = await Promise.all([
-      supabase.from("workouts").select("id,nome,descricao,created_at").order("created_at", { ascending: false }),
-      supabase.from("workout_sessions").select("id,nome_treino,iniciado_em,duracao_min,volume_total,status")
-        .order("iniciado_em", { ascending: false }).limit(30),
-      supabase.from("workout_exercises").select("id,workout_id"),
-    ]);
-    if (w.error) toast.error(w.error.message);
-    setWorkouts(w.data ?? []);
-    setSessions(s.data ?? []);
-    const c: Record<string, number> = {};
-    (we.data ?? []).forEach((r: { workout_id: string }) => {
-      c[r.workout_id] = (c[r.workout_id] ?? 0) + 1;
-    });
-    setCounts(c);
-    setLoading(false);
-  }
+    setLoadError("");
+    try {
+      const [w, s, we] = await Promise.all([
+        supabase
+          .from("workouts")
+          .select("id,nome,descricao,created_at,ordem")
+          .eq("user_id", user.id)
+          .order("ordem")
+          .order("created_at", { ascending: false })
+          .order("id"),
+        supabase
+          .from("workout_sessions")
+          .select("id,nome_treino,iniciado_em,duracao_min,volume_total,status")
+          .eq("user_id", user.id)
+          .order("iniciado_em", { ascending: false })
+          .limit(30),
+        supabase.from("workout_exercises").select("id,workout_id").eq("user_id", user.id),
+      ]);
+      if (w.error) throw w.error;
+      if (s.error) throw s.error;
+      if (we.error) throw we.error;
+      setWorkouts(w.data ?? []);
+      setSessions(s.data ?? []);
+      const c: Record<string, number> = {};
+      (we.data ?? []).forEach((r) => {
+        c[r.workout_id] = (c[r.workout_id] ?? 0) + 1;
+      });
+      setCounts(c);
+    } catch (error) {
+      setLoadError(errorMessage(error, "Não foi possível carregar seus treinos."));
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  useEffect(() => { load(); }, [user?.id]);
+  async function saveOrder() {
+    if (!orderDraft || ordering) return;
+    setOrdering(true);
+    try {
+      const { error } = await supabase.rpc("reorder_workouts", {
+        p_ids: orderDraft.map((w) => w.id),
+      });
+      if (error) throw error;
+      setWorkouts(orderDraft.map((w, index) => ({ ...w, ordem: index })));
+      setOrderDraft(null);
+      toast.success("Ordem dos treinos salva.");
+    } catch (error) {
+      toast.error(errorMessage(error, "Não foi possível salvar a ordem."));
+    } finally {
+      setOrdering(false);
+    }
+  }
 
   function openNew() {
     setEditing(null);
+    setPlanId(crypto.randomUUID());
     setNome("");
     setDescricao("");
     setItems([]);
@@ -103,14 +187,21 @@ function WorkoutsPage() {
 
   async function openEdit(w: WorkoutRow) {
     setEditing(w);
+    setPlanId(w.id);
     setNome(w.nome);
     setDescricao(w.descricao ?? "");
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("workout_exercises")
-      .select("id,exercise_id,series,repeticoes,carga_kg,descanso_seg,exercises(id,nome,musculo_principal)")
+      .select(
+        "id,exercise_id,series,repeticoes,carga_kg,descanso_seg,exercises(id,nome,musculo_principal)",
+      )
       .eq("workout_id", w.id)
       .order("ordem");
-    setExercises((data ?? []).flatMap(row => row.exercises ? [row.exercises] : []));
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setExercises((data ?? []).flatMap((row) => (row.exercises ? [row.exercises] : [])));
     setItems(
       (data ?? []).map((r) => ({
         id: r.id,
@@ -126,56 +217,64 @@ function WorkoutsPage() {
 
   function addItem(exercise_id: string) {
     if (items.some((i) => i.exercise_id === exercise_id)) return;
-    setItems((p) => [...p, { exercise_id, series: 3, repeticoes: 10, carga_kg: "", descanso_seg: 60 }]);
+    setItems((p) => [
+      ...p,
+      {
+        id: crypto.randomUUID(),
+        exercise_id,
+        series: 3,
+        repeticoes: 10,
+        carga_kg: "",
+        descanso_seg: 60,
+      },
+    ]);
   }
 
   function move(idx: number, dir: -1 | 1) {
-    setItems((p) => {
-      const next = [...p];
-      const t = idx + dir;
-      if (t < 0 || t >= next.length) return p;
-      [next[idx], next[t]] = [next[t], next[idx]];
-      return next;
-    });
+    setItems((p) => moveTo(p, idx, idx + dir));
   }
 
   async function save() {
-    if (!user) return;
-    if (!nome.trim()) return toast.error("Dê um nome ao treino.");
+    if (!user || saving) return;
+    if (!nome.trim() || nome.trim().length > 120)
+      return toast.error("Informe um nome de até 120 caracteres.");
     if (items.length === 0) return toast.error("Adicione ao menos um exercício.");
+    const rows = items.map((it) => ({
+      ...it,
+      carga_kg: it.carga_kg.trim() === "" ? null : decimalNumber(it.carga_kg),
+    }));
+    if (
+      rows.some(
+        (it) =>
+          !Number.isInteger(it.series) ||
+          it.series < 1 ||
+          it.series > 100 ||
+          !Number.isInteger(it.repeticoes) ||
+          it.repeticoes < 1 ||
+          it.repeticoes > 1000 ||
+          !Number.isInteger(it.descanso_seg) ||
+          it.descanso_seg < 0 ||
+          it.descanso_seg > 3600 ||
+          (it.carga_kg !== null &&
+            (!Number.isFinite(it.carga_kg) || it.carga_kg < 0 || it.carga_kg > 1000000)),
+      )
+    )
+      return toast.error("Verifique séries, repetições, carga e descanso.");
     setSaving(true);
     try {
-      let workoutId = editing?.id;
-      if (editing) {
-        const { error } = await supabase.from("workouts")
-          .update({ nome: nome.trim(), descricao: descricao.trim() || null })
-          .eq("id", editing.id);
-        if (error) throw error;
-        await supabase.from("workout_exercises").delete().eq("workout_id", editing.id);
-      } else {
-        const { data, error } = await supabase.from("workouts")
-          .insert({ user_id: user.id, nome: nome.trim(), descricao: descricao.trim() || null })
-          .select("id").single();
-        if (error) throw error;
-        workoutId = data.id;
-      }
-      const rows = items.map((it, i) => ({
-        workout_id: workoutId!,
-        user_id: user.id,
-        exercise_id: it.exercise_id,
-        ordem: i,
-        series: Number(it.series) || 1,
-        repeticoes: Number(it.repeticoes) || 1,
-        carga_kg: it.carga_kg === "" ? null : Number(it.carga_kg),
-        descanso_seg: Number(it.descanso_seg) || 60,
-      }));
-      const { error: e2 } = await supabase.from("workout_exercises").insert(rows);
-      if (e2) throw e2;
+      const { data, error } = await supabase.rpc("save_workout_plan", {
+        p_id: planId,
+        p_name: nome.trim(),
+        p_description: descricao.trim(),
+        p_items: rows,
+      });
+      if (error) throw error;
+      if (data !== planId) throw new Error("O treino não pôde ser confirmado.");
       toast.success(editing ? "Treino atualizado!" : "Treino criado!");
       setOpen(false);
-      load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao salvar treino");
+      void load();
+    } catch (error) {
+      toast.error(errorMessage(error, "Erro ao salvar treino."));
     } finally {
       setSaving(false);
     }
@@ -199,14 +298,19 @@ function WorkoutsPage() {
   }, [exercises]);
 
   return (
-    <main className="mx-auto max-w-md px-5 pt-10 pb-4">
+    <main className="workout-plans mx-auto max-w-2xl px-5 pt-6 pb-4">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">eForge</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            eForge
+          </p>
           <h1 className="mt-1 text-3xl font-black">Treinos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Monte, execute e acompanhe seu volume.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Monte, execute e acompanhe seu volume.
+          </p>
         </div>
         <button
+          disabled={!!orderDraft}
           onClick={openNew}
           className="grid size-11 place-items-center rounded-full bg-neon text-primary-foreground glow-neon-soft"
           aria-label="Novo treino"
@@ -229,51 +333,145 @@ function WorkoutsPage() {
         ))}
       </div>
 
+      {loadError && (
+        <div role="alert" className="plan-error">
+          <p>{loadError}</p>
+          <Button variant="outline" onClick={() => void load()}>
+            Tentar novamente
+          </Button>
+        </div>
+      )}
       {loading ? (
-        <div className="mt-10 flex justify-center"><Loader2 className="size-6 animate-spin text-neon" /></div>
+        <div className="mt-10 flex justify-center">
+          <Loader2 className="size-6 animate-spin text-neon" />
+        </div>
       ) : tab === "treinos" ? (
         <div className="mt-5 space-y-3">
-          {workouts.length === 0 && (
+          {workouts.length > 1 && !orderDraft && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setOrderDraft([...workouts])}
+            >
+              <ListOrdered size={18} />
+              Organizar treinos
+            </Button>
+          )}
+          {orderDraft && (
+            <section className="plan-order-controls" aria-label="Organizar treinos">
+              <p>Escolha a ordem dos treinos. Você pode alterá-la novamente depois.</p>
+              <div>
+                <Button variant="outline" disabled={ordering} onClick={() => setOrderDraft(null)}>
+                  Cancelar organização
+                </Button>
+                <Button disabled={ordering} onClick={() => void saveOrder()}>
+                  {ordering ? <Loader2 className="animate-spin" /> : <Save size={18} />}Salvar ordem
+                </Button>
+              </div>
+            </section>
+          )}
+          {workouts.length === 0 && !loadError && (
             <div className="hairline rounded-3xl surface p-8 text-center">
               <Dumbbell className="mx-auto size-8 text-neon" />
               <p className="mt-3 font-bold">Nenhum treino ainda</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Crie seu primeiro treino usando os exercícios da sua{" "}
-                <Link to="/exercises" className="text-neon">biblioteca</Link>.
+                <Link to="/exercises" className="text-neon">
+                  biblioteca
+                </Link>
+                .
               </p>
-              <Button onClick={openNew} className="mt-4 rounded-full">Criar treino</Button>
+              <Button onClick={openNew} className="mt-4 rounded-full">
+                Criar treino
+              </Button>
             </div>
           )}
-          {workouts.map((w) => (
-            <div key={w.id} className="hairline rounded-3xl surface p-4">
-              <div className="flex items-center gap-3">
-                <div className="grid size-12 place-items-center rounded-2xl bg-neon/15 text-neon ring-1 ring-neon/30">
-                  <Dumbbell className="size-6" strokeWidth={2.5} />
+          {orderDraft ? (
+            <SortableList
+              items={orderDraft}
+              onReorder={setOrderDraft}
+              disabled={ordering}
+              label={(w) => w.nome}
+            >
+              {(w, index, handle) => (
+                <div className="plan-order-card">
+                  <span className="plan-number">{index + 1}</span>
+                  <strong>{w.nome}</strong>
+                  {handle}
+                  <button
+                    type="button"
+                    className="plan-icon-button"
+                    disabled={ordering || index === 0}
+                    aria-label={`Subir treino ${w.nome}`}
+                    onClick={() => setOrderDraft(moveTo(orderDraft, index, index - 1))}
+                  >
+                    <ArrowUp size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    className="plan-icon-button"
+                    disabled={ordering || index === orderDraft.length - 1}
+                    aria-label={`Descer treino ${w.nome}`}
+                    onClick={() => setOrderDraft(moveTo(orderDraft, index, index + 1))}
+                  >
+                    <ArrowDown size={18} />
+                  </button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-bold">{w.nome}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {counts[w.id] ?? 0} exercício{(counts[w.id] ?? 0) === 1 ? "" : "s"}
-                    {w.descricao ? ` · ${w.descricao}` : ""}
+              )}
+            </SortableList>
+          ) : (
+            workouts.map((w) => (
+              <article key={w.id} className="hairline rounded-3xl surface p-4">
+                <div className="plan-card-heading">
+                  <div className="plan-card-icon">
+                    <Dumbbell size={24} />
                   </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">{w.nome}</h2>
+                    <p className="text-muted-foreground">
+                      {counts[w.id] ?? 0} exercício{counts[w.id] === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() =>
+                      void navigate({ to: "/run/$workoutId", params: { workoutId: w.id } })
+                    }
+                  >
+                    <Play size={18} />
+                    Iniciar
+                  </Button>
                 </div>
-                <button
-                  onClick={() => navigate({ to: "/run/$workoutId", params: { workoutId: w.id } })}
-                  className="flex items-center gap-1 rounded-full bg-neon px-4 py-2 text-xs font-bold text-primary-foreground glow-neon-soft"
-                >
-                  <Play className="size-3.5" strokeWidth={3} /> Iniciar
-                </button>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => openEdit(w)} className="flex items-center gap-1 rounded-full surface-2 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
-                  <Pencil className="size-3" /> Editar
-                </button>
-                <button onClick={() => setToDelete(w)} className="flex items-center gap-1 rounded-full surface-2 px-3 py-1.5 text-[11px] font-semibold text-destructive">
-                  <Trash2 className="size-3" /> Excluir
-                </button>
-              </div>
-            </div>
-          ))}
+                {w.descricao && (
+                  <p className="mt-3 text-muted-foreground break-words">{w.descricao}</p>
+                )}
+                <div className="plan-card-actions">
+                  <Button
+                    variant="outline"
+                    aria-label={`Editar ${w.nome}`}
+                    onClick={() => void openEdit(w)}
+                  >
+                    <Pencil size={18} />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    aria-label={`Compartilhar ${w.nome}`}
+                    onClick={() => setShareWorkout(w)}
+                  >
+                    <Share2 size={18} />
+                    Compartilhar
+                  </Button>
+                  <button
+                    className="plan-icon-button text-destructive"
+                    aria-label={`Excluir ${w.nome}`}
+                    onClick={() => setToDelete(w)}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
         </div>
       ) : (
         <div className="mt-5 space-y-3">
@@ -281,30 +479,52 @@ function WorkoutsPage() {
             <div className="hairline rounded-3xl surface p-8 text-center">
               <History className="mx-auto size-8 text-neon" />
               <p className="mt-3 font-bold">Sem execuções ainda</p>
-              <p className="mt-1 text-sm text-muted-foreground">Inicie um treino para começar seu histórico.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Inicie um treino para começar seu histórico.
+              </p>
             </div>
           )}
           {sessions.map((s) => (
             <div key={s.id} className="hairline rounded-3xl surface p-4">
               <div className="flex items-center justify-between">
                 <div className="font-bold">{s.nome_treino}</div>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  s.status === "concluida" ? "bg-neon/15 text-neon" : "surface-2 text-muted-foreground"
-                }`}>
-                  {s.status === "concluida" ? "Concluído" : s.status === "em_andamento" ? "Em andamento" : "Cancelado"}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    s.status === "concluida"
+                      ? "bg-neon/15 text-neon"
+                      : "surface-2 text-muted-foreground"
+                  }`}
+                >
+                  {s.status === "concluida"
+                    ? "Concluído"
+                    : s.status === "em_andamento"
+                      ? "Em andamento"
+                      : "Cancelado"}
                 </span>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {new Date(s.iniciado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                {new Date(s.iniciado_em).toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-center">
                 <div className="rounded-xl surface-2 px-2 py-2">
-                  <div className="text-sm font-black text-neon">{Math.round(Number(s.volume_total)).toLocaleString("pt-BR")} kg</div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Volume</div>
+                  <div className="text-sm font-black text-neon">
+                    {Math.round(Number(s.volume_total)).toLocaleString("pt-BR")} kg
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Volume
+                  </div>
                 </div>
                 <div className="rounded-xl surface-2 px-2 py-2">
-                  <div className="text-sm font-black text-neon">{s.duracao_min ? `${Math.round(Number(s.duracao_min))} min` : "—"}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Duração</div>
+                  <div className="text-sm font-black text-neon">
+                    {s.duracao_min ? `${Math.round(Number(s.duracao_min))} min` : "—"}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Duração
+                  </div>
                 </div>
               </div>
             </div>
@@ -312,62 +532,145 @@ function WorkoutsPage() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+      <WorkoutShareDialog workout={shareWorkout} onClose={() => setShareWorkout(null)} />
+      <Dialog
+        open={open}
+        onOpenChange={(value) => {
+          if (!saving) setOpen(value);
+        }}
+      >
+        <DialogContent className="workout-plan-dialog max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar treino" : "Novo treino"}</DialogTitle>
-            <DialogDescription>Escolha exercícios da sua biblioteca e defina séries, reps e descanso.</DialogDescription>
+            <DialogDescription>
+              Escolha exercícios da sua biblioteca e defina séries, reps e descanso.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
               <Label htmlFor="w-nome">Nome do treino</Label>
-              <Input id="w-nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Peito & Tríceps" />
+              <Input
+                maxLength={120}
+                disabled={saving}
+                id="w-nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Peito & Tríceps"
+              />
             </div>
             <div>
               <Label htmlFor="w-desc">Descrição (opcional)</Label>
-              <Textarea id="w-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={2} />
+              <Textarea
+                id="w-desc"
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                rows={2}
+              />
             </div>
 
             <div>
               <Label>Adicionar exercício</Label>
-              <ExercisePicker excludeIds={items.map(item => item.exercise_id)} onSelect={ex => {setExercises(prev => [...prev.filter(item => item.id !== ex.id),ex]);addItem(ex.id);}}/>
+              <ExercisePicker
+                excludeIds={items.map((item) => item.exercise_id)}
+                onSelect={(ex) => {
+                  setExercises((prev) => [...prev.filter((item) => item.id !== ex.id), ex]);
+                  addItem(ex.id);
+                }}
+              />
             </div>
 
-            <div className="space-y-3">
-              {items.map((it, idx) => (
-                <div key={it.exercise_id} className="rounded-2xl hairline surface-2 p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="grid size-6 place-items-center rounded-full bg-neon/15 text-[11px] font-bold text-neon">{idx + 1}</span>
-                    <span className="min-w-0 flex-1 truncate text-sm font-bold">{exMap[it.exercise_id]?.nome ?? "Exercício"}</span>
-                    <button onClick={() => move(idx, -1)} aria-label="Subir"><ArrowUp className="size-4 text-muted-foreground" /></button>
-                    <button onClick={() => move(idx, 1)} aria-label="Descer"><ArrowDown className="size-4 text-muted-foreground" /></button>
-                    <button onClick={() => setItems((p) => p.filter((_, i) => i !== idx))} aria-label="Remover">
-                      <X className="size-4 text-destructive" />
-                    </button>
-                  </div>
-                  <div className="mt-3 grid grid-cols-4 gap-2">
-                    <NumField label="Séries" value={it.series} onChange={(v) => setItems((p) => p.map((x, i) => i === idx ? { ...x, series: v } : x))} />
-                    <NumField label="Reps" value={it.repeticoes} onChange={(v) => setItems((p) => p.map((x, i) => i === idx ? { ...x, repeticoes: v } : x))} />
-                    <div>
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Carga</span>
-                      <Input
-                        inputMode="decimal"
-                        value={it.carga_kg}
-                        onChange={(e) => setItems((p) => p.map((x, i) => i === idx ? { ...x, carga_kg: e.target.value } : x))}
-                        className="mt-1 h-9"
-                        placeholder="kg"
+            <SortableList
+              items={items}
+              onReorder={setItems}
+              disabled={saving}
+              label={(it) => exMap[it.exercise_id]?.nome ?? "Exercício"}
+            >
+              {(it, idx, handle) => {
+                const name = exMap[it.exercise_id]?.nome ?? "Exercício indisponível";
+                const update = (patch: Partial<WEItem>) =>
+                  setItems((p) => p.map((x) => (x.id === it.id ? { ...x, ...patch } : x)));
+                return (
+                  <section className="plan-exercise" aria-label={`${idx + 1}. ${name}`}>
+                    <div className="plan-exercise-title">
+                      <span className="plan-number">{idx + 1}</span>
+                      <h3>{name}</h3>
+                    </div>
+                    <div className="plan-exercise-actions">
+                      {handle}
+                      <span>Reordenar</span>
+                      <button
+                        type="button"
+                        disabled={saving || idx === 0}
+                        className="plan-icon-button"
+                        aria-label={`Subir ${name}`}
+                        onClick={() => move(idx, -1)}
+                      >
+                        <ArrowUp size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={saving || idx === items.length - 1}
+                        className="plan-icon-button"
+                        aria-label={`Descer ${name}`}
+                        onClick={() => move(idx, 1)}
+                      >
+                        <ArrowDown size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={saving}
+                        className="plan-icon-button text-destructive"
+                        aria-label={`Remover ${name}`}
+                        onClick={() => setItems((p) => p.filter((x) => x.id !== it.id))}
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="plan-fields">
+                      <NumField
+                        label="Séries"
+                        name={name}
+                        value={it.series}
+                        disabled={saving}
+                        onChange={(v) => update({ series: v })}
+                      />
+                      <NumField
+                        label="Repetições"
+                        name={name}
+                        value={it.repeticoes}
+                        disabled={saving}
+                        onChange={(v) => update({ repeticoes: v })}
+                      />
+                      <label>
+                        Carga (kg)
+                        <Input
+                          aria-label={`Carga de ${name}`}
+                          inputMode="decimal"
+                          disabled={saving}
+                          value={it.carga_kg}
+                          onChange={(e) => update({ carga_kg: e.target.value })}
+                          placeholder="Opcional"
+                        />
+                      </label>
+                      <NumField
+                        label="Descanso (s)"
+                        name={name}
+                        value={it.descanso_seg}
+                        disabled={saving}
+                        onChange={(v) => update({ descanso_seg: v })}
                       />
                     </div>
-                    <NumField label="Desc(s)" value={it.descanso_seg} onChange={(v) => setItems((p) => p.map((x, i) => i === idx ? { ...x, descanso_seg: v } : x))} />
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </section>
+                );
+              }}
+            </SortableList>
           </div>
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button disabled={saving} variant="ghost" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
             <Button onClick={save} disabled={saving} className="rounded-full">
               {saving && <Loader2 className="mr-2 size-4 animate-spin" />} Salvar treino
             </Button>
@@ -380,7 +683,8 @@ function WorkoutsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir treino?</AlertDialogTitle>
             <AlertDialogDescription>
-              O treino "{toDelete?.nome}" e seus exercícios serão removidos. O histórico de execuções é mantido.
+              O treino "{toDelete?.nome}" e seus exercícios serão removidos. O histórico de
+              execuções é mantido.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -391,22 +695,36 @@ function WorkoutsPage() {
       </AlertDialog>
 
       <p className="mt-8 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-        <Clock className="size-3" /> Ao finalizar um treino, seu mapa muscular é atualizado automaticamente.
+        <Clock className="size-3" /> Ao finalizar um treino, seu mapa muscular é atualizado
+        automaticamente.
       </p>
     </main>
   );
 }
 
-function NumField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function NumField({
+  label,
+  name,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  name: string;
+  value: number;
+  onChange: (v: number) => void;
+  disabled: boolean;
+}) {
   return (
-    <div>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+    <label>
+      {label}
       <Input
+        aria-label={`${label} de ${name}`}
         inputMode="numeric"
         value={String(value)}
+        disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, "")) || 0)}
-        className="mt-1 h-9"
       />
-    </div>
+    </label>
   );
 }

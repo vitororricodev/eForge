@@ -742,16 +742,58 @@ export type Database = {
           },
         ];
       };
+      workout_shares: {
+        Row: {
+          id: string;
+          user_id: string;
+          workout_id: string;
+          token: string;
+          snapshot: Json;
+          created_at: string;
+          revoked_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          workout_id: string;
+          token: string;
+          snapshot: Json;
+          created_at?: string;
+          revoked_at?: string | null;
+        };
+        Update: { revoked_at?: string | null };
+        Relationships: [];
+      };
+      workout_share_imports: {
+        Row: {
+          user_id: string;
+          request_id: string;
+          share_id: string;
+          workout_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          request_id: string;
+          share_id: string;
+          workout_id: string;
+          created_at?: string;
+        };
+        Update: { workout_id?: string };
+        Relationships: [];
+      };
       workouts: {
         Row: {
           created_at: string;
           descricao: string | null;
           id: string;
           nome: string;
+          ordem: number;
           updated_at: string;
           user_id: string;
         };
         Insert: {
+          ordem?: number;
           created_at?: string;
           descricao?: string | null;
           id?: string;
@@ -760,6 +802,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          ordem?: number;
           created_at?: string;
           descricao?: string | null;
           id?: string;
@@ -774,6 +817,30 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      can_use_workout_exercise: { Args: { p_id: string }; Returns: boolean };
+      save_workout_plan: {
+        Args: { p_id: string; p_name: string; p_description: string; p_items: Json };
+        Returns: string;
+      };
+      reorder_workouts: { Args: { p_ids: string[] }; Returns: undefined };
+      create_workout_share: { Args: { p_workout_id: string }; Returns: Json };
+      revoke_workout_share: { Args: { p_share_id: string }; Returns: undefined };
+      get_shared_workout: { Args: { p_token: string }; Returns: Json };
+      import_shared_workout: {
+        Args: { p_token: string; p_name: string; p_replacements: Json; p_request_id: string };
+        Returns: string;
+      };
+      save_body_profile: {
+        Args: {
+          p_weight: number;
+          p_height: number;
+          p_age: number;
+          p_sex: string;
+          p_goal: Database["public"]["Enums"]["fitness_goal"];
+        };
+        Returns: Json;
+      };
+
       set_owned_exercise_active: { Args: { p_id: string; p_active: boolean }; Returns: undefined };
       inspect_owned_gif_assets: { Args: { p_entries: Json }; Returns: Json };
       import_owned_gif: { Args: { p_entry: Json; p_gif_url: string }; Returns: Json };

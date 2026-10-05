@@ -9,11 +9,15 @@ export async function database(exclude = []) {
   await db.exec(
     `CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role BYPASSRLS;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY,raw_user_meta_data jsonb,email text);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA public,auth TO authenticated,service_role;GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated,service_role;CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text primary key,name text,public boolean);CREATE TABLE storage.objects(id uuid DEFAULT gen_random_uuid(),bucket_id text,name text,metadata jsonb);CREATE FUNCTION storage.foldername(text) RETURNS text[] LANGUAGE sql AS $$SELECT string_to_array($1,'/')$$;`,
   );
+  // Supabase grants table access by default; let each migration revoke it as in production.
+  await db.exec(
+    "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO authenticated",
+  );
   for (const name of fs.readdirSync("supabase/migrations").sort())
     if (!exclude.some((p) => name.startsWith(p)))
       await db.exec(fs.readFileSync("supabase/migrations/" + name, "utf8"));
   await db.exec(
-    "GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public,storage TO authenticated;GRANT USAGE ON SCHEMA storage TO authenticated;ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY",
+    "GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA storage TO authenticated;GRANT USAGE ON SCHEMA storage TO authenticated;ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY",
   );
   await db.query(
     "INSERT INTO auth.users(id,email) VALUES($1,'a@test.invalid'),($2,'b@test.invalid'),($3,'admin@test.invalid')",

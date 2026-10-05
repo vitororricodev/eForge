@@ -1,23 +1,63 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
 import {
-  Activity, Plus, Pencil, Trash2, TrendingUp, TrendingDown, Minus, Save, X, Ruler, Scale, Target, Calendar,
+  Activity,
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Save,
+  X,
+  Ruler,
+  Scale,
+  Target,
+  Calendar,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { calculateBMI, decimalNumber, effectiveWeight } from "@/lib/body-profile";
+import { errorMessage } from "@/lib/workout-sharing";
+import "@/components/workouts/workout-plan.css";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/body-profile")({
   head: () => ({ meta: [{ title: "eForge — Perfil Corporal" }] }),
@@ -48,6 +88,7 @@ type Measurement = {
   id: string;
   user_id: string;
   measured_at: string;
+  created_at: string;
   weight_kg: number | null;
   arm_cm: number | null;
   chest_cm: number | null;
@@ -64,7 +105,12 @@ const profileSchema = z.object({
   age: z.number().int().min(10).max(120),
   sex: z.enum(["masculino", "feminino", "outro"]),
   objetivo_fitness: z.enum([
-    "perder_peso", "ganhar_massa", "manter_peso", "condicionamento", "hipertrofia", "saude_geral",
+    "perder_peso",
+    "ganhar_massa",
+    "manter_peso",
+    "condicionamento",
+    "hipertrofia",
+    "saude_geral",
   ]),
 });
 
@@ -84,13 +130,19 @@ function classifyBMI(bmi: number) {
   if (bmi < 18.5) return { label: "Abaixo do peso", key: "abaixo_do_peso", tone: "text-sky-300" };
   if (bmi < 25) return { label: "Peso normal", key: "peso_normal", tone: "text-neon" };
   if (bmi < 30) return { label: "Sobrepeso", key: "sobrepeso", tone: "text-yellow-300" };
-  if (bmi < 35) return { label: "Obesidade grau 1", key: "obesidade_grau_1", tone: "text-orange-400" };
-  if (bmi < 40) return { label: "Obesidade grau 2", key: "obesidade_grau_2", tone: "text-orange-500" };
+  if (bmi < 35)
+    return { label: "Obesidade grau 1", key: "obesidade_grau_1", tone: "text-orange-400" };
+  if (bmi < 40)
+    return { label: "Obesidade grau 2", key: "obesidade_grau_2", tone: "text-orange-500" };
   return { label: "Obesidade grau 3", key: "obesidade_grau_3", tone: "text-destructive" };
 }
 
 function fmtDate(s: string) {
-  return new Date(s).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(s.includes("T") ? s : s + "T12:00:00").toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function BodyProfilePage() {
@@ -103,32 +155,55 @@ function BodyProfilePage() {
   const [editingMeasure, setEditingMeasure] = useState<Measurement | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  async function load() {
-    if (!user) return;
+  const [loadError, setLoadError] = useState("");
+  const load = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-    const [{ data: p }, { data: m }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-      supabase.from("body_measurements").select("*").eq("user_id", user.id).order("measured_at", { ascending: false }),
-    ]);
-    setProfile(p as Profile | null);
-    setMeasurements((m as Measurement[]) ?? []);
-    setLoading(false);
-  }
+    setLoadError("");
+    try {
+      const [p, m] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+        supabase
+          .from("body_measurements")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("measured_at", { ascending: false })
+          .order("created_at", { ascending: false }),
+      ]);
+      if (p.error) throw p.error;
+      if (m.error) throw m.error;
+      setProfile(p.data);
+      setMeasurements(m.data ?? []);
+    } catch (error) {
+      setLoadError(errorMessage(error, "Não foi possível carregar o perfil."));
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  useEffect(() => { void load(); /* eslint-disable-next-line */ }, [user?.id]);
-
-  const latest = measurements[0] ?? null;
-  const currentWeight = latest?.weight_kg ?? profile?.weight_kg ?? null;
+  const currentWeight = effectiveWeight(profile, measurements);
   const height = profile?.height_cm ?? null;
-  const bmi = currentWeight && height ? currentWeight / Math.pow(height / 100, 2) : null;
+  const bmi = calculateBMI(currentWeight, height);
   const bmiClass = bmi ? classifyBMI(bmi) : null;
 
   const chartData = useMemo(() => {
     return [...measurements]
       .sort((a, b) => a.measured_at.localeCompare(b.measured_at))
       .map((m) => ({
-        date: new Date(m.measured_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
-        peso: m.weight_kg, cintura: m.waist_cm, braco: m.arm_cm, coxa: m.thigh_cm,
+        date: new Date(m.measured_at + "T12:00:00").toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+        }),
+        peso: m.weight_kg,
+        cintura: m.waist_cm,
+        braco: m.arm_cm,
+        coxa: m.thigh_cm,
       }));
   }, [measurements]);
 
@@ -140,6 +215,7 @@ function BodyProfilePage() {
           <h1 className="text-3xl font-black">Perfil Corporal</h1>
         </div>
         <button
+          disabled={loading || !!loadError}
           onClick={() => setProfileOpen(true)}
           className="rounded-full bg-neon px-4 py-2 text-xs font-bold text-primary-foreground glow-neon-soft"
         >
@@ -147,23 +223,43 @@ function BodyProfilePage() {
         </button>
       </div>
 
+      {loadError && (
+        <div role="alert" className="plan-error">
+          <p>{loadError}</p>
+          <button className="min-h-11" onClick={() => void load()}>
+            Tentar novamente
+          </button>
+        </div>
+      )}
       {/* Cards principais */}
       <div className="mt-6 grid grid-cols-2 gap-3">
-        <StatCard icon={<Scale className="size-4" />} label="Peso atual"
-          value={currentWeight ? `${currentWeight} kg` : "—"} />
-        <StatCard icon={<Ruler className="size-4" />} label="Altura"
-          value={height ? `${height} cm` : "—"} />
-        <StatCard icon={<Activity className="size-4" />} label="IMC"
+        <StatCard
+          icon={<Scale className="size-4" />}
+          label="Peso atual"
+          value={currentWeight ? `${currentWeight} kg` : "—"}
+        />
+        <StatCard
+          icon={<Ruler className="size-4" />}
+          label="Altura"
+          value={height ? `${height} cm` : "—"}
+        />
+        <StatCard
+          icon={<Activity className="size-4" />}
+          label="IMC"
           value={bmi ? bmi.toFixed(1) : "—"}
-          sub={bmiClass?.label} subTone={bmiClass?.tone} />
-        <StatCard icon={<Target className="size-4" />} label="Objetivo"
-          value={FITNESS_GOALS.find((g) => g.value === profile?.objetivo_fitness)?.label ?? "—"} />
+          sub={bmiClass?.label}
+          subTone={bmiClass?.tone}
+        />
+        <StatCard
+          icon={<Target className="size-4" />}
+          label="Objetivo"
+          value={FITNESS_GOALS.find((g) => g.value === profile?.objetivo_fitness)?.label ?? "—"}
+        />
       </div>
 
       <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
         <Calendar className="size-3" />
-        Última atualização:{" "}
-        {profile?.updated_at ? fmtDate(profile.updated_at) : "nunca"}
+        Última atualização: {profile?.updated_at ? fmtDate(profile.updated_at) : "nunca"}
       </p>
 
       {/* IMC visual */}
@@ -171,7 +267,9 @@ function BodyProfilePage() {
         <div className="mt-6 hairline rounded-3xl surface p-5 glow-neon-soft">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Índice de Massa Corporal</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Índice de Massa Corporal
+              </p>
               <p className="mt-1 text-4xl font-black text-glow">{bmi.toFixed(1)}</p>
               <p className={`text-sm font-bold ${bmiClass.tone}`}>{bmiClass.label}</p>
             </div>
@@ -184,7 +282,9 @@ function BodyProfilePage() {
       {/* Gráficos */}
       {chartData.length >= 2 && (
         <section className="mt-8 space-y-5">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Evolução</h2>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+            Evolução
+          </h2>
           <ChartCard title="Peso (kg)" dataKey="peso" data={chartData} />
           <ChartCard title="Cintura (cm)" dataKey="cintura" data={chartData} />
           <ChartCard title="Braço (cm)" dataKey="braco" data={chartData} />
@@ -195,9 +295,14 @@ function BodyProfilePage() {
       {/* Medidas */}
       <section className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Histórico de Medidas</h2>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+            Histórico de Medidas
+          </h2>
           <button
-            onClick={() => { setEditingMeasure(null); setMeasureOpen(true); }}
+            onClick={() => {
+              setEditingMeasure(null);
+              setMeasureOpen(true);
+            }}
             className="flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1.5 text-xs font-bold text-neon"
           >
             <Plus className="size-3.5" /> Nova medida
@@ -205,12 +310,16 @@ function BodyProfilePage() {
         </div>
 
         {loading ? (
-          <div className="mt-6 grid place-items-center py-10 text-sm text-muted-foreground">Carregando…</div>
+          <div className="mt-6 grid place-items-center py-10 text-sm text-muted-foreground">
+            Carregando…
+          </div>
         ) : measurements.length === 0 ? (
           <div className="mt-6 hairline rounded-3xl surface p-8 text-center">
             <Ruler className="mx-auto size-10 text-neon opacity-60" />
             <p className="mt-3 font-bold">Nenhuma medida ainda</p>
-            <p className="mt-1 text-xs text-muted-foreground">Registre suas primeiras medidas para acompanhar sua evolução.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Registre suas primeiras medidas para acompanhar sua evolução.
+            </p>
           </div>
         ) : (
           <ul className="mt-4 space-y-3">
@@ -223,25 +332,54 @@ function BodyProfilePage() {
                       {fmtDate(m.measured_at)}
                     </div>
                     <div className="flex gap-1.5">
-                      <button onClick={() => { setEditingMeasure(m); setMeasureOpen(true); }}
-                        className="grid size-8 place-items-center rounded-full border border-border text-muted-foreground hover:text-neon hover:border-neon/40">
+                      <button
+                        aria-label={`Editar medida de ${fmtDate(m.measured_at)}`}
+                        onClick={() => {
+                          setEditingMeasure(m);
+                          setMeasureOpen(true);
+                        }}
+                        className="grid size-8 place-items-center rounded-full border border-border text-muted-foreground hover:text-neon hover:border-neon/40"
+                      >
                         <Pencil className="size-3.5" />
                       </button>
-                      <button onClick={() => setDeleteId(m.id)}
-                        className="grid size-8 place-items-center rounded-full border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40">
+                      <button
+                        aria-label={`Excluir medida de ${fmtDate(m.measured_at)}`}
+                        onClick={() => setDeleteId(m.id)}
+                        className="grid size-8 place-items-center rounded-full border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40"
+                      >
                         <Trash2 className="size-3.5" />
                       </button>
                     </div>
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                    <MeasureCell label="Peso" value={m.weight_kg} unit="kg" prev={prev?.weight_kg} />
+                    <MeasureCell
+                      label="Peso"
+                      value={m.weight_kg}
+                      unit="kg"
+                      prev={prev?.weight_kg}
+                    />
                     <MeasureCell label="Braço" value={m.arm_cm} unit="cm" prev={prev?.arm_cm} />
                     <MeasureCell label="Peito" value={m.chest_cm} unit="cm" prev={prev?.chest_cm} />
-                    <MeasureCell label="Cintura" value={m.waist_cm} unit="cm" prev={prev?.waist_cm} />
-                    <MeasureCell label="Abdômen" value={m.abdomen_cm} unit="cm" prev={prev?.abdomen_cm} />
+                    <MeasureCell
+                      label="Cintura"
+                      value={m.waist_cm}
+                      unit="cm"
+                      prev={prev?.waist_cm}
+                    />
+                    <MeasureCell
+                      label="Abdômen"
+                      value={m.abdomen_cm}
+                      unit="cm"
+                      prev={prev?.abdomen_cm}
+                    />
                     <MeasureCell label="Quadril" value={m.hip_cm} unit="cm" prev={prev?.hip_cm} />
                     <MeasureCell label="Coxa" value={m.thigh_cm} unit="cm" prev={prev?.thigh_cm} />
-                    <MeasureCell label="Panturrilha" value={m.calf_cm} unit="cm" prev={prev?.calf_cm} />
+                    <MeasureCell
+                      label="Panturrilha"
+                      value={m.calf_cm}
+                      unit="cm"
+                      prev={prev?.calf_cm}
+                    />
                   </div>
                 </li>
               );
@@ -251,15 +389,26 @@ function BodyProfilePage() {
       </section>
 
       <ProfileDialog
-        open={profileOpen} onOpenChange={setProfileOpen}
-        profile={profile} userId={user?.id}
-        onSaved={() => { setProfileOpen(false); void load(); }}
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        profile={profile}
+        currentWeight={currentWeight}
+        userId={user?.id}
+        onSaved={() => {
+          setProfileOpen(false);
+          void load();
+        }}
       />
 
       <MeasurementDialog
-        open={measureOpen} onOpenChange={setMeasureOpen}
-        editing={editingMeasure} userId={user?.id}
-        onSaved={() => { setMeasureOpen(false); void load(); }}
+        open={measureOpen}
+        onOpenChange={setMeasureOpen}
+        editing={editingMeasure}
+        userId={user?.id}
+        onSaved={() => {
+          setMeasureOpen(false);
+          void load();
+        }}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
@@ -274,12 +423,20 @@ function BodyProfilePage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
                 if (!deleteId) return;
-                const { error } = await supabase.from("body_measurements").delete().eq("id", deleteId);
+                const { error } = await supabase
+                  .from("body_measurements")
+                  .delete()
+                  .eq("id", deleteId);
                 if (error) toast.error("Erro ao excluir");
-                else { toast.success("Medida excluída"); void load(); }
+                else {
+                  toast.success("Medida excluída");
+                  void load();
+                }
                 setDeleteId(null);
               }}
-            >Excluir</AlertDialogAction>
+            >
+              Excluir
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -287,68 +444,127 @@ function BodyProfilePage() {
   );
 }
 
-function StatCard({ icon, label, value, sub, subTone }: {
-  icon: React.ReactNode; label: string; value: string; sub?: string; subTone?: string;
+function StatCard({
+  icon,
+  label,
+  value,
+  sub,
+  subTone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub?: string;
+  subTone?: string;
 }) {
   return (
     <div className="hairline rounded-2xl surface p-4">
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-        <span className="text-neon">{icon}</span>{label}
+        <span className="text-neon">{icon}</span>
+        {label}
       </div>
       <p className="mt-2 truncate text-lg font-black">{value}</p>
-      {sub && <p className={`text-[11px] font-bold ${subTone ?? "text-muted-foreground"}`}>{sub}</p>}
+      {sub && (
+        <p className={`text-[11px] font-bold ${subTone ?? "text-muted-foreground"}`}>{sub}</p>
+      )}
     </div>
   );
 }
 
-function MeasureCell({ label, value, unit, prev }: {
-  label: string; value: number | null; unit: string; prev?: number | null;
+function MeasureCell({
+  label,
+  value,
+  unit,
+  prev,
+}: {
+  label: string;
+  value: number | null;
+  unit: string;
+  prev?: number | null;
 }) {
-  if (value == null) return (
-    <div className="rounded-lg border border-border/60 p-2">
-      <p className="text-[10px] text-muted-foreground">{label}</p>
-      <p className="text-xs font-bold text-muted-foreground">—</p>
-    </div>
-  );
+  if (value == null)
+    return (
+      <div className="rounded-lg border border-border/60 p-2">
+        <p className="text-[10px] text-muted-foreground">{label}</p>
+        <p className="text-xs font-bold text-muted-foreground">—</p>
+      </div>
+    );
   const diff = prev != null ? value - prev : null;
   return (
     <div className="rounded-lg border border-border/60 p-2">
       <p className="text-[10px] text-muted-foreground">{label}</p>
-      <p className="text-xs font-bold">{value}<span className="text-muted-foreground"> {unit}</span></p>
+      <p className="text-xs font-bold">
+        {value}
+        <span className="text-muted-foreground"> {unit}</span>
+      </p>
       {diff != null && diff !== 0 && (
-        <p className={`flex items-center gap-0.5 text-[10px] font-bold ${diff > 0 ? "text-neon" : "text-orange-400"}`}>
+        <p
+          className={`flex items-center gap-0.5 text-[10px] font-bold ${diff > 0 ? "text-neon" : "text-orange-400"}`}
+        >
           {diff > 0 ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
           {Math.abs(diff).toFixed(1)}
         </p>
       )}
-      {diff === 0 && <p className="flex items-center gap-0.5 text-[10px] text-muted-foreground"><Minus className="size-2.5" />0</p>}
+      {diff === 0 && (
+        <p className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+          <Minus className="size-2.5" />0
+        </p>
+      )}
     </div>
   );
 }
 
 function BMIScale({ bmi }: { bmi: number }) {
-  const min = 15, max = 40;
+  const min = 15,
+    max = 40;
   const pct = Math.max(0, Math.min(100, ((bmi - min) / (max - min)) * 100));
   return (
     <div className="mt-4">
-      <div className="relative h-2 overflow-hidden rounded-full"
-        style={{ background: "linear-gradient(90deg, oklch(0.7 0.18 230), oklch(0.76 0.19 300) 30%, oklch(0.85 0.2 90) 55%, oklch(0.75 0.22 50) 75%, oklch(0.65 0.24 25))" }}>
-        <div className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-background"
-          style={{ left: `${pct}%` }} />
+      <div
+        className="relative h-2 overflow-hidden rounded-full"
+        style={{
+          background:
+            "linear-gradient(90deg, oklch(0.7 0.18 230), oklch(0.76 0.19 300) 30%, oklch(0.85 0.2 90) 55%, oklch(0.75 0.22 50) 75%, oklch(0.65 0.24 25))",
+        }}
+      >
+        <div
+          className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-background"
+          style={{ left: `${pct}%` }}
+        />
       </div>
       <div className="mt-1.5 flex justify-between text-[9px] uppercase tracking-wider text-muted-foreground">
-        <span>18.5</span><span>25</span><span>30</span><span>35</span><span>40</span>
+        <span>18.5</span>
+        <span>25</span>
+        <span>30</span>
+        <span>35</span>
+        <span>40</span>
       </div>
     </div>
   );
 }
 
-function ChartCard({ title, dataKey, data }: { title: string; dataKey: string; data: any[] }) {
+function ChartCard({
+  title,
+  dataKey,
+  data,
+}: {
+  title: string;
+  dataKey: "peso" | "cintura" | "braco" | "coxa";
+  data: {
+    date: string;
+    peso: number | null;
+    cintura: number | null;
+    braco: number | null;
+    coxa: number | null;
+  }[];
+}) {
   const hasData = data.some((d) => d[dataKey] != null);
   if (!hasData) return null;
   return (
     <div className="hairline rounded-2xl surface p-4">
-      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</p>
+      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </p>
       <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -356,11 +572,22 @@ function ChartCard({ title, dataKey, data }: { title: string; dataKey: string; d
             <XAxis dataKey="date" stroke="oklch(0.62 0 0)" fontSize={10} />
             <YAxis stroke="oklch(0.62 0 0)" fontSize={10} domain={["auto", "auto"]} />
             <Tooltip
-              contentStyle={{ background: "oklch(0.09 0 0)", border: "1px solid oklch(0.2 0 0)", borderRadius: 12, fontSize: 12 }}
+              contentStyle={{
+                background: "oklch(0.09 0 0)",
+                border: "1px solid oklch(0.2 0 0)",
+                borderRadius: 12,
+                fontSize: 12,
+              }}
               labelStyle={{ color: "oklch(0.62 0 0)" }}
             />
-            <Line type="monotone" dataKey={dataKey} stroke="oklch(0.76 0.19 300)" strokeWidth={2.5}
-              dot={{ r: 3, fill: "oklch(0.76 0.19 300)" }} activeDot={{ r: 5 }} />
+            <Line
+              type="monotone"
+              dataKey={dataKey}
+              stroke="oklch(0.76 0.19 300)"
+              strokeWidth={2.5}
+              dot={{ r: 3, fill: "oklch(0.76 0.19 300)" }}
+              activeDot={{ r: 5 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -368,73 +595,147 @@ function ChartCard({ title, dataKey, data }: { title: string; dataKey: string; d
   );
 }
 
-function NumField({ label, value, onChange, step = "0.1" }: {
-  label: string; value: string; onChange: (v: string) => void; step?: string;
+function NumField({
+  label,
+  value,
+  onChange,
+  step = "0.1",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  step?: string;
 }) {
+  const id = useId();
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs">{label}</Label>
-      <Input type="number" step={step} inputMode="decimal" value={value}
-        onChange={(e) => onChange(e.target.value)} className="surface-2 border-border" />
+      <Label htmlFor={id} className="text-xs">
+        {label}
+      </Label>
+      <Input
+        id={id}
+        type="text"
+        inputMode={step === "1" ? "numeric" : "decimal"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="surface-2 border-border"
+      />
     </div>
   );
 }
 
-function ProfileDialog({ open, onOpenChange, profile, userId, onSaved }: {
-  open: boolean; onOpenChange: (o: boolean) => void;
-  profile: Profile | null; userId?: string; onSaved: () => void;
+function ProfileDialog({
+  open,
+  onOpenChange,
+  profile,
+  currentWeight,
+  userId,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  profile: Profile | null;
+  currentWeight: number | null;
+  userId?: string;
+  onSaved: () => void;
 }) {
   const [form, setForm] = useState({
-    weight_kg: "", height_cm: "", age: "",
-    sex: "masculino", objetivo_fitness: "saude_geral",
+    weight_kg: "",
+    height_cm: "",
+    age: "",
+    sex: "masculino",
+    objetivo_fitness: "saude_geral",
   });
   const [saving, setSaving] = useState(false);
-
+  const [error, setError] = useState("");
   useEffect(() => {
-    if (open) setForm({
-      weight_kg: profile?.weight_kg?.toString() ?? "",
+    if (!open) return;
+    setForm({
+      weight_kg: currentWeight?.toString() ?? "",
       height_cm: profile?.height_cm?.toString() ?? "",
       age: profile?.age?.toString() ?? "",
       sex: profile?.sex ?? "masculino",
       objetivo_fitness: profile?.objetivo_fitness ?? "saude_geral",
     });
-  }, [open, profile]);
-
+    setError("");
+  }, [open, profile, currentWeight]);
+  const bmi = calculateBMI(decimalNumber(form.weight_kg), decimalNumber(form.height_cm));
   async function handleSave() {
-    if (!userId) return;
+    if (!userId || saving) return;
     const parsed = profileSchema.safeParse({
-      weight_kg: parseFloat(form.weight_kg),
-      height_cm: parseFloat(form.height_cm),
-      age: parseInt(form.age, 10),
-      sex: form.sex, objetivo_fitness: form.objetivo_fitness,
+      weight_kg: decimalNumber(form.weight_kg),
+      height_cm: decimalNumber(form.height_cm),
+      age: decimalNumber(form.age),
+      sex: form.sex,
+      objetivo_fitness: form.objetivo_fitness,
     });
-    if (!parsed.success) { toast.error("Verifique os valores informados"); return; }
+    if (!parsed.success) {
+      setError("Verifique peso (20–400 kg), altura (80–260 cm), idade (10–120 anos) e objetivo.");
+      return;
+    }
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({
-      weight_kg: parsed.data.weight_kg,
-      height_cm: parsed.data.height_cm,
-      age: parsed.data.age,
-      sex: parsed.data.sex,
-      objetivo_fitness: parsed.data.objetivo_fitness,
-    }).eq("id", userId);
-    setSaving(false);
-    if (error) { toast.error("Erro ao salvar perfil"); return; }
-    toast.success("Perfil atualizado");
-    onSaved();
+    setError("");
+    try {
+      const p = parsed.data;
+      const { data, error } = await supabase.rpc("save_body_profile", {
+        p_weight: p.weight_kg,
+        p_height: p.height_cm,
+        p_age: p.age,
+        p_sex: p.sex,
+        p_goal: p.objetivo_fitness,
+      });
+      if (error) throw error;
+      if (!data || typeof data !== "object" || Array.isArray(data) || data.id !== userId)
+        throw new Error("Não foi possível confirmar o perfil salvo.");
+      toast.success("Perfil atualizado");
+      onSaved();
+    } catch (error) {
+      setError(errorMessage(error, "Erro ao salvar perfil. Tente novamente."));
+    } finally {
+      setSaving(false);
+    }
   }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="surface border-border max-w-md">
-        <DialogHeader><DialogTitle>Perfil físico</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-3">
-          <NumField label="Peso (kg)" value={form.weight_kg} onChange={(v) => setForm({ ...form, weight_kg: v })} />
-          <NumField label="Altura (cm)" value={form.height_cm} onChange={(v) => setForm({ ...form, height_cm: v })} step="1" />
-          <NumField label="Idade" value={form.age} onChange={(v) => setForm({ ...form, age: v })} step="1" />
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!saving) onOpenChange(value);
+      }}
+    >
+      <DialogContent className="workout-plan-dialog max-h-[90dvh] overflow-y-auto sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Perfil físico</DialogTitle>
+          <DialogDescription>
+            Atualize seus dados. O IMC é calculado automaticamente com peso e altura.
+          </DialogDescription>
+        </DialogHeader>
+        <fieldset disabled={saving} className="grid grid-cols-2 gap-3">
+          <NumField
+            label="Peso (kg)"
+            value={form.weight_kg}
+            onChange={(value) => setForm({ ...form, weight_kg: value })}
+          />
+          <NumField
+            label="Altura (cm)"
+            value={form.height_cm}
+            onChange={(value) => setForm({ ...form, height_cm: value })}
+          />
+          <NumField
+            label="Idade"
+            step="1"
+            value={form.age}
+            onChange={(value) => setForm({ ...form, age: value })}
+          />
           <div className="space-y-1.5">
-            <Label className="text-xs">Sexo</Label>
-            <Select value={form.sex} onValueChange={(v) => setForm({ ...form, sex: v })}>
-              <SelectTrigger className="surface-2 border-border"><SelectValue /></SelectTrigger>
+            <Label htmlFor="profile-sex">Sexo</Label>
+            <Select
+              disabled={saving}
+              value={form.sex}
+              onValueChange={(value) => setForm({ ...form, sex: value })}
+            >
+              <SelectTrigger id="profile-sex">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="masculino">Masculino</SelectItem>
                 <SelectItem value="feminino">Feminino</SelectItem>
@@ -443,23 +744,55 @@ function ProfileDialog({ open, onOpenChange, profile, userId, onSaved }: {
             </Select>
           </div>
           <div className="col-span-2 space-y-1.5">
-            <Label className="text-xs">Objetivo fitness</Label>
-            <Select value={form.objetivo_fitness} onValueChange={(v) => setForm({ ...form, objetivo_fitness: v })}>
-              <SelectTrigger className="surface-2 border-border"><SelectValue /></SelectTrigger>
+            <Label htmlFor="profile-goal">Objetivo fitness</Label>
+            <Select
+              disabled={saving}
+              value={form.objetivo_fitness}
+              onValueChange={(value) => setForm({ ...form, objetivo_fitness: value })}
+            >
+              <SelectTrigger id="profile-goal">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {FITNESS_GOALS.map((g) => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}
+                {FITNESS_GOALS.map((goal) => (
+                  <SelectItem key={goal.value} value={goal.value}>
+                    {goal.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+        </fieldset>
+        <div
+          className="rounded-2xl border border-neon/30 bg-neon/10 p-4"
+          role="status"
+          aria-label="IMC calculado"
+        >
+          <span className="text-muted-foreground">IMC calculado</span>
+          <strong className="block text-3xl text-neon">
+            {bmi
+              ? bmi.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+              : "—"}
+          </strong>
+          {!bmi && <p>Preencha peso e altura para calcular.</p>}
         </div>
+        {error && (
+          <p role="alert" className="plan-error">
+            {error}
+          </p>
+        )}
         <DialogFooter>
-          <button onClick={() => onOpenChange(false)}
-            className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-bold">
-            <X className="size-3.5" /> Cancelar
+          <button disabled={saving} onClick={() => onOpenChange(false)} className="share-open">
+            <X size={18} />
+            Cancelar
           </button>
-          <button disabled={saving} onClick={handleSave}
-            className="flex items-center gap-1.5 rounded-full bg-neon px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50">
-            <Save className="size-3.5" /> {saving ? "Salvando…" : "Salvar"}
+          <button
+            disabled={saving}
+            onClick={() => void handleSave()}
+            className="share-login share-open"
+          >
+            <Save size={18} />
+            {saving ? "Salvando…" : "Salvar"}
           </button>
         </DialogFooter>
       </DialogContent>
@@ -467,14 +800,30 @@ function ProfileDialog({ open, onOpenChange, profile, userId, onSaved }: {
   );
 }
 
-function MeasurementDialog({ open, onOpenChange, editing, userId, onSaved }: {
-  open: boolean; onOpenChange: (o: boolean) => void;
-  editing: Measurement | null; userId?: string; onSaved: () => void;
+function MeasurementDialog({
+  open,
+  onOpenChange,
+  editing,
+  userId,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  editing: Measurement | null;
+  userId?: string;
+  onSaved: () => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState<Record<string, string>>({
-    measured_at: today, weight_kg: "", arm_cm: "", chest_cm: "", waist_cm: "",
-    abdomen_cm: "", hip_cm: "", thigh_cm: "", calf_cm: "",
+    measured_at: today,
+    weight_kg: "",
+    arm_cm: "",
+    chest_cm: "",
+    waist_cm: "",
+    abdomen_cm: "",
+    hip_cm: "",
+    thigh_cm: "",
+    calf_cm: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -494,64 +843,133 @@ function MeasurementDialog({ open, onOpenChange, editing, userId, onSaved }: {
       });
     } else {
       setForm({
-        measured_at: today, weight_kg: "", arm_cm: "", chest_cm: "", waist_cm: "",
-        abdomen_cm: "", hip_cm: "", thigh_cm: "", calf_cm: "",
+        measured_at: today,
+        weight_kg: "",
+        arm_cm: "",
+        chest_cm: "",
+        waist_cm: "",
+        abdomen_cm: "",
+        hip_cm: "",
+        thigh_cm: "",
+        calf_cm: "",
       });
     }
   }, [open, editing, today]);
 
-  function toNum(s: string) { const n = parseFloat(s); return isNaN(n) ? null : n; }
+  function toNum(s: string) {
+    if (!s.trim()) return null;
+    return decimalNumber(s);
+  }
 
   async function handleSave() {
     if (!userId) return;
     const payload = {
       measured_at: form.measured_at,
-      weight_kg: toNum(form.weight_kg), arm_cm: toNum(form.arm_cm),
-      chest_cm: toNum(form.chest_cm), waist_cm: toNum(form.waist_cm),
-      abdomen_cm: toNum(form.abdomen_cm), hip_cm: toNum(form.hip_cm),
-      thigh_cm: toNum(form.thigh_cm), calf_cm: toNum(form.calf_cm),
+      weight_kg: toNum(form.weight_kg),
+      arm_cm: toNum(form.arm_cm),
+      chest_cm: toNum(form.chest_cm),
+      waist_cm: toNum(form.waist_cm),
+      abdomen_cm: toNum(form.abdomen_cm),
+      hip_cm: toNum(form.hip_cm),
+      thigh_cm: toNum(form.thigh_cm),
+      calf_cm: toNum(form.calf_cm),
     };
     const parsed = measurementSchema.safeParse(payload);
-    if (!parsed.success) { toast.error("Verifique os valores das medidas"); return; }
+    if (!parsed.success) {
+      toast.error("Verifique os valores das medidas");
+      return;
+    }
     const hasAny = Object.entries(payload).some(([k, v]) => k !== "measured_at" && v != null);
-    if (!hasAny) { toast.error("Preencha ao menos uma medida"); return; }
+    if (!hasAny) {
+      toast.error("Preencha ao menos uma medida");
+      return;
+    }
     setSaving(true);
     const { error } = editing
       ? await supabase.from("body_measurements").update(payload).eq("id", editing.id)
       : await supabase.from("body_measurements").insert({ ...payload, user_id: userId });
     setSaving(false);
-    if (error) { toast.error("Erro ao salvar medida"); return; }
+    if (error) {
+      toast.error("Erro ao salvar medida");
+      return;
+    }
     toast.success(editing ? "Medida atualizada" : "Medida registrada");
     onSaved();
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="surface border-border max-w-md max-h-[90dvh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{editing ? "Editar medida" : "Nova medida"}</DialogTitle></DialogHeader>
+      <DialogContent className="workout-plan-dialog max-w-md max-h-[90dvh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{editing ? "Editar medida" : "Nova medida"}</DialogTitle>
+          <DialogDescription>Registre a data e ao menos uma medida.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-1.5">
-          <Label className="text-xs">Data do registro</Label>
-          <Input type="date" value={form.measured_at}
+          <Label htmlFor="measure-date" className="text-xs">
+            Data do registro
+          </Label>
+          <Input
+            id="measure-date"
+            type="date"
+            value={form.measured_at}
             onChange={(e) => setForm({ ...form, measured_at: e.target.value })}
-            className="surface-2 border-border" />
+            className="surface-2 border-border"
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <NumField label="Peso (kg)" value={form.weight_kg} onChange={(v) => setForm({ ...form, weight_kg: v })} />
-          <NumField label="Braço (cm)" value={form.arm_cm} onChange={(v) => setForm({ ...form, arm_cm: v })} />
-          <NumField label="Peito (cm)" value={form.chest_cm} onChange={(v) => setForm({ ...form, chest_cm: v })} />
-          <NumField label="Cintura (cm)" value={form.waist_cm} onChange={(v) => setForm({ ...form, waist_cm: v })} />
-          <NumField label="Abdômen (cm)" value={form.abdomen_cm} onChange={(v) => setForm({ ...form, abdomen_cm: v })} />
-          <NumField label="Quadril (cm)" value={form.hip_cm} onChange={(v) => setForm({ ...form, hip_cm: v })} />
-          <NumField label="Coxa (cm)" value={form.thigh_cm} onChange={(v) => setForm({ ...form, thigh_cm: v })} />
-          <NumField label="Panturrilha (cm)" value={form.calf_cm} onChange={(v) => setForm({ ...form, calf_cm: v })} />
+          <NumField
+            label="Peso (kg)"
+            value={form.weight_kg}
+            onChange={(v) => setForm({ ...form, weight_kg: v })}
+          />
+          <NumField
+            label="Braço (cm)"
+            value={form.arm_cm}
+            onChange={(v) => setForm({ ...form, arm_cm: v })}
+          />
+          <NumField
+            label="Peito (cm)"
+            value={form.chest_cm}
+            onChange={(v) => setForm({ ...form, chest_cm: v })}
+          />
+          <NumField
+            label="Cintura (cm)"
+            value={form.waist_cm}
+            onChange={(v) => setForm({ ...form, waist_cm: v })}
+          />
+          <NumField
+            label="Abdômen (cm)"
+            value={form.abdomen_cm}
+            onChange={(v) => setForm({ ...form, abdomen_cm: v })}
+          />
+          <NumField
+            label="Quadril (cm)"
+            value={form.hip_cm}
+            onChange={(v) => setForm({ ...form, hip_cm: v })}
+          />
+          <NumField
+            label="Coxa (cm)"
+            value={form.thigh_cm}
+            onChange={(v) => setForm({ ...form, thigh_cm: v })}
+          />
+          <NumField
+            label="Panturrilha (cm)"
+            value={form.calf_cm}
+            onChange={(v) => setForm({ ...form, calf_cm: v })}
+          />
         </div>
         <DialogFooter>
-          <button onClick={() => onOpenChange(false)}
-            className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-bold">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-bold"
+          >
             <X className="size-3.5" /> Cancelar
           </button>
-          <button disabled={saving} onClick={handleSave}
-            className="flex items-center gap-1.5 rounded-full bg-neon px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50">
+          <button
+            disabled={saving}
+            onClick={handleSave}
+            className="flex items-center gap-1.5 rounded-full bg-neon px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"
+          >
             <Save className="size-3.5" /> {saving ? "Salvando…" : "Salvar"}
           </button>
         </DialogFooter>

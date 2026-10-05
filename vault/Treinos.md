@@ -12,4 +12,12 @@ Finalizar exige uma série concluída e confirmação. Se armazenamento local fa
 
 Teste local: `tests/workout-run-browser.mjs`. Sessão, catálogo e RPCs são fixtures HTTP isoladas; não chegam ao banco real. Inclui edição, vírgula decimal, concluir/desfazer, descanso, adicionar/remover, tipo/histórico, som, offline/retomada, UUIDs, substituição, finalização e papéis no mapa. Capturas: [Validação](../validation/treino-mapa/README.md).
 
-Relacionados: [[Arquitetura]], [[Muscle-Map]], [[Banco-e-acesso]].
+Em 03/10/2026, `/workouts` ganhou compartilhamento e organização. `SortableList` usa Pointer Events com captura no elemento estável da lista (o cartão muda de posição sem perder o gesto), rolagem por proximidade das bordas e teclas cima/baixo/Home/End com foco preservado. Somente o puxador bloqueia o gesto de rolagem. As setas continuam disponíveis. O cancelamento restaura o estado anterior ao gesto.
+
+No editor, cada item tem UUID estável. `save_workout_plan` valida propriedade, disponibilidade, duplicatas e parâmetros antes de concluir a transação; atualiza os mesmos itens e remove somente os retirados. Não apaga tudo antes de reinserir. Descanso zero e carga decimal são preservados. Séries executadas, histórico e snapshots continuam no fluxo existente.
+
+`workouts.ordem` é preenchida preservando a ordem anterior por criação. `Organizar treinos` mantém um rascunho com salvar/cancelar; `reorder_workouts` valida o conjunto completo do titular e persiste a ordem. Criação/importação entra ao final. O início utiliza a mesma sequência para o próximo treino. Todas as operações de organização do mesmo usuário passam pelo mesmo lock transacional.
+
+Teste de interação/ordem/cópia/perfil: `tests/workout-sharing-browser.mjs`. [[Compartilhamento]] descreve criação e importação de links. Guia de aplicação: [Fechamento](../FECHAMENTO-EFORGE.md).
+
+Relacionados: [[Arquitetura]], [[Muscle-Map]], [[Banco-e-acesso]], [[Compartilhamento]], [[Perfil]].

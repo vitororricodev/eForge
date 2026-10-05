@@ -4,7 +4,9 @@ Aplicativo voltado ao celular em React/TanStack Start, Supabase e Capacitor, com
 
 ## Instalação e atualização
 
-**Ajustes de treino e mapa de 03/10/2026:** se sua biblioteca já está instalada, aplique o código e execute as verificações. Não há SQL, migration, reimportação de GIFs ou Edge Function nova para estes ajustes. Consulte [Treino e mapa atualizados](ATUALIZACAO-TREINO-MAPA.md). Os passos de banco abaixo são da instalação da biblioteca anterior.
+**Fechamento de compartilhamento, ordem e perfil:** esta atualização inclui SQL novo. Com a biblioteca própria anterior instalada, execute o arquivo completo `maintenance/20261003150000_workout_sharing_order_profile_manual.sql` no SQL Editor. Configure `VITE_PUBLIC_SITE_URL` antes do build Android/iOS para gerar links do domínio público. Consulte [Fluxos, instalação e validação](FECHAMENTO-EFORGE.md).
+
+**Ajustes anteriores de treino e avatar:** se sua biblioteca já está instalada, aplique o código e execute as verificações. Não há SQL, migration, reimportação de GIFs ou Edge Function nova para estes ajustes. Consulte [Treino e mapa atualizados](ATUALIZACAO-TREINO-MAPA.md). Os passos de banco abaixo são da instalação da biblioteca anterior.
 
 1. Execute npm ci.
 2. Copie .env.example para .env e configure a URL/chave **públicas** do mesmo projeto Supabase. Preserve seu arquivo local; nenhuma credencial acompanha a entrega.
@@ -51,7 +53,7 @@ npm run build
 npm run build:mobile
 ```
 
-O comando npm test executa oito suítes, incluindo importador, ZIP, PostgreSQL local/RLS/Storage simulado e troca com exercício antigo utilizado. Os testes de navegador são separados, usam rotas reais e respostas HTTP isoladas; veja o guia para executá-los. Resultado e dívida preexistente do lint global estão documentados na auditoria.
+O comando npm test executa onze suítes, incluindo importador, ZIP, PostgreSQL local/RLS/Storage simulado, compartilhamento público, cópia seletiva, retries, ordem, perfil e SQL manual. Os testes de navegador são separados, usam rotas reais e HTTP isolado; a suíte de compartilhamento executa também PostgreSQL local. Resultado e dívida preexistente do lint global estão documentados na validação.
 
 O build web usa o adaptador TanStack/Nitro existente. O build mobile usa a configuração Capacitor existente; para sincronizar ou abrir projetos nativos, use os scripts cap:sync, cap:android e cap:ios. Nenhuma publicação é executada nesta entrega. Use HTTPS/PWA conforme o ambiente já adotado pelo projeto.
 

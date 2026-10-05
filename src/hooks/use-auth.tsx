@@ -1,4 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { consumeShareReturn } from "@/lib/workout-sharing";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,11 +21,14 @@ const AuthContext = createContext<AuthContextValue>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, s) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_evt, s) => {
       if (_evt === "SIGNED_OUT") queryClient.clear();
       setSession(s);
       setLoading(false);
@@ -33,7 +38,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [queryClient]);
+
+  useEffect(() => {
+    if (!session) return;
+    const pending = consumeShareReturn();
+    if (pending)
+      void navigate({ to: "/share/$token", params: { token: pending.slice(7) }, replace: true });
+  }, [session, navigate]);
 
   return (
     <AuthContext.Provider
@@ -41,7 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         session,
         loading,
-        signOut: async () => { await supabase.auth.signOut(); },
+        signOut: async () => {
+          await supabase.auth.signOut();
+        },
       }}
     >
       {children}

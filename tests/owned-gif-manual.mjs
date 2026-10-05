@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { database, rpc, asUser, ADMIN } from "./helpers/owned-database.mjs";
-const db = await database(["20261002180000", "20261002200000", "20261002201000"]);
+const db = await database(["20261002180000", "20261002200000", "20261002201000", "20261003150000"]);
 await db.exec(
   "CREATE SCHEMA supabase_migrations;CREATE TABLE supabase_migrations.schema_migrations(version text PRIMARY KEY,name text,statements text[]);INSERT INTO supabase_migrations.schema_migrations(version,name) VALUES('20261002120000','exercisedb_catalog'),('20261002121000','catalog_training_snapshot');",
 );
@@ -46,7 +46,12 @@ await db.exec("DROP FUNCTION public.activate_owned_gif_library(text[])");
 await assert.rejects(db.exec(sql), /estrutura incompleta/);
 await db.exec("ROLLBACK");
 await db.close();
-const partial = await database(["20261002180000", "20261002200000", "20261002201000"]);
+const partial = await database([
+  "20261002180000",
+  "20261002200000",
+  "20261002201000",
+  "20261003150000",
+]);
 await partial.exec(
   "CREATE SCHEMA supabase_migrations;CREATE TABLE supabase_migrations.schema_migrations(version text PRIMARY KEY,name text,statements text[]);INSERT INTO supabase_migrations.schema_migrations(version) VALUES('20261002120000'),('20261002121000');ALTER TABLE exercises ADD COLUMN catalog_deleted_at timestamptz;",
 );

@@ -26,6 +26,7 @@ import { Route as AuthenticatedMuscleMapRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedWorkoutsRouteImport } from './routes/_authenticated/workouts'
+import { Route as ShareTokenRouteImport } from './routes/share.$token'
 import { Route as AuthenticatedAdminExercisesRouteImport } from './routes/_authenticated/admin.exercises'
 import { Route as AuthenticatedRunWorkoutIdRouteImport } from './routes/_authenticated/run.$workoutId'
 
@@ -115,6 +116,11 @@ const AuthenticatedWorkoutsRoute = AuthenticatedWorkoutsRouteImport.update({
   path: '/workouts',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ShareTokenRoute = ShareTokenRouteImport.update({
+  id: '/share/$token',
+  path: '/share/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminExercisesRoute =
   AuthenticatedAdminExercisesRouteImport.update({
     id: '/admin/exercises',
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/workouts': typeof AuthenticatedWorkoutsRoute
+  '/share/$token': typeof ShareTokenRoute
   '/admin/exercises': typeof AuthenticatedAdminExercisesRoute
   '/run/$workoutId': typeof AuthenticatedRunWorkoutIdRoute
 }
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/workouts': typeof AuthenticatedWorkoutsRoute
+  '/share/$token': typeof ShareTokenRoute
   '/admin/exercises': typeof AuthenticatedAdminExercisesRoute
   '/run/$workoutId': typeof AuthenticatedRunWorkoutIdRoute
 }
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/workouts': typeof AuthenticatedWorkoutsRoute
+  '/share/$token': typeof ShareTokenRoute
   '/_authenticated/admin/exercises': typeof AuthenticatedAdminExercisesRoute
   '/_authenticated/run/$workoutId': typeof AuthenticatedRunWorkoutIdRoute
 }
@@ -209,6 +218,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reports'
     | '/workouts'
+    | '/share/$token'
     | '/admin/exercises'
     | '/run/$workoutId'
   fileRoutesByTo: FileRoutesByTo
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reports'
     | '/workouts'
+    | '/share/$token'
     | '/admin/exercises'
     | '/run/$workoutId'
   id:
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/reports'
     | '/_authenticated/workouts'
+    | '/share/$token'
     | '/_authenticated/admin/exercises'
     | '/_authenticated/run/$workoutId'
   fileRoutesById: FileRoutesById
@@ -262,6 +274,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   WelcomeRoute: typeof WelcomeRoute
+  ShareTokenRoute: typeof ShareTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -385,6 +398,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkoutsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/share/$token': {
+      id: '/share/$token'
+      path: '/share/$token'
+      fullPath: '/share/$token'
+      preLoaderRoute: typeof ShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/exercises': {
       id: '/_authenticated/admin/exercises'
       path: '/admin/exercises'
@@ -444,6 +464,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   WelcomeRoute: WelcomeRoute,
+  ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
