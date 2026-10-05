@@ -210,13 +210,15 @@ async function contextFor(id = null, desktop = false) {
           );
           if (Array.isArray(body)) body = body[0] ?? null;
         } else if (url.pathname.endsWith("/profiles"))
-          body = (await db.query("SELECT * FROM profiles")).rows[0] ?? null;
+          // JSON do PostgreSQL reproduz números/datas do PostgREST; o driver local
+          // devolve NUMERIC como string e DATE como Date em consultas cruas.
+          body = (await db.query("SELECT to_jsonb(p) data FROM profiles p")).rows[0]?.data ?? null;
         else if (url.pathname.endsWith("/body_measurements"))
           body = (
             await db.query(
-              "SELECT * FROM body_measurements ORDER BY measured_at DESC,created_at DESC",
+              "SELECT to_jsonb(m) data FROM body_measurements m ORDER BY measured_at DESC,created_at DESC",
             )
-          ).rows;
+          ).rows.map((row) => row.data);
         else if (url.pathname.endsWith("/user_roles")) body = null;
         else if (
           url.pathname.endsWith("/set_logs") ||
@@ -449,20 +451,75 @@ try {
     "80",
     "older measurement does not hide current profile weight",
   );
+  await profile.getByRole("textbox", { name: "Peso (kg)", exact: true }).fill("55");
+  await profile.getByRole("textbox", { name: "Idade", exact: true }).fill("26");
+  const heightInput = profile.getByRole("textbox", { name: "Altura (m ou cm)", exact: true });
+  const calculated = profile.getByRole("status", { name: "IMC calculado", exact: true });
+  for (const height of ["1,85", "1.85", "185"]) {
+    await heightInput.fill(height);
+    assert((await calculated.innerText()).includes("16,1"));
+    assert((await calculated.innerText()).includes("Abaixo do peso"));
+    assert(!(await calculated.innerText()).includes("160.701"));
+  }
+  assert((await calculated.innerText()).includes("De 18,5 até menos de 25,0"));
+  assert((await calculated.innerText()).includes("63,3 a 85,6 kg"));
+  await profile.getByRole("combobox", { name: "Objetivo fitness", exact: true }).click();
+  await owner.getByRole("option", { name: "Perder peso", exact: true }).click();
+  assert((await calculated.innerText()).includes("Revise o objetivo de perder peso"));
+  await heightInput.fill("1,85");
+  await profile.evaluate((el) => {
+    el.scrollTop = 0;
+  });
+  await screenshot(owner, "imc-formulario-mobile");
+  await calculated.scrollIntoViewIfNeeded();
+  await screenshot(owner, "imc-resultado-mobile");
+  await noOverflow(owner);
+  await profile.getByRole("button", { name: "Salvar", exact: true }).click();
+  await owner.getByText("Perfil atualizado", { exact: true }).waitFor();
+  await owner.reload();
+  await owner.getByRole("button", { name: "Editar perfil", exact: true }).waitFor();
+  const savedBMI = owner.getByRole("status", { name: "Índice de Massa Corporal", exact: true });
+  await savedBMI.waitFor();
+  assert((await savedBMI.innerText()).includes("16,1"));
+  assert((await savedBMI.innerText()).includes("63,3 a 85,6 kg"));
+  await asOwner(db);
+  const savedBody = (
+    await db.query(
+      "SELECT weight_kg::float8 weight_kg,height_cm::float8 height_cm,age FROM profiles WHERE id=$1",
+      [USER_A],
+    )
+  ).rows[0];
+  assert.equal(savedBody.weight_kg, 55);
+  assert.equal(savedBody.height_cm, 185, "metros são persistidos em centímetros");
+  assert.equal(savedBody.age, 26);
+  await screenshot(owner, "imc-resumo-mobile");
+  await owner.getByRole("button", { name: "Editar perfil", exact: true }).click();
+  assert.equal(await heightInput.inputValue(), "185");
+  await profile.getByRole("textbox", { name: "Peso (kg)", exact: true }).fill("80");
+  assert((await calculated.innerText()).includes("Na faixa de referência"));
+  await profile.getByRole("textbox", { name: "Peso (kg)", exact: true }).fill("100");
+  assert((await calculated.innerText()).includes("Acima do peso"));
+  assert((await calculated.innerText()).includes("Sobrepeso"));
+  await profile.getByRole("textbox", { name: "Idade", exact: true }).fill("65");
+  assert((await calculated.innerText()).includes("Acima de 22,0 e abaixo de 27,0"));
+  await profile.getByRole("textbox", { name: "Idade", exact: true }).fill("19");
+  assert((await calculated.innerText()).includes("curvas de crescimento"));
+  assert(!(await calculated.innerText()).includes("IMC desejável"));
+  await profile.getByRole("textbox", { name: "Idade", exact: true }).fill("26");
   await profile.getByRole("textbox", { name: "Peso (kg)", exact: true }).fill("81,0");
-  await profile.getByRole("textbox", { name: "Altura (cm)", exact: true }).fill("180");
+  await heightInput.fill("1.80");
   assert(
     (
       await profile.getByRole("status", { name: "IMC calculado", exact: true }).innerText()
     ).includes("25,0"),
   );
-  await profile.getByRole("textbox", { name: "Altura (cm)", exact: true }).fill("");
+  await heightInput.fill("");
   assert(
     (
       await profile.getByRole("status", { name: "IMC calculado", exact: true }).innerText()
     ).includes("—"),
   );
-  await profile.getByRole("textbox", { name: "Altura (cm)", exact: true }).fill("180");
+  await heightInput.fill("1.80");
   await screenshot(owner, "perfil-imc-mobile");
   failProfile = true;
   await profile.getByRole("button", { name: "Salvar", exact: true }).click();
@@ -554,11 +611,21 @@ try {
   await guest.keyboard.press("Escape");
   await guest.goto(base + "/body-profile");
   await guest.getByRole("button", { name: "Editar perfil", exact: true }).click();
+  const smallProfile = guest.getByRole("dialog", { name: "Perfil físico", exact: true });
+  await smallProfile.getByRole("textbox", { name: "Peso (kg)", exact: true }).fill("55");
+  await smallProfile.getByRole("textbox", { name: "Altura (m ou cm)", exact: true }).fill("1,85");
+  await smallProfile.getByRole("textbox", { name: "Idade", exact: true }).fill("26");
+  await smallProfile.getByRole("status").scrollIntoViewIfNeeded();
   assert(
     await guest.getByRole("dialog").evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
     "320px profile must not overflow horizontally",
   );
+  await screenshot(guest, "imc-mobile-320");
   await guest.keyboard.press("Escape");
+  await desktop.goto(base + "/body-profile");
+  await desktop.getByRole("status", { name: "Índice de Massa Corporal", exact: true }).waitFor();
+  await noOverflow(desktop);
+  await screenshot(desktop, "imc-desktop");
   // Long lists exercise edge scrolling in both the page and the nested editor.
   const seedLong = queue.then(async () => {
     await asOwner(db);

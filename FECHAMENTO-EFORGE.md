@@ -1,5 +1,7 @@
 # eForge — compartilhamento, organização e perfil
 
+Atualização posterior de IMC (05/10/2026): veja [ATUALIZACAO-IMC.md](ATUALIZACAO-IMC.md). Corrige altura em metros/centímetros e acrescenta classificação/faixa de referência; não exige SQL novo.
+
 Atualização de 03/10/2026 sobre o código `05e3519` da branch `main`. Mantém a biblioteca própria, a execução mobile e o avatar anatômico com primários roxos fortes, secundários suaves e seleção ciano. Nenhum serviço remoto ou produção foi alterado.
 
 ## Aplicar no seu projeto

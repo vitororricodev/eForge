@@ -55,6 +55,24 @@ const exercises = [
     musculo_principal: "biceps",
     musculos_secundarios: ["forearms"],
   },
+  {
+    id: "00000000-0000-4000-8000-000000000104",
+    nome: "Puxada na frente",
+    musculo_principal: "lats",
+    musculos_secundarios: ["biceps"],
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000105",
+    nome: "Elevação lateral",
+    musculo_principal: "shoulders",
+    musculos_secundarios: [],
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000106",
+    nome: "Tríceps na polia",
+    musculo_principal: "triceps",
+    musculos_secundarios: [],
+  },
 ].map((entry) => ({
   ...entry,
   user_id: uid,
@@ -87,6 +105,8 @@ const exercises = [
 let snapshot = null;
 let offline = false;
 const snapshots = [];
+let planRequests = 0;
+let planDelay = 0;
 let launch = { headless: true, args: ["--no-sandbox"] };
 if (process.env.TEST_CHROMIUM_MODULE) {
   const { default: binary } = await import(process.env.TEST_CHROMIUM_MODULE);
@@ -120,8 +140,11 @@ await context.route("**/*", async (route) => {
   let body = [];
   if (url.pathname.endsWith("/auth/v1/user")) body = user;
   else if (url.pathname.endsWith("/workouts")) body = { nome: "Peito e costas" };
-  else if (url.pathname.endsWith("/workout_exercises"))
-    body = exercises.slice(0, 2).map((exercise, index) => ({
+  else if (url.pathname.endsWith("/workout_exercises")) {
+    planRequests++;
+    if (planDelay) await new Promise((resolve) => setTimeout(resolve, planDelay));
+    body = [exercises[0], exercises[1], ...exercises.slice(3)].map((exercise, index) => ({
+      id: `00000000-0000-4000-8000-00000000020${index}`,
       exercise_id: exercise.id,
       exercises: exercise,
       series: index ? 2 : 3,
@@ -130,7 +153,7 @@ await context.route("**/*", async (route) => {
       descanso_seg: 90,
       ordem: index,
     }));
-  else if (url.pathname.endsWith("/rpc/search_exercises_v2"))
+  } else if (url.pathname.endsWith("/rpc/search_exercises_v2"))
     body = { items: exercises, total: exercises.length };
   else if (url.pathname.endsWith("/rpc/exercise_catalog_facets"))
     body = { equipments: [], bodyParts: [] };
@@ -304,6 +327,93 @@ try {
     .fill("12");
   await waitFor(() => snapshots.at(-1)?.sets[0]?.repeticoes === 12, "Offline change not resynced");
   // Replace the second exercise without touching the completed bench press.
+  // Reproduce a legacy active draft containing only completed/current exercises.
+  // The registered plan still has five; resume must restore the untouched three.
+  const completeBeforeResume = await readDraft();
+  assert.equal(completeBeforeResume.exercises.length, 5);
+  await page.evaluate((key) => {
+    const partial = JSON.parse(localStorage.getItem(key));
+    partial.exercises = partial.exercises.slice(0, 2);
+    delete partial.plannedExercises;
+    partial.exercises.forEach((exercise) => delete exercise.plan_item_id);
+    localStorage.setItem(key, JSON.stringify(partial));
+  }, draftKey);
+  // Legacy drafts remain usable offline, but may not erase a complete server snapshot.
+  offline = true;
+  const syncCountBeforeLegacy = snapshots.length;
+  await page.reload();
+  await page.getByRole("heading", { name: "Peito e costas", exact: true }).waitFor();
+  await page
+    .getByText("Salvo no aparelho • sincronização pendente", {
+      exact: true,
+    })
+    .waitFor();
+  assert.equal((await readDraft()).exercises.length, 2);
+  offline = false;
+  planDelay = 300;
+  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  // Edit while plan verification is in flight: the response must use the latest draft.
+  await page
+    .getByRole("textbox", { name: "Remada com halteres série 1 repetições", exact: true })
+    .fill("13");
+  completeBeforeResume.exercises[1].sets[0].reps = "13";
+  await waitFor(
+    async () => (await readDraft()).exercises.length === 5,
+    "BUG: resume hides untouched exercises from an incomplete local draft",
+  );
+  planDelay = 0;
+  assert.equal(
+    (await readDraft()).exercises[1].sets[0].reps,
+    "13",
+    "A delayed plan response must not overwrite live edits",
+  );
+  assert(
+    snapshots
+      .slice(syncCountBeforeLegacy)
+      .every((entry) => new Set(entry.sets.map((set) => set.exercise_id)).size === 5),
+    "An unverified partial draft must not truncate server logs",
+  );
+  const recovered = await readDraft();
+  assert.equal(recovered.id, completeBeforeResume.id, "Recovery must retain the active session");
+  assert.deepEqual(
+    recovered.exercises[0].sets,
+    completeBeforeResume.exercises[0].sets,
+    "Recovery must retain completed series, values and UUIDs",
+  );
+  assert.equal(await page.locator(".workout-run-exercise").count(), 5);
+  for (const exercise of exercises.slice(3)) {
+    assert.equal(await page.getByRole("region", { name: exercise.nome, exact: true }).count(), 1);
+  }
+
+  assert.equal(
+    await page
+      .getByText("Exercícios pendentes recuperados. Suas séries registradas foram preservadas.", {
+        exact: true,
+      })
+      .count(),
+    0,
+    "Recover exercises without showing a recovery notification",
+  );
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: output + "/treino-recuperado-mobile-tela.png" });
+  await page.screenshot({ path: output + "/treino-recuperado-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 320, height: 740 });
+  assert(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    "Recovered workout overflows on 320px",
+  );
+  await page.screenshot({ path: output + "/treino-recuperado-320.png" });
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.screenshot({ path: output + "/treino-recuperado-desktop-tela.png" });
+  await page.screenshot({ path: output + "/treino-recuperado-desktop.png", fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  // Opening another workout cannot silently attach the active draft to a wrong URL.
+  await page.goto(base + "/run/00000000-0000-4000-8000-000000000099");
+  await page.waitForURL(base + "/run/" + wid);
+  await page.getByRole("heading", { name: "Peito e costas", exact: true }).waitFor();
+  assert.equal((await readDraft()).id, recovered.id);
+  assert.equal((await readDraft()).exercises.length, 5);
+
   const second = page.getByRole("region", { name: "Remada com halteres", exact: true });
   await second.getByRole("button", { name: "Substituir exercício", exact: true }).click();
   await page.getByRole("button", { name: /Rosca com halteres/ }).click();
@@ -318,6 +428,55 @@ try {
   await waitFor(
     () => snapshot?.sets.some((set) => set.exercise_id === exercises[2].id && set.concluida),
     "Replacement snapshot not saved",
+  );
+  // A stale tab writes a partial draft; the active screen repairs it immediately.
+  const otherTab = await context.newPage();
+  await otherTab.goto(base + "/offline.html");
+  await otherTab.evaluate((key) => {
+    const partial = JSON.parse(localStorage.getItem(key));
+    partial.exercises = partial.exercises.slice(0, 2);
+    delete partial.plannedExercises;
+    partial.revision = (partial.revision ?? 0) + 1;
+    localStorage.setItem(key, JSON.stringify(partial));
+  }, draftKey);
+  await waitFor(
+    async () => (await readDraft()).exercises.length === 5,
+    "Stale tab truncated the active exercise list",
+  );
+  assert.equal(
+    (await readDraft()).exercises[1].exercise_id,
+    exercises[2].id,
+    "Recovery must preserve the replacement",
+  );
+  assert.equal((await readDraft()).exercises[0].sets[0].id, stableSetId);
+  const revisionAfterRepair = (await readDraft()).revision;
+  await page.waitForTimeout(300);
+  assert.equal(
+    (await readDraft()).revision,
+    revisionAfterRepair,
+    "Storage events must not create a write loop",
+  );
+  await otherTab.close();
+  const requestsBeforeResume = planRequests;
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.reload();
+  await page.getByRole("heading", { name: "Peito e costas", exact: true }).waitFor();
+  assert.equal(
+    planRequests,
+    requestsBeforeResume,
+    "New drafts resume their starting plan without a network rebuild",
+  );
+  assert.equal((await readDraft()).exercises.length, 5);
+  assert.equal((await readDraft()).exercises[1].exercise_id, exercises[2].id);
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("focus"));
+    window.dispatchEvent(new Event("pageshow"));
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  assert.equal(await page.locator(".workout-run-exercise").count(), 5);
+  await waitFor(
+    () => new Set(snapshot?.sets.map((set) => set.exercise_id)).size === 5,
+    "Snapshot omitted pending exercises after recovery",
   );
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Finalizar treino", exact: true }).click();
@@ -337,7 +496,7 @@ try {
   assert.equal(snapshot.sets[0].id, stableSetId);
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: real local workout routes — no legacy avatar, input/decimal editing, complete/undo, rest +/-/skip, add/remove, series types/history, sound switch, offline/resume, stable snapshot IDs, replacement, finish-to-muscle-map, roles, 320–1440px, 44px targets and footer clearance.",
+    "PASS: real local workout routes — no legacy avatar, input/decimal editing, complete/undo, rest +/-/skip, add/remove, series types/history, sound switch, offline/resume, incomplete legacy recovery without finishing, delayed-load edits, stale-tab protection, full snapshots, stable slot/set IDs, replacement/resume, route identity, finish-to-muscle-map, roles, 320–1440px, 44px targets and footer clearance.",
   );
 } catch (error) {
   console.error("Browser location:", page.url());

@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-05",
+  "base_commit": "dc0e396",
+  "project": "eForge",
+  "reproduced_before_fix": {
+    "plan_exercises": 5,
+    "visible_exercises": 2,
+    "missing_exercises": 3,
+    "condition": "legacy incomplete local active draft; registered plan unchanged"
+  },
+  "verified_after_fix": {
+    "plan_exercises": 5,
+    "recovered_exercises": 5,
+    "same_session": true,
+    "logged_sets_preserved": true,
+    "reconnection_without_finishing": true,
+    "delayed_load_edits_preserved": true,
+    "stale_tab_list_protected": true,
+    "replacement_survives_resume": true,
+    "snapshots_include_pending_exercises": true,
+    "route_matches_active_workout": true,
+    "silent_recovery_without_notification": true
+  },
+  "checks": {
+    "npm_test_suites": 12,
+    "npm_test": "passed",
+    "typecheck": "passed",
+    "web_build": "passed",
+    "capacitor_build": "passed",
+    "scoped_eslint": "passed",
+    "diff_check": "passed",
+    "browser": "passed"
+  },
+  "viewports_width": [
+    320,
+    360,
+    390,
+    430,
+    768,
+    1440
+  ],
+  "horizontal_overflow": false,
+  "minimum_touch_target_px": 44,
+  "external_requests_intercepted": true,
+  "remote_database_changes": false,
+  "production_published": false,
+  "limitation": "Original device trigger is not proven; no device logs or original draft were available."
+}

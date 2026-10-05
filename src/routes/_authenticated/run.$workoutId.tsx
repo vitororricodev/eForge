@@ -1,8 +1,8 @@
 import { ExercisePicker } from "@/components/exercises/ExercisePicker";
 import { Brand } from "@/components/Brand";
 import { ArrowLeft, Check, Plus, Timer, Trash2, Trophy, Volume2 } from "lucide-react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,9 @@ import {
   saveDraft,
   remaining,
   totals,
+  attachWorkoutPlan,
+  restoreDraftExercises,
+  draftKey,
   type Draft,
   type Exercise,
 } from "@/lib/workout-storage";
@@ -25,34 +28,57 @@ function Run() {
   const { user } = useAuth();
   const userId = user?.id;
   const { workoutId } = Route.useParams();
+  const navigate = useNavigate();
   const [historyRows, setHistoryRows] = useState<
     { exercise_id: string | null; carga_kg: number | null; repeticoes: number | null }[]
   >([]);
   const [sound, setSound] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const draftRef = useRef<Draft | null>(null);
+  const [resumeAttempt, setResumeAttempt] = useState(0);
   const [now, setNow] = useState(Date.now());
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const update = useCallback((next: Draft) => {
+  const apply = useCallback((next: Draft) => {
     try {
-      saveDraft(next);
-      setDraft(next);
+      const saved = saveDraft(next);
+      draftRef.current = saved;
+      setDraft(saved);
       return true;
     } catch {
       toast.error("Armazenamento cheio. Não foi possível salvar a alteração.");
       return false;
     }
   }, []);
+  const update = useCallback(
+    (change: (current: Draft) => Draft) => {
+      const current = draftRef.current;
+      return current && !current.finished ? apply(change(current)) : false;
+    },
+    [apply],
+  );
 
   useEffect(() => {
     if (!userId) return;
     let active = true;
     (async () => {
       const old = readDraft(userId);
+      setError("");
       if (old && (!old.finished || !old.synced)) {
-        if (active) setDraft(old);
-        return;
+        if (old.workoutId !== workoutId) {
+          await navigate({
+            to: "/run/$workoutId",
+            params: { workoutId: old.workoutId },
+            replace: true,
+          });
+          return;
+        }
+        apply(old);
+        if (old.finished || old.plannedExercises) return;
+      } else {
+        draftRef.current = null;
+        setDraft(null);
       }
       const [
         { data: workout, error: workoutError },
@@ -79,6 +105,42 @@ function Run() {
       if (workoutError || rowsError) throw workoutError || rowsError;
       if (!active) return;
       setHistoryRows(history || []);
+      const plannedExercises: Exercise[] = (rows || []).map((row) => {
+        const previous = history?.find((entry) => entry.exercise_id === row.exercise_id);
+        return {
+          plan_item_id: row.id || row.exercise_id,
+          exercise_id: row.exercise_id,
+          nome: row.exercises?.nome || "Exercício",
+          musculo_principal: row.exercises?.musculo_principal || "",
+          musculos_primarios: row.exercises?.musculos_primarios || [],
+          musculos_secundarios: row.exercises?.musculos_secundarios || [],
+          musculos_terciarios: row.exercises?.musculos_terciarios || [],
+          descanso_seg: row.descanso_seg,
+          previous: previous ? `${previous.repeticoes} × ${previous.carga_kg} kg` : undefined,
+          sets: Array.from({ length: row.series }, () => ({
+            id: crypto.randomUUID(),
+            reps: String(previous?.repeticoes ?? row.repeticoes),
+            carga: String(previous?.carga_kg ?? row.carga_kg ?? 0),
+            done: false,
+            kind: "normal",
+          })),
+        };
+      });
+      // Reconcile the latest local version, not the snapshot from before the request.
+      const latest = draftRef.current ?? readDraft(userId);
+      if (latest && (!latest.finished || !latest.synced)) {
+        if (latest.workoutId !== workoutId) {
+          await navigate({
+            to: "/run/$workoutId",
+            params: { workoutId: latest.workoutId },
+            replace: true,
+          });
+          return;
+        }
+        const repaired = attachWorkoutPlan(latest, plannedExercises);
+        apply(repaired);
+        return;
+      }
       const next: Draft = {
         id: crypto.randomUUID(),
         userId,
@@ -86,35 +148,66 @@ function Run() {
         name: workout!.nome,
         started: Date.now(),
         restUntil: 0,
-        exercises: (rows || []).map((row) => {
-          const previous = history?.find((entry) => entry.exercise_id === row.exercise_id);
-          return {
-            exercise_id: row.exercise_id,
-            nome: row.exercises?.nome || "Exercício",
-            musculo_principal: row.exercises?.musculo_principal || "",
-            musculos_primarios: row.exercises?.musculos_primarios || [],
-            musculos_secundarios: row.exercises?.musculos_secundarios || [],
-            musculos_terciarios: row.exercises?.musculos_terciarios || [],
-            descanso_seg: row.descanso_seg,
-            previous: previous ? `${previous.repeticoes} × ${previous.carga_kg} kg` : undefined,
-            sets: Array.from({ length: row.series }, () => ({
-              id: crypto.randomUUID(),
-              reps: String(previous?.repeticoes ?? row.repeticoes),
-              carga: String(previous?.carga_kg ?? row.carga_kg ?? 0),
-              done: false,
-              kind: "normal",
-            })),
-          };
-        }),
+        exercises: plannedExercises,
+        plannedExercises: structuredClone(plannedExercises),
       };
-      update(next);
+      apply(next);
     })().catch((err) => {
-      if (active) setError(err.message || "Não foi possível abrir o treino.");
+      if (!active) return;
+      if (draftRef.current) setStatus("Salvo no aparelho • sincronização pendente");
+      else setError(err.message || "Não foi possível abrir o treino.");
     });
     return () => {
       active = false;
     };
-  }, [userId, workoutId, update]);
+  }, [userId, workoutId, apply, navigate, resumeAttempt]);
+  useEffect(() => {
+    if (!userId) return;
+    const refresh = () => {
+      const current = draftRef.current;
+      const saved = readDraft(userId);
+      if (current && saved?.id === current.id && (saved.revision ?? 0) > (current.revision ?? 0)) {
+        const restored = restoreDraftExercises(
+          { ...saved, plannedExercises: current.plannedExercises ?? saved.plannedExercises },
+          current.exercises,
+        );
+        if (
+          restored.exercises.length > saved.exercises.length ||
+          (!saved.plannedExercises && restored.plannedExercises)
+        )
+          apply(restored);
+        else {
+          draftRef.current = restored;
+          setDraft(restored);
+        }
+      }
+      if (
+        navigator.onLine &&
+        draftRef.current &&
+        !draftRef.current.finished &&
+        !draftRef.current.plannedExercises
+      )
+        setResumeAttempt((attempt) => attempt + 1);
+    };
+    const storage = (event: StorageEvent) => {
+      if (event.key === draftKey(userId)) refresh();
+    };
+    const visible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("storage", storage);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("pageshow", refresh);
+    window.addEventListener("online", refresh);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      window.removeEventListener("storage", storage);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("pageshow", refresh);
+      window.removeEventListener("online", refresh);
+      document.removeEventListener("visibilitychange", visible);
+    };
+  }, [userId, apply]);
   useEffect(() => {
     if (!userId) return;
     const timer = setInterval(() => {
@@ -180,15 +273,23 @@ function Run() {
           /* Sound can be unavailable on the device. */
         }
       }
-      update({ ...draft, restUntil: 0 });
+      update((current) =>
+        current.restUntil <= Date.now() ? { ...current, restUntil: 0 } : current,
+      );
     }
   }, [now, draft, sound, update]);
   function change(index: number, fn: (exercise: Exercise) => Exercise) {
-    if (draft)
-      update({
-        ...draft,
-        exercises: draft.exercises.map((exercise, i) => (i === index ? fn(exercise) : exercise)),
-      });
+    const slot = draft?.exercises[index];
+    if (slot)
+      update((current) => ({
+        ...current,
+        exercises: current.exercises.map((exercise) =>
+          (exercise.plan_item_id ?? exercise.exercise_id) ===
+          (slot.plan_item_id ?? slot.exercise_id)
+            ? fn(exercise)
+            : exercise,
+        ),
+      }));
   }
   if (error)
     return (
@@ -299,7 +400,10 @@ function Run() {
               type="button"
               aria-label="Diminuir descanso em 15 segundos"
               onClick={() =>
-                update({ ...draft, restUntil: Math.max(Date.now(), draft.restUntil - 15_000) })
+                update((current) => ({
+                  ...current,
+                  restUntil: Math.max(Date.now(), current.restUntil - 15_000),
+                }))
               }
             >
               −15s
@@ -307,11 +411,16 @@ function Run() {
             <button
               type="button"
               aria-label="Aumentar descanso em 15 segundos"
-              onClick={() => update({ ...draft, restUntil: draft.restUntil + 15_000 })}
+              onClick={() =>
+                update((current) => ({ ...current, restUntil: current.restUntil + 15_000 }))
+              }
             >
               +15s
             </button>
-            <button type="button" onClick={() => update({ ...draft, restUntil: 0 })}>
+            <button
+              type="button"
+              onClick={() => update((current) => ({ ...current, restUntil: 0 }))}
+            >
               Pular descanso
             </button>
           </div>
@@ -321,7 +430,7 @@ function Run() {
         {draft.exercises.map((exercise, exerciseIndex) => (
           <section
             className="workout-run-exercise"
-            key={exercise.exercise_id}
+            key={exercise.plan_item_id ?? exercise.exercise_id}
             aria-label={exercise.nome}
           >
             <div className="workout-run-exercise-heading">
@@ -403,23 +512,25 @@ function Run() {
                     aria-pressed={set.done}
                     className="workout-run-complete"
                     onClick={() => {
-                      const exercises = draft.exercises.map((current, i) =>
-                        i !== exerciseIndex
-                          ? current
-                          : {
-                              ...current,
-                              sets: current.sets.map((item) =>
-                                item.id === set.id ? { ...item, done: !item.done } : item,
-                              ),
-                            },
-                      );
-                      update({
-                        ...draft,
-                        exercises,
-                        restUntil: !set.done
+                      update((current) => ({
+                        ...current,
+                        exercises: current.exercises.map((item) =>
+                          (item.plan_item_id ?? item.exercise_id) !==
+                          (exercise.plan_item_id ?? exercise.exercise_id)
+                            ? item
+                            : {
+                                ...item,
+                                sets: item.sets.map((series) =>
+                                  series.id === set.id ? { ...series, done: !series.done } : series,
+                                ),
+                              },
+                        ),
+                        restUntil: !current.exercises
+                          .find((item) => item.sets.some((series) => series.id === set.id))
+                          ?.sets.find((series) => series.id === set.id)?.done
                           ? Date.now() + exercise.descanso_seg * 1000
-                          : draft.restUntil,
-                      });
+                          : current.restUntil,
+                      }));
                       navigator.vibrate?.(40);
                     }}
                   >
@@ -515,8 +626,13 @@ function Run() {
             if (!stats.sets) return toast.error("Conclua ao menos uma série.");
             if (!confirm("Finalizar o treino com as séries concluídas?")) return;
             setSaving(true);
-            const finished = { ...draft, finished: Date.now(), restUntil: 0 };
-            if (!update(finished)) {
+            const current = draftRef.current;
+            if (!current) {
+              setSaving(false);
+              return;
+            }
+            const finished = { ...current, finished: Date.now(), restUntil: 0 };
+            if (!apply(finished)) {
               setSaving(false);
               return;
             }

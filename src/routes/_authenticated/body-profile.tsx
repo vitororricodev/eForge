@@ -46,7 +46,15 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { calculateBMI, decimalNumber, effectiveWeight } from "@/lib/body-profile";
+import {
+  calculateBMI,
+  classifyBMI,
+  decimalNumber,
+  effectiveWeight,
+  formatBodyNumber,
+  heightCentimeters,
+} from "@/lib/body-profile";
+import { BMIResult } from "@/components/body-profile/BMIResult";
 import { errorMessage } from "@/lib/workout-sharing";
 import "@/components/workouts/workout-plan.css";
 import { Input } from "@/components/ui/input";
@@ -126,17 +134,6 @@ const measurementSchema = z.object({
   calf_cm: z.number().min(15).max(100).optional().nullable(),
 });
 
-function classifyBMI(bmi: number) {
-  if (bmi < 18.5) return { label: "Abaixo do peso", key: "abaixo_do_peso", tone: "text-sky-300" };
-  if (bmi < 25) return { label: "Peso normal", key: "peso_normal", tone: "text-neon" };
-  if (bmi < 30) return { label: "Sobrepeso", key: "sobrepeso", tone: "text-yellow-300" };
-  if (bmi < 35)
-    return { label: "Obesidade grau 1", key: "obesidade_grau_1", tone: "text-orange-400" };
-  if (bmi < 40)
-    return { label: "Obesidade grau 2", key: "obesidade_grau_2", tone: "text-orange-500" };
-  return { label: "Obesidade grau 3", key: "obesidade_grau_3", tone: "text-destructive" };
-}
-
 function fmtDate(s: string) {
   return new Date(s.includes("T") ? s : s + "T12:00:00").toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -188,9 +185,9 @@ function BodyProfilePage() {
   }, [load]);
 
   const currentWeight = effectiveWeight(profile, measurements);
-  const height = profile?.height_cm ?? null;
+  const height = heightCentimeters(profile?.height_cm);
   const bmi = calculateBMI(currentWeight, height);
-  const bmiClass = bmi ? classifyBMI(bmi) : null;
+  const bmiClass = classifyBMI(bmi, profile?.age ?? null);
 
   const chartData = useMemo(() => {
     return [...measurements]
@@ -236,19 +233,25 @@ function BodyProfilePage() {
         <StatCard
           icon={<Scale className="size-4" />}
           label="Peso atual"
-          value={currentWeight ? `${currentWeight} kg` : "—"}
+          value={currentWeight ? `${formatBodyNumber(currentWeight)} kg` : "—"}
         />
         <StatCard
           icon={<Ruler className="size-4" />}
           label="Altura"
-          value={height ? `${height} cm` : "—"}
+          value={height ? `${height.toLocaleString("pt-BR")} cm` : "—"}
         />
         <StatCard
           icon={<Activity className="size-4" />}
           label="IMC"
-          value={bmi ? bmi.toFixed(1) : "—"}
+          value={formatBodyNumber(bmi)}
           sub={bmiClass?.label}
-          subTone={bmiClass?.tone}
+          subTone={
+            bmiClass?.state === "above"
+              ? "text-yellow-300"
+              : bmiClass?.state === "below"
+                ? "text-sky-300"
+                : "text-neon"
+          }
         />
         <StatCard
           icon={<Target className="size-4" />}
@@ -263,19 +266,15 @@ function BodyProfilePage() {
       </p>
 
       {/* IMC visual */}
-      {bmi && bmiClass && (
-        <div className="mt-6 hairline rounded-3xl surface p-5 glow-neon-soft">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Índice de Massa Corporal
-              </p>
-              <p className="mt-1 text-4xl font-black text-glow">{bmi.toFixed(1)}</p>
-              <p className={`text-sm font-bold ${bmiClass.tone}`}>{bmiClass.label}</p>
-            </div>
-            <Activity className="size-10 text-neon opacity-70" />
-          </div>
-          <BMIScale bmi={bmi} />
+      {bmi != null && (
+        <div className="mt-6">
+          <BMIResult
+            weight={currentWeight}
+            height={height}
+            age={profile?.age ?? null}
+            goal={profile?.objetivo_fitness}
+            title="Índice de Massa Corporal"
+          />
         </div>
       )}
 
@@ -514,35 +513,6 @@ function MeasureCell({
   );
 }
 
-function BMIScale({ bmi }: { bmi: number }) {
-  const min = 15,
-    max = 40;
-  const pct = Math.max(0, Math.min(100, ((bmi - min) / (max - min)) * 100));
-  return (
-    <div className="mt-4">
-      <div
-        className="relative h-2 overflow-hidden rounded-full"
-        style={{
-          background:
-            "linear-gradient(90deg, oklch(0.7 0.18 230), oklch(0.76 0.19 300) 30%, oklch(0.85 0.2 90) 55%, oklch(0.75 0.22 50) 75%, oklch(0.65 0.24 25))",
-        }}
-      >
-        <div
-          className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-background"
-          style={{ left: `${pct}%` }}
-        />
-      </div>
-      <div className="mt-1.5 flex justify-between text-[9px] uppercase tracking-wider text-muted-foreground">
-        <span>18.5</span>
-        <span>25</span>
-        <span>30</span>
-        <span>35</span>
-        <span>40</span>
-      </div>
-    </div>
-  );
-}
-
 function ChartCard({
   title,
   dataKey,
@@ -600,11 +570,13 @@ function NumField({
   value,
   onChange,
   step = "0.1",
+  help,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   step?: string;
+  help?: string;
 }) {
   const id = useId();
   return (
@@ -619,7 +591,13 @@ function NumField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="surface-2 border-border"
+        aria-describedby={help ? `${id}-help` : undefined}
       />
+      {help && (
+        <p id={`${id}-help`} className="text-sm text-muted-foreground">
+          {help}
+        </p>
+      )}
     </div>
   );
 }
@@ -652,19 +630,19 @@ function ProfileDialog({
     if (!open) return;
     setForm({
       weight_kg: currentWeight?.toString() ?? "",
-      height_cm: profile?.height_cm?.toString() ?? "",
+      height_cm: heightCentimeters(profile?.height_cm)?.toString() ?? "",
       age: profile?.age?.toString() ?? "",
       sex: profile?.sex ?? "masculino",
       objetivo_fitness: profile?.objetivo_fitness ?? "saude_geral",
     });
     setError("");
   }, [open, profile, currentWeight]);
-  const bmi = calculateBMI(decimalNumber(form.weight_kg), decimalNumber(form.height_cm));
+  const height = heightCentimeters(form.height_cm);
   async function handleSave() {
     if (!userId || saving) return;
     const parsed = profileSchema.safeParse({
       weight_kg: decimalNumber(form.weight_kg),
-      height_cm: decimalNumber(form.height_cm),
+      height_cm: height,
       age: decimalNumber(form.age),
       sex: form.sex,
       objetivo_fitness: form.objetivo_fitness,
@@ -716,9 +694,10 @@ function ProfileDialog({
             onChange={(value) => setForm({ ...form, weight_kg: value })}
           />
           <NumField
-            label="Altura (cm)"
+            label="Altura (m ou cm)"
             value={form.height_cm}
             onChange={(value) => setForm({ ...form, height_cm: value })}
+            help="Ex.: 1,85 ou 185."
           />
           <NumField
             label="Idade"
@@ -763,19 +742,12 @@ function ProfileDialog({
             </Select>
           </div>
         </fieldset>
-        <div
-          className="rounded-2xl border border-neon/30 bg-neon/10 p-4"
-          role="status"
-          aria-label="IMC calculado"
-        >
-          <span className="text-muted-foreground">IMC calculado</span>
-          <strong className="block text-3xl text-neon">
-            {bmi
-              ? bmi.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-              : "—"}
-          </strong>
-          {!bmi && <p>Preencha peso e altura para calcular.</p>}
-        </div>
+        <BMIResult
+          weight={decimalNumber(form.weight_kg)}
+          height={height}
+          age={decimalNumber(form.age)}
+          goal={form.objetivo_fitness}
+        />
         {error && (
           <p role="alert" className="plan-error">
             {error}
