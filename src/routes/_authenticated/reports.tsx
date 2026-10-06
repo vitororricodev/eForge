@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
 import type { Tables } from "@/integrations/supabase/types";
-import { Link } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -299,13 +298,6 @@ function ReportsPage() {
 
   return (
     <main className="mx-auto max-w-md px-5 pt-10 pb-4">
-      <div className="flex flex-wrap gap-3 py-4 text-neon">
-        <Link to="/cardio">Cardio</Link>
-        <Link to="/body-profile">Medidas</Link>
-        <Link to="/goals">Metas</Link>
-        <Link to="/achievements">Medalhas</Link>
-        <Link to="/muscle-map">Mapa muscular</Link>
-      </div>
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Insights

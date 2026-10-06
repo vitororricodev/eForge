@@ -4,6 +4,8 @@ Aplicativo voltado ao celular em React/TanStack Start, Supabase e Capacitor, com
 
 ## Instalação e atualização
 
+**Navegação da Evolução (06/10/2026):** o menu superior agora começa por “Relatórios” e permanece disponível em Cardio, Medidas, Metas, Medalhas e Mapa muscular. Opção ativa destacada, áreas de toque de 44px e rolagem horizontal quando necessária. Reutiliza as rotas existentes e não exige SQL. Consulte [Evolução](vault/Evolucao.md) e [Validação da navegação](validation/evolucao-20261006/README.md).
+
 **Correção de exercícios desaparecendo no treino (05/10/2026):** lista inicial protegida, recuperação de rascunhos anteriores sem finalizar e sincronização da versão atual. Não exige SQL novo. Consulte [Investigação, correção e validação](CORRECAO-TREINO-EXERCICIOS.md).
 
 **Correção de IMC (05/10/2026):** altura aceita metros ou centímetros, resultado em pt-BR, classificação e faixa desejável por idade com peso correspondente. Não exige SQL novo se o perfil já salva com a RPC anterior. Consulte [Atualização e validação do IMC](ATUALIZACAO-IMC.md).

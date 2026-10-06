@@ -18,4 +18,6 @@ A correção de treino em 05/10/2026 mantém os módulos `workout-storage.ts` e 
 
 Em 06/10/2026, o card da tela inicial (`dashboard.tsx`) passa a exibir “Sequência de treinos”. Apenas o texto foi alterado; contador de dias, cálculo da sequência, meta semanal, componentes e estilos foram preservados. A conferência isolada do card com o CSS existente e Teko verificou larguras de 320, 360, 390 e 430px, sem sobreposição ou corte; em 320px, o texto quebra naturalmente em duas linhas.
 
-Relacionados: [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]], [[Compartilhamento]], [[Perfil]].
+Em 06/10/2026, `EvolutionNav` passa a integrar o layout autenticado nas seis rotas da Evolução. O menu duplicado de `reports.tsx` foi removido. Estado ativo acompanha o pathname do TanStack Router; CSS fica restrito a `eforge-evolution-*`, com tokens existentes e rolagem horizontal local. A opção ativa é revelada no menu ao navegar ou redimensionar, sem alterar a rolagem vertical da página. Menu inferior, consultas, gráficos, formulários, anatomia e rotas continuam existentes. Não há dependência, schema ou serviço novo. Consulte [[Evolucao]].
+
+Relacionados: [[Evolucao]], [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]], [[Compartilhamento]], [[Perfil]].

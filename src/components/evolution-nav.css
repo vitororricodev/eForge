@@ -1,0 +1,55 @@
+.eforge-evolution-nav {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 4px 20px 0;
+  font-family: var(--font-sans);
+}
+
+.eforge-evolution-links {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 6px;
+  scroll-padding-inline: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--neon-soft) transparent;
+}
+
+.eforge-evolution-links a {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: var(--neon);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.eforge-evolution-links a[aria-current="page"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.muscle-map-shell .eforge-evolution-nav {
+  max-width: 520px;
+}
+
+@media (max-width: 380px) {
+  .eforge-evolution-nav {
+    padding-inline: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .muscle-map-shell .eforge-evolution-nav {
+    max-width: 1160px;
+    padding-inline: 0;
+  }
+}

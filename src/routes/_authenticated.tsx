@@ -3,6 +3,7 @@ import { Brand } from "@/components/Brand";
 import { Trophy } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { MobileApp } from "@/components/MobileApp";
+import { EvolutionNav } from "@/components/EvolutionNav";
 import { createFileRoute, redirect, Outlet, Link, useLocation } from "@tanstack/react-router";
 import { Home, Dumbbell, User, Library, Heart, BarChart3, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,7 @@ function AuthLayout() {
           </Link>
         </header>
         <MobileApp />
+        <EvolutionNav />
         <div key={user.id}>
           <Outlet />
         </div>
