@@ -7,7 +7,7 @@ O `@import url("https://fonts.googleapis.com/...")` em `src/styles.css` era proc
 - Remove o `@import` remoto de `src/styles.css`.
 - Carrega Teko 600/700 no `<head>` via TanStack Router em `src/routes/__root.tsx`.
 - Atualiza `capacitor.html` para usar a mesma Teko.
-- Mantém `Forega Sport` somente em `.eforge-wordmark` (logo eForge).
+- Na versão deste hotfix, `Forega Sport` era restrita à logo. Em 06/10/2026, foi substituída pelos SVG F Forjado, sem alterar Teko nem reintroduzir o import remoto no CSS. Aplicação atual: [Identidade visual](vault/Identidade-visual.md).
 
 ## Validação rápida
 ```bash

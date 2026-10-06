@@ -599,10 +599,7 @@
     padding: 4px;
   }
   .muscle-desktop-brand .eforge-brand {
-    gap: 5px;
-  }
-  .muscle-desktop-brand .eforge-wordmark {
-    font-size: 21px;
+    width: 164px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

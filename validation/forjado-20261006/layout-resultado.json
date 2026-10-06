@@ -1,0 +1,959 @@
+{
+  "passed": true,
+  "cases": 40,
+  "widths": [
+    320,
+    360,
+    390,
+    430,
+    1440
+  ],
+  "publicRoutes": [
+    "/welcome",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/share/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "linksPreserved": true,
+  "introAndSkip": true,
+  "fontsPreserved": true,
+  "svgEffectsAbsent": true,
+  "errors": [],
+  "unexpected": [],
+  "results": [
+    {
+      "route": "/welcome",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 40,
+          "right": 216,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/login",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 153.828125,
+          "height": 39.984375,
+          "left": 83.21875,
+          "right": 237.046875,
+          "fitsParent": true,
+          "ratio": 3.8472059398202423,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/signup",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 153.828125,
+          "height": 39.984375,
+          "left": 83.21875,
+          "right": 237.046875,
+          "fitsParent": true,
+          "ratio": 3.8472059398202423,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/forgot-password",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 153.828125,
+          "height": 39.984375,
+          "left": 83.21875,
+          "right": 237.046875,
+          "fitsParent": true,
+          "ratio": 3.8472059398202423,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/reset-password",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 153.828125,
+          "height": 39.984375,
+          "left": 83.21875,
+          "right": 237.046875,
+          "fitsParent": true,
+          "ratio": 3.8472059398202423,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/share/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 16,
+          "right": 192,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/dashboard",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 16,
+          "right": 192,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 68,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/reports",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 16,
+          "right": 192,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 68,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/muscle-map",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 20,
+          "right": 196,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 60,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/welcome",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 40,
+          "right": 216,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/login",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 92,
+          "right": 268,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/signup",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 92,
+          "right": 268,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/forgot-password",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 92,
+          "right": 268,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/reset-password",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 92,
+          "right": 268,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/share/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 16,
+          "right": 192,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/dashboard",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 16,
+          "right": 192,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 108,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/reports",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 16,
+          "right": 192,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 108,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/muscle-map",
+      "width": 360,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 20,
+          "right": 196,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 100,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/welcome",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 24,
+          "right": 200,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/login",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 107,
+          "right": 283,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/signup",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 107,
+          "right": 283,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/forgot-password",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 107,
+          "right": 283,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/reset-password",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 107,
+          "right": 283,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/share/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 20,
+          "right": 196,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/dashboard",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 16,
+          "right": 192,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 138,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/reports",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 16,
+          "right": 192,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 138,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/muscle-map",
+      "width": 390,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 20,
+          "right": 196,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 130,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/welcome",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 24,
+          "right": 200,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/login",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 127,
+          "right": 303,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/signup",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 127,
+          "right": 303,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/forgot-password",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 127,
+          "right": 303,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/reset-password",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 127,
+          "right": 303,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/share/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 20,
+          "right": 196,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/dashboard",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 20,
+          "right": 196,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 170,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/reports",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 20,
+          "right": 196,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 170,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/muscle-map",
+      "width": 430,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 20,
+          "right": 196,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 170,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/run/00000000-0000-4000-8000-000000000002",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-simbolo-roxo.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 32,
+          "height": 32,
+          "left": 272,
+          "right": 304,
+          "fitsParent": true,
+          "ratio": 1,
+          "naturalRatio": 1,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/run/finished",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 72,
+          "right": 248,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    },
+    {
+      "route": "/muscle-map",
+      "width": 1440,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 235,
+          "right": 411,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        },
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 141,
+          "height": 36.65625,
+          "left": 24,
+          "right": 165,
+          "fitsParent": true,
+          "ratio": 3.846547314578005,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": [
+        {
+          "gap": 940,
+          "centerError": 0,
+          "actionHeight": 44
+        }
+      ]
+    },
+    {
+      "route": "/offline.html",
+      "width": 320,
+      "logos": [
+        {
+          "src": "/brand/forjado/eforge-logo-header.svg",
+          "alt": "eForge",
+          "loaded": true,
+          "width": 176,
+          "height": 45.75,
+          "left": 40,
+          "right": 216,
+          "fitsParent": true,
+          "ratio": 3.8469945355191255,
+          "naturalRatio": 3.8461538461538463,
+          "filter": "none",
+          "shadow": "none"
+        }
+      ],
+      "header": []
+    }
+  ]
+}

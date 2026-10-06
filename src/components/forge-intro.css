@@ -1,6 +1,6 @@
 .forge-intro{position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at 50% 60%,#211329 0%,#09090d 57%);color:#faf9ff;display:flex;flex-direction:column;align-items:center;overflow:hidden;isolation:isolate}
-.forge-intro-brand{padding-top:max(42px,env(safe-area-inset-top));z-index:2}.forge-intro-brand .eforge-brand img{display:none}.forge-intro-brand .eforge-wordmark{font-size:30px}
-.forge-scene{position:absolute;top:50%;left:50%;width:min(94vw,440px);transform:translate(-50%,-45%);transition:opacity .6s,transform .6s}.forge-art{width:100%;overflow:visible;filter:drop-shadow(0 0 13px #b26bff15)}
+.forge-intro-brand{padding-top:max(42px,env(safe-area-inset-top));z-index:2}.forge-intro-brand .eforge-brand{width:190px}
+.forge-scene{position:absolute;top:50%;left:50%;width:min(94vw,440px);transform:translate(-50%,-45%);transition:opacity .6s,transform .6s}.forge-art{width:100%;overflow:visible}.forge-metal,.forge-hammer{filter:drop-shadow(0 0 13px #b26bff15)}
 .forge-hammer{transform-origin:75px 210px;animation:forge-strikes 2.1s linear both;transition:opacity .25s}
 @keyframes forge-strikes{0%,7%{transform:rotate(-20deg)}26.2%{transform:rotate(0)}34%{transform:rotate(-25deg)}52.4%{transform:rotate(0)}63%{transform:rotate(-28deg)}78.6%{transform:rotate(0)}90%,100%{transform:rotate(-15deg)}}
 .forge-sparks{transform-origin:247px 279px;animation:forge-spark .38s ease-out both;filter:drop-shadow(0 0 5px #b76fff)}@keyframes forge-spark{from{opacity:1;transform:scale(.25)}to{opacity:0;transform:scale(1.55)}}

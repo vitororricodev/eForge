@@ -133,10 +133,8 @@
 }
 .animate-fade-up { animation: fade-up 0.5s ease-out both; }
 
-@font-face { font-family: "Forega Sport"; src: url("/fonts/forega-sport-demo.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0000,U+000D,U+0020,U+002C,U+002E,U+0041,U+0042,U+0043,U+0044,U+0045,U+0046,U+0047,U+0048,U+0049,U+004A,U+004B,U+004C,U+004D,U+004E,U+004F,U+0050,U+0051,U+0052,U+0053,U+0054,U+0055,U+0056,U+0057,U+0058,U+0059,U+005A,U+0061,U+0062,U+0063,U+0064,U+0065,U+0066,U+0067,U+0068,U+0069,U+006A,U+006B,U+006C,U+006D,U+006E,U+006F,U+0070,U+0071,U+0072,U+0073,U+0074,U+0075,U+0076,U+0077,U+0078,U+0079,U+007A; }
 :root { color-scheme: dark; --background: #09090d; --surface: #121219; --surface-2: #1b1b25; --muted-foreground: #aaa7b7; }
 h1,h2,h3,h4 { font-family: var(--font-display); font-style: normal; font-weight: 700 !important; font-synthesis: none; letter-spacing: 0.01em; line-height: 1.05; overflow-wrap: anywhere; }
-.eforge-wordmark { font-family: "Forega Sport", "Arial Black", Impact, sans-serif; font-weight: 400; font-style: normal; font-synthesis: none; letter-spacing: 0; text-transform: none; }
 input, select, textarea, table, [role="timer"] { font-family: var(--font-sans); font-weight: 700; font-variant-numeric: tabular-nums; }
 button, a, input, select { touch-action: manipulation; }
 input, select, textarea { font-size: 16px !important; }
@@ -180,9 +178,9 @@ main { padding-top: max(2rem, env(safe-area-inset-top)) !important; }
  --body-active-stroke:#d8b4f044;
 }
 body { background:radial-gradient(ellipse at 90% 0%,#9a50dd0c,transparent 50%),#09090d; }
-.eforge-brand { display:inline-flex; align-items:center; gap:10px; white-space:nowrap; color:#faf9ff; }
-.eforge-brand .eforge-wordmark { font-size:25px; line-height:1.2; }
-.eforge-brand img { width:32px; height:32px; object-fit:contain; }
+.eforge-brand { display:inline-flex; align-items:center; width:176px; max-width:100%; min-width:0; vertical-align:middle; }
+.eforge-brand img { display:block; width:100%; height:auto; object-fit:contain; }
+.eforge-brand-compact { width:32px; flex-shrink:0; }
 .eforge-app-header { max-width:480px; margin:auto; padding:max(20px,env(safe-area-inset-top)) 20px 8px; display:flex; align-items:center; justify-content:space-between; }
 .eforge-app-header > a:last-child { border:1px solid var(--border); border-radius:12px; padding:8px; min-width:44px; min-height:44px; display:grid; place-items:center; }
 main { max-width:480px; padding-top:24px !important; }

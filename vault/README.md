@@ -3,6 +3,7 @@
 Documentação técnica da biblioteca própria e do aplicativo existente, compatível com Obsidian. O guia de aplicação está em [Biblioteca oficial eForge](../BIBLIOTECA-EFORGE.md).
 
 - [[Arquitetura]] — tecnologias e fluxos de consulta.
+- [[Identidade-visual]] — SVGs oficiais F Forjado, ícones, aplicações e atualização do cache.
 - [[Evolucao]] — navegação entre relatórios, cardio, medidas, metas, medalhas e mapa.
 - [[Biblioteca]] — manifesto, classificação, identidade e Storage.
 - [[Banco-e-acesso]] — migrations, RLS e preservação do histórico.

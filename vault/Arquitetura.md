@@ -22,4 +22,6 @@ Em 06/10/2026, `EvolutionNav` passa a integrar o layout autenticado nas seis rot
 
 Em 06/10/2026, `rest-audio.ts` concentra apenas o alerta de fim do descanso. Um player pertence à tela de execução, prepara o AudioContext no evento da opção de som, agenda/cancela os seis bipes e libera o contexto ao desmontar. Não compartilha nem fecha o contexto da intro. O componente mantém o mesmo cálculo de tempo final e o fluxo de armazenamento/sincronização. Nenhuma dependência, configuração de banco ou alteração visual foi introduzida.
 
-Relacionados: [[Evolucao]], [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]], [[Compartilhamento]], [[Perfil]].
+Em 06/10/2026, a identidade F Forjado passa a usar os SVG oficiais diretamente no componente existente `Brand`, com variantes completa/compacta e superfície escura/clara. Forega sai do runtime da marca; Teko e a fonte de sistema do mapa permanecem. Favicon, PNGs PWA, launchers/splash Android e cache de ativos são atualizados. O utilitário Python apenas exporta assets durante desenvolvimento, sem dependência no runtime. O service worker mantém a separação entre cache público e dados locais e o bloqueio de atualização durante treino ativo. Nenhuma alteração de banco, autenticação, rotas, appId ou regras de negócio. Consulte [[Identidade-visual]].
+
+Relacionados: [[Identidade-visual]], [[Evolucao]], [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]], [[Compartilhamento]], [[Perfil]].

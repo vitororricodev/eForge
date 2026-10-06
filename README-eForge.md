@@ -4,6 +4,8 @@ Aplicativo voltado ao celular em React/TanStack Start, Supabase e Capacitor, com
 
 ## Instalação e atualização
 
+**Identidade F Forjado (06/10/2026):** SVGs fornecidos usados diretamente em login/cadastro, cabeçalhos, abertura, treino, compartilhamento e tela offline. Favicon, ícones PWA/Android e splash atualizados; Teko e a tipografia restante permanecem. Atualização do cache preserva sessões/treinos e o bloqueio de reload durante treino ativo. Não exige SQL. Consulte [Arquivos oficiais e aplicações](vault/Identidade-visual.md) e [Capturas/verificação](validation/forjado-20261006/README.md). Alterações locais, sem publicação; APK e instalação física não validados.
+
 **Alerta de descanso (06/10/2026):** sequência de seis bipes alternados, com mais presença e duração de cerca de 2s. O áudio é preparado ao ativar “Som no descanso”; desligar a opção, finalizar ou sair interrompe os tons. O volume de mídia continua sendo controlado pelo celular. Cronômetro, vibração e rascunhos são preservados; não exige SQL. Consulte [Treinos](vault/Treinos.md) e [Validação do som](validation/descanso-som-20261006/README.md).
 
 **Navegação da Evolução (06/10/2026):** o menu superior agora começa por “Relatórios” e permanece disponível em Cardio, Medidas, Metas, Medalhas e Mapa muscular. Opção ativa destacada, áreas de toque de 44px e rolagem horizontal quando necessária. Reutiliza as rotas existentes e não exige SQL. Consulte [Evolução](vault/Evolucao.md) e [Validação da navegação](validation/evolucao-20261006/README.md).
@@ -48,7 +50,7 @@ A execução /run/$workoutId prioriza resumo, descanso e séries, com edição d
 
 A rota /muscle-map mantém a arte anatômica cinza com aparência 3D, imagens WebP e máscaras SVG interativas. Primários treinados aparecem em roxo forte, secundários em roxo suave; a seleção usa contorno ciano e preserva a cor de treino. Frente/costas no celular, ambas no desktop, nomes, detalhes e lista acessível são mantidos. Papéis vêm dos snapshots das séries concluídas. Pesos: primário 1, secundário 0,55, terciário 0,25; aquecimentos excluídos. Semana local: segunda-feira 00:00 até a próxima segunda, exclusiva. A virada muda a análise visual, sem excluir histórico.
 
-Documentos específicos: [Mapa mobile](ATUALIZACAO-MAPA-MOBILE.md), [avatar semanal](ATUALIZACAO-AVATAR-SEMANAL.md) e [Vault técnico](vault/README.md). Forega Sport DEMO permanece na marca; Teko Bold na interface existente, com exceção de fonte de sistema já aprovada para a tela do mapa.
+Documentos específicos: [Mapa mobile](ATUALIZACAO-MAPA-MOBILE.md), [avatar semanal](ATUALIZACAO-AVATAR-SEMANAL.md) e [Vault técnico](vault/README.md). A marca usa o lettering vetorial F Forjado; Teko Bold permanece na interface existente, com exceção de fonte de sistema já aprovada para a tela do mapa. Documentos/capturas anteriores a 06/10/2026 registram a antiga Forega como histórico; siga [Identidade visual](vault/Identidade-visual.md) para alterações novas.
 
 PWA, ícones, service worker e fallback offline mantêm a configuração existente. Visite as telas online antes de testar offline; GIFs/telas ainda não carregados e consultas novas exigem conexão. Dados privados de API não entram no cache do service worker.
 

@@ -1,0 +1,60 @@
+{
+  "passed": true,
+  "productionBuild": "Capacitor web build served locally; no APK",
+  "cases": [
+    "Production MobileApp refuses reload during an active draft; new worker waits and draft is unchanged",
+    "Accepted update activates new worker, removes only old shell cache, precaches exact new SVGs and keeps auth, draft, settings, IndexedDB and unrelated caches",
+    "Real offline fallback displays the new SVG from the precache and keeps the workout draft"
+  ],
+  "oldCache": "eforge-shell-v4",
+  "newCache": "eforge-shell-v5-forjado",
+  "links": [
+    {
+      "rel": "icon",
+      "href": "/brand/forjado/eforge-favicon.svg"
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "/brand/forjado/apple-touch-icon.png"
+    },
+    {
+      "rel": "manifest",
+      "href": "/manifest.webmanifest?v=forjado-20261006"
+    },
+    {
+      "rel": "icon",
+      "href": "/brand/forjado/favicon-32.png"
+    },
+    {
+      "rel": "icon",
+      "href": "/brand/forjado/eforge-favicon.svg"
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "/brand/forjado/apple-touch-icon.png"
+    }
+  ],
+  "paths": [
+    "/offline.html",
+    "/manifest.webmanifest",
+    "/manifest.webmanifest",
+    "/brand/forjado/eforge-logo-header.svg",
+    "/brand/forjado/eforge-logo-horizontal-preto.svg",
+    "/brand/forjado/eforge-simbolo-roxo.svg",
+    "/brand/forjado/eforge-icone-app.svg",
+    "/brand/forjado/eforge-icone-maskable.svg",
+    "/brand/forjado/eforge-favicon.svg",
+    "/brand/forjado/icon-app-192.png",
+    "/brand/forjado/icon-app-512.png",
+    "/brand/forjado/icon-maskable-192.png",
+    "/brand/forjado/icon-maskable-512.png",
+    "/brand/forjado/apple-touch-icon.png",
+    "/brand/forjado/favicon-32.png",
+    "/assets/main-Cf1Y-1jV.css",
+    "/assets/main-BcaYx0_I.js",
+    "/assets/styles-BteHAxEi.css"
+  ],
+  "identityAndDataPreserved": true,
+  "errors": [],
+  "unexpected": []
+}

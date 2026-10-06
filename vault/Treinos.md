@@ -2,7 +2,7 @@
 
 A rota `/run/$workoutId` mantém rascunho por usuário, UUIDs estáveis, RPC transacional e retomada. A execução prioriza o celular: resumo de tempo/séries feitas/volume, progresso real, descanso aderente no topo e cartões de exercícios com séries editáveis.
 
-O avatar geométrico foi retirado da execução em 03/10/2026. Teko permanece na interface e Forega na marca; a exceção de fonte do mapa continua restrita ao mapa.
+O avatar geométrico foi retirado da execução em 03/10/2026. Teko permanece na interface; desde 06/10/2026, a marca usa os SVG F Forjado conforme [[Identidade-visual]]. A exceção de fonte do mapa continua restrita ao mapa.
 
 Cada série aceita repetições inteiras e carga decimal com ponto/vírgula. Marcação pode ser desfeita. Adição gera novo UUID; remoção exclui a série do rascunho. Tipo, histórico e substituição pelo ExercisePicker continuam existentes. Substituir com séries concluídas exige a confirmação anterior e redefine somente as séries daquele exercício.
 

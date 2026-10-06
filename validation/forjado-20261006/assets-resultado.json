@@ -1,0 +1,320 @@
+{
+  "passed": true,
+  "svgMasters": [
+    {
+      "file": "eforge-favicon.svg",
+      "sha256": "c506a3c1ba603395a8d6c334cb69825d9860005cdbdae63b9747ab0f733ac04d",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-icone-app.svg",
+      "sha256": "34f738f6f93cbbf6d6b3a2636900867860670f43d74c4b1625e0e5466cbd2f4d",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-icone-maskable.svg",
+      "sha256": "48ff4d58af9676e71f3f711a28a3740aaae5291fbf32a6d12e544938e42a8b03",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-logo-header.svg",
+      "sha256": "15e3785c155e21ea36b00e689f3f1a4505b76b4d00e0764f61a4cfd2ee5a4cb9",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-logo-horizontal-branco.svg",
+      "sha256": "98bb919f3657bb4b2c5724f2de4a850bcfa9de3dd1c7cdf64539064bce328111",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-logo-horizontal-preto.svg",
+      "sha256": "0357271a063f45a4a028040a442248a45bf3bd4540424ab4ab867513beb2199e",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-logo-horizontal-roxo.svg",
+      "sha256": "a685d7d21c326daf0fd16f551327245e897e7238bc951c774a8539098b861253",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-simbolo-branco.svg",
+      "sha256": "2cb88efebfd3fd205e6ed05a34cc0a33d5e48791ae86b035dee1d3a3d7dec9ad",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-simbolo-preto.svg",
+      "sha256": "c5d1791194a4f6a5c6ffdd8bfe5969cc7017781fa8297cced0082b35218802fe",
+      "matchesProvidedSVG": true
+    },
+    {
+      "file": "eforge-simbolo-roxo.svg",
+      "sha256": "ab3399b116bffb34246f1fad9e4c57f7351df9f556d7b023acd9cdb5bfa8bbdb",
+      "matchesProvidedSVG": true
+    }
+  ],
+  "nativePNGs": [
+    {
+      "file": "android/app/src/main/res/drawable-land-xxhdpi/splash.png",
+      "size": [
+        1920,
+        1280
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-land-xhdpi/splash.png",
+      "size": [
+        1600,
+        960
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-port-xxxhdpi/splash.png",
+      "size": [
+        1440,
+        2560
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-port-mdpi/splash.png",
+      "size": [
+        480,
+        800
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-port-xhdpi/splash.png",
+      "size": [
+        960,
+        1600
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable/splash.png",
+      "size": [
+        1280,
+        1920
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png",
+      "size": [
+        324,
+        324
+      ],
+      "png": true,
+      "maximumArtworkRadius": 92.67416036846517,
+      "safeRadius": 99.0,
+      "foregroundHasTransparency": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "size": [
+        144,
+        144
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+      "size": [
+        144,
+        144
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png",
+      "size": [
+        108,
+        108
+      ],
+      "png": true,
+      "maximumArtworkRadius": 31.12073263919087,
+      "safeRadius": 33.0,
+      "foregroundHasTransparency": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "size": [
+        48,
+        48
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
+      "size": [
+        48,
+        48
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-land-mdpi/splash.png",
+      "size": [
+        800,
+        480
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png",
+      "size": [
+        162,
+        162
+      ],
+      "png": true,
+      "maximumArtworkRadius": 46.674404120459855,
+      "safeRadius": 49.5,
+      "foregroundHasTransparency": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "size": [
+        72,
+        72
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
+      "size": [
+        72,
+        72
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-port-hdpi/splash.png",
+      "size": [
+        720,
+        1280
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-land-hdpi/splash.png",
+      "size": [
+        1280,
+        720
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
+      "size": [
+        432,
+        432
+      ],
+      "png": true,
+      "maximumArtworkRadius": 123.0873673453129,
+      "safeRadius": 132.0,
+      "foregroundHasTransparency": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "size": [
+        192,
+        192
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
+      "size": [
+        192,
+        192
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-port-xxhdpi/splash.png",
+      "size": [
+        1280,
+        1920
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/drawable-land-xxxhdpi/splash.png",
+      "size": [
+        2560,
+        1440
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png",
+      "size": [
+        216,
+        216
+      ],
+      "png": true,
+      "maximumArtworkRadius": 61.53454314448105,
+      "safeRadius": 66.0,
+      "foregroundHasTransparency": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "size": [
+        96,
+        96
+      ],
+      "png": true
+    },
+    {
+      "file": "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
+      "size": [
+        96,
+        96
+      ],
+      "png": true
+    }
+  ],
+  "nativeXMLs": [
+    "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+    "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+    "android/app/src/main/res/drawable/ic_launcher_background.xml",
+    "android/app/src/main/res/layout/activity_main.xml",
+    "android/app/src/main/res/xml/file_paths.xml",
+    "android/app/src/main/res/values/strings.xml",
+    "android/app/src/main/res/values/ic_launcher_background.xml",
+    "android/app/src/main/res/values/styles.xml"
+  ],
+  "manifestIcons": [
+    {
+      "src": "/brand/forjado/icon-app-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/forjado/icon-app-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/forjado/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/brand/forjado/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "manifestIdentityPreserved": true,
+  "iosNativeProjectPresent": false,
+  "androidAPKCompiled": false,
+  "reason": "Android SDK not installed; native resource XML and PNG dimensions/safe zones validated."
+}

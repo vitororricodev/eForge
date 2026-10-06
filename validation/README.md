@@ -1,5 +1,7 @@
 # Capturas e verificação local
 
+Identidade F Forjado, SVGs, ícones, cache e capturas reais de 06/10/2026: [forjado-20261006/README.md](forjado-20261006/README.md).
+
 O alerta de fim do descanso e a regressão do treino de 06/10/2026 estão em [descanso-som-20261006/README.md](descanso-som-20261006/README.md), com renderização Web Audio real, cancelamento, erros de dispositivo e builds.
 
 As capturas e resultados de compartilhamento, organização e perfil estão em [fechamento/README.md](fechamento/README.md). Elas foram obtidas nas rotas reais com Chromium e PostgreSQL local, sem requests ao banco remoto.

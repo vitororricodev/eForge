@@ -10,4 +10,6 @@ Se a lista não carregar, confira configuração pública, login e migrations no
 
 Após ativação confirmada, remova as antigas funções/Secrets exclusivos no Supabase e confira jobs remotos. Nenhum serviço remoto foi alterado nesta entrega. Passos completos e limites: [Guia](../BIBLIOTECA-EFORGE.md). Execute testes, typecheck e builds antes de publicar.
 
+Para atualizar a marca, use os mestres F Forjado documentados em [[Identidade-visual]]; não recrie o lettering com fonte. As exportações PNG acompanham o código e podem ser regeneradas pelo utilitário indicado. O cache de marca tem versão própria; atualização preserva sessão e rascunhos e continua bloqueada durante treino ativo. Não limpe dados do navegador para atualizar a logo.
+
 Para exercícios que sumiram em sessão ativa, a versão de 05/10/2026 recupera a lista inicial local; rascunhos anteriores são conferidos ao reconectar. Preserve o rascunho e não limpe dados do navegador como primeira medida. Se persistir, registre versão instalada, quantidade de exercícios do plano/sessão, horário e se ocorreu retorno de suspensão, offline ou uso de outra aba. Não exponha tokens ou informações pessoais. [Correção e limites](../CORRECAO-TREINO-EXERCICIOS.md) e testes de regressão acompanham o projeto.

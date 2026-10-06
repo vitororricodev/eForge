@@ -18,9 +18,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-black text-neon text-glow">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Página não encontrada</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          A rota que você procurou não existe.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">A rota que você procurou não existe.</p>
         <Link
           to="/"
           className="mt-6 inline-flex items-center justify-center rounded-full bg-neon px-6 py-2.5 text-sm font-bold text-primary-foreground glow-neon-soft"
@@ -39,9 +37,14 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
     <div className="flex min-h-dvh items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-bold">Algo deu errado</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error instanceof Error ? error.message : "Tente novamente."}</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {error instanceof Error ? error.message : "Tente novamente."}
+        </p>
         <button
-          onClick={() => { router.invalidate(); reset(); }}
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
           className="mt-6 rounded-full bg-neon px-6 py-2.5 text-sm font-bold text-primary-foreground"
         >
           Tentar novamente
@@ -58,20 +61,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#000000" },
       { title: "eForge — Treino inteligente, evolução real" },
-      { name: "description", content: "App fitness premium com mapa muscular, treinos personalizados e evolução corporal." },
+      {
+        name: "description",
+        content:
+          "App fitness premium com mapa muscular, treinos personalizados e evolução corporal.",
+      },
       { property: "og:title", content: "eForge" },
       { property: "og:description", content: "Treino inteligente, evolução real." },
       { property: "og:type", content: "website" },
     ],
     links: [
-      { rel: "preload", href: "/fonts/forega-sport-demo.ttf", as: "font", type: "font/ttf", crossOrigin: "anonymous" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "manifest", href: "/manifest.webmanifest?v=forjado-20261006" },
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: "/favicon.png" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/brand/forjado/favicon-32.png" },
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        sizes: "any",
+        href: "/brand/forjado/eforge-favicon.svg",
+      },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/brand/forjado/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Teko:wght@600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Teko:wght@600;700&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
