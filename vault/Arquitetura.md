@@ -20,4 +20,6 @@ Em 06/10/2026, o card da tela inicial (`dashboard.tsx`) passa a exibir “Sequê
 
 Em 06/10/2026, `EvolutionNav` passa a integrar o layout autenticado nas seis rotas da Evolução. O menu duplicado de `reports.tsx` foi removido. Estado ativo acompanha o pathname do TanStack Router; CSS fica restrito a `eforge-evolution-*`, com tokens existentes e rolagem horizontal local. A opção ativa é revelada no menu ao navegar ou redimensionar, sem alterar a rolagem vertical da página. Menu inferior, consultas, gráficos, formulários, anatomia e rotas continuam existentes. Não há dependência, schema ou serviço novo. Consulte [[Evolucao]].
 
+Em 06/10/2026, `rest-audio.ts` concentra apenas o alerta de fim do descanso. Um player pertence à tela de execução, prepara o AudioContext no evento da opção de som, agenda/cancela os seis bipes e libera o contexto ao desmontar. Não compartilha nem fecha o contexto da intro. O componente mantém o mesmo cálculo de tempo final e o fluxo de armazenamento/sincronização. Nenhuma dependência, configuração de banco ou alteração visual foi introduzida.
+
 Relacionados: [[Evolucao]], [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]], [[Compartilhamento]], [[Perfil]].

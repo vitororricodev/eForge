@@ -4,6 +4,8 @@ Aplicativo voltado ao celular em React/TanStack Start, Supabase e Capacitor, com
 
 ## Instalação e atualização
 
+**Alerta de descanso (06/10/2026):** sequência de seis bipes alternados, com mais presença e duração de cerca de 2s. O áudio é preparado ao ativar “Som no descanso”; desligar a opção, finalizar ou sair interrompe os tons. O volume de mídia continua sendo controlado pelo celular. Cronômetro, vibração e rascunhos são preservados; não exige SQL. Consulte [Treinos](vault/Treinos.md) e [Validação do som](validation/descanso-som-20261006/README.md).
+
 **Navegação da Evolução (06/10/2026):** o menu superior agora começa por “Relatórios” e permanece disponível em Cardio, Medidas, Metas, Medalhas e Mapa muscular. Opção ativa destacada, áreas de toque de 44px e rolagem horizontal quando necessária. Reutiliza as rotas existentes e não exige SQL. Consulte [Evolução](vault/Evolucao.md) e [Validação da navegação](validation/evolucao-20261006/README.md).
 
 **Correção de exercícios desaparecendo no treino (05/10/2026):** lista inicial protegida, recuperação de rascunhos anteriores sem finalizar e sincronização da versão atual. Não exige SQL novo. Consulte [Investigação, correção e validação](CORRECAO-TREINO-EXERCICIOS.md).

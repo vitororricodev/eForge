@@ -18,6 +18,7 @@ import {
   type Exercise,
 } from "@/lib/workout-storage";
 import { syncDraft } from "@/lib/workout-sync";
+import { createRestAudio } from "@/lib/rest-audio";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import "@/components/workouts/workout-run.css";
@@ -33,6 +34,7 @@ function Run() {
     { exercise_id: string | null; carga_kg: number | null; repeticoes: number | null }[]
   >([]);
   const [sound, setSound] = useState(false);
+  const restAudio = useRef<ReturnType<typeof createRestAudio> | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const draftRef = useRef<Draft | null>(null);
   const [resumeAttempt, setResumeAttempt] = useState(0);
@@ -257,22 +259,18 @@ function Run() {
     return () => window.removeEventListener("beforeunload", guard);
   }, [draft]);
   useEffect(() => {
+    return () => {
+      restAudio.current?.dispose();
+      restAudio.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    if (draft?.finished) restAudio.current?.stop();
+  }, [draft?.finished]);
+  useEffect(() => {
     if (draft?.restUntil && remaining(draft.restUntil, now) === 0) {
       navigator.vibrate?.([200, 100, 200]);
-      if (sound) {
-        try {
-          const audio = new AudioContext();
-          const oscillator = audio.createOscillator();
-          oscillator.connect(audio.destination);
-          oscillator.start();
-          oscillator.stop(audio.currentTime + 0.25);
-          oscillator.onended = () => {
-            void audio.close();
-          };
-        } catch {
-          /* Sound can be unavailable on the device. */
-        }
-      }
+      if (sound) restAudio.current?.play();
       update((current) =>
         current.restUntil <= Date.now() ? { ...current, restUntil: 0 } : current,
       );
@@ -352,7 +350,12 @@ function Run() {
             <input
               type="checkbox"
               checked={sound}
-              onChange={(event) => setSound(event.target.checked)}
+              onChange={(event) => {
+                const enabled = event.target.checked;
+                restAudio.current ??= createRestAudio();
+                restAudio.current.setEnabled(enabled);
+                setSound(enabled);
+              }}
             />
             <Volume2 size={17} aria-hidden="true" /> Som no descanso
           </label>

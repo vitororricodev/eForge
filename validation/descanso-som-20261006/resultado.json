@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-06T14:53:48.967Z",
+  "localOnly": true,
+  "waveform": [
+    {
+      "sampleRate": 44100,
+      "peak": 0.9499052166938782,
+      "duration": 1.9949886621315194,
+      "rms": 0.6257483631782907,
+      "pulseEnergy": [
+        0.6333525446270819,
+        0.6268252578474287,
+        0.6333559492239211,
+        0.6268336753111475,
+        0.6333505595346814,
+        0.6268252578474287
+      ],
+      "canceledPeak": 0
+    },
+    {
+      "sampleRate": 48000,
+      "peak": 0.9367934465408325,
+      "duration": 1.9949791666666667,
+      "rms": 0.6263435816479651,
+      "pulseEnergy": [
+        0.6347249506340893,
+        0.6278898608576069,
+        0.6347249506340893,
+        0.6278898713603037,
+        0.6347333383270759,
+        0.6278898713603037
+      ],
+      "canceledPeak": 0
+    },
+    {
+      "sampleRate": 96000,
+      "peak": 0.9429472088813782,
+      "duration": 1.9949895833333333,
+      "rms": 0.6310944135456578,
+      "pulseEnergy": [
+        0.6419990987969436,
+        0.6393363241129087,
+        0.6419990987969436,
+        0.6393363034137715,
+        0.6419989456078363,
+        0.6393363034137715
+      ],
+      "canceledPeak": 0
+    }
+  ],
+  "cases": [
+    "Actual Web Audio render: six strong tones, about two seconds, peak below clipping at 44.1/48/96 kHz; cancel produces silence",
+    "Default muted: natural expiry clears timer and vibrates without constructing audio",
+    "Checkbox prepares a running AudioContext within the tap; natural expiry plays exactly one six-tone alert and retains all exercises",
+    "Subsequent rests reuse the context; turning sound off cancels the ongoing and scheduled tones",
+    "Skipping a rest stays silent and clears its deadline",
+    "Unavailable Web Audio does not throw",
+    "Mute prevents deferred playback after a pending resume",
+    "Dispose prevents deferred playback after a pending resume",
+    "Refused AudioContext does not interrupt the workout",
+    "Rejected resume is caught",
+    "Leaving the screen cancels tones and closes its audio context while preserving the draft"
+  ],
+  "errors": []
+}
