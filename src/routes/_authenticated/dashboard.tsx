@@ -223,7 +223,7 @@ function Dashboard() {
               {streak} {streak === 1 ? "dia" : "dias"}
             </div>
             <div className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              ofensiva atual
+              Sequência de treinos
             </div>
           </div>
           <div className="ml-auto text-right">

@@ -16,4 +16,6 @@ Em 05/10/2026, o perfil passa a reutilizar `BMIResult` entre formulário e resum
 
 A correção de treino em 05/10/2026 mantém os módulos `workout-storage.ts` e `workout-sync.ts`, a chave local por usuário e o contrato da RPC existente. O rascunho recebe campos opcionais de plano inicial, identidade de item e revisão, compatíveis com rascunhos anteriores. Recuperação/invariantes de lista ficam no módulo de armazenamento; o componente aplica alterações sobre o estado atual, e o sincronizador confirma a revisão enviada sem sobrescrever uma mais recente. Nenhuma dependência ou banco paralelo. Suítes de armazenamento/sincronização e teste de navegador verificam os cenários de rascunho incompleto e concorrência.
 
+Em 06/10/2026, o card da tela inicial (`dashboard.tsx`) passa a exibir “Sequência de treinos”. Apenas o texto foi alterado; contador de dias, cálculo da sequência, meta semanal, componentes e estilos foram preservados. A conferência isolada do card com o CSS existente e Teko verificou larguras de 320, 360, 390 e 430px, sem sobreposição ou corte; em 320px, o texto quebra naturalmente em duas linhas.
+
 Relacionados: [[Treinos]], [[Biblioteca]], [[Banco-e-acesso]], [[Muscle-Map]], [[Compartilhamento]], [[Perfil]].
